@@ -1,11 +1,10 @@
-package com.lelebees.imperabot.application;
+package com.lelebees.imperabot.application.bot;
 
 import com.lelebees.imperabot.data.GameRepository;
-import com.lelebees.imperabot.domain.game.Game;
-import com.lelebees.imperabot.domain.game.GameNotFoundException;
+import com.lelebees.imperabot.domain.bot.game.Game;
+import com.lelebees.imperabot.domain.bot.game.GameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -16,17 +15,11 @@ public class GameService {
         this.gameRepository = gameRepository;
     }
 
-    public Game findGameByID(int ID){
+    public Game findGameByID(int ID) {
         Optional<Game> gameOptional = gameRepository.findById(ID);
-        if (gameOptional.isPresent())
-        {
+        if (gameOptional.isPresent()) {
             return gameOptional.get();
         }
-        throw new GameNotFoundException("Could not find game: "+ID);
-    }
-
-    public List<Game> findAllGames()
-    {
-        return gameRepository.findAll();
+        throw new GameNotFoundException("Could not find game: " + ID);
     }
 }

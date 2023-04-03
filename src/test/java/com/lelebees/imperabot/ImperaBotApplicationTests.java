@@ -8,6 +8,7 @@ class ImperaBotApplicationTests {
 
     @Test
     void contextLoads() {
+        assert true;
     }
 
 }

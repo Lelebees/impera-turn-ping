@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.domain;
+package com.lelebees.imperabot.domain.bot;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

@@ -36,3 +36,4 @@ build/
 ### Lelebees ###
 .env
 notes.md
+src/main/resources/application.properties

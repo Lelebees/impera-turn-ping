@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.domain.game;
+package com.lelebees.imperabot.domain.bot.game;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 public class Game {
     @Id
     private int game_id;
-    public int last_turn;
+    public int current_turn;
     public boolean half_time_notice;
 
 }
