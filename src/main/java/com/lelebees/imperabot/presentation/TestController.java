@@ -6,7 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-// This totally isnt a hack so i can test shit. SHHHHH
+// This totally isn't a hack so I can test shit. SHHHHH
 @Controller
 @RequestMapping("/test")
 public class TestController {
