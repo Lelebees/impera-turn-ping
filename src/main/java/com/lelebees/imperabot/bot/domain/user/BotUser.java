@@ -1,5 +1,6 @@
 package com.lelebees.imperabot.bot.domain.user;
 
+import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

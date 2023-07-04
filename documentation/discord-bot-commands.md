@@ -32,9 +32,9 @@
 
     - 0: No notifications
     - 1: DMs Only (overrides guild setting)
-    - 2: DMs & Guild (Always sends to BOTH)
+    - 2: Guild only (If there is no guild, no message)
     - 3: Guild > DMs (If there is no guild, fall back to DMs)
-    - 4: Guild only (If there is no guild, no message)
+    - 4: DMs & Guild (Always sends to BOTH)
 
 ## Guild commands
 
