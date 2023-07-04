@@ -1,5 +1,5 @@
 {
   "name": "link",
   "description": "Links your Impera Account to your Discord account",
-  "options": []
+  "type": 1
 }

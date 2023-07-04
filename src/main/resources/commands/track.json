@@ -1,0 +1,19 @@
+{
+  "name": "track",
+  "description": "Track a game",
+  "type": 1,
+  "options": [
+    {
+      "name": "gameID",
+      "type": 4,
+      "description": "ID of the game you wish to track",
+      "required": true
+    },
+    {
+      "name": "password",
+      "type": 3,
+      "description": "Password of the game you wish to track",
+      "required": false
+    }
+  ]
+}

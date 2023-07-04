@@ -14,7 +14,7 @@
   args: `gameID`, ?`password`
   Will make the bot join the specified game if it hasn't started yet and the botUser is already in the game. If it has,
   the bot will tell the botUser that it is unable to join. Will also start logging notifications for every botUser in
-  the game wich it is able and allowed to.
+  the game which it is able and allowed to.
 
   Command can only be used if:
 
@@ -32,14 +32,15 @@
 
     - 0: No notifications
     - 1: DMs Only (overrides guild setting)
-    - 2: DMs & Guild (Always sends to BOTH)
+    - 2: Guild only (If there is no guild, no message)
     - 3: Guild > DMs (If there is no guild, fall back to DMs)
-    - 4: Guild only (If there is no guild, no message)
+    - 4: DMs & Guild (Always sends to BOTH (Unless guild does not track the game, In which case it will send only to
+      DMs))
 
 ## Guild commands
 
 These commands have different behaviour from botUser commands. This behaviour is invoked by the commands context: being
-used in a guild, rather then dm's.
+used in a guild, rather then dms.
 
 - `/notifications`
   args: ?`gameID`, ?`channel`, ?`settings`

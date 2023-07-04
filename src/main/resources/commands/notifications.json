@@ -1,0 +1,63 @@
+{
+  "name": "notifications",
+  "description": "Change notification settings",
+  "type": 1,
+  "options": [
+    {
+      "name": "guild",
+      "description": "Settings for this guild",
+      "type": 1,
+      "options": [
+        {
+          "name": "gameID",
+          "type": 4,
+          "description": "ID of the game you wish to see/change notification settings for",
+          "required": false
+        },
+        {
+          "name": "channel",
+          "type": 7,
+          "description": "Channel you wish to see/change notification settings for",
+          "required": false
+        },
+        {
+          "name": "settings",
+          "type": 4,
+          "description": "Setting you wish to use",
+          "required": false,
+          "choices": [
+            {
+              "name": "No notifications",
+              "value": 0
+            },
+            {
+              "name": "Notifications on",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "user",
+      "type": 1,
+      "description": "Personal settings",
+      "options": [
+        {
+          "name": "gameID",
+          "type": 4,
+          "description": "ID of the game you wish to see/change notification settings for",
+          "required": false
+        },
+        {
+          "name": "settings",
+          "type": 4,
+          "description": "Setting you wish to use",
+          "required": false,
+          "choices": [
+          ]
+        }
+      ]
+    }
+  ]
+}
