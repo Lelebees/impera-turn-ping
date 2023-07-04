@@ -9,7 +9,7 @@
       "type": 1,
       "options": [
         {
-          "name": "gameID",
+          "name": "gameid",
           "type": 4,
           "description": "ID of the game you wish to see/change notification settings for",
           "required": false
@@ -44,7 +44,7 @@
       "description": "Personal settings",
       "options": [
         {
-          "name": "gameID",
+          "name": "gameid",
           "type": 4,
           "description": "ID of the game you wish to see/change notification settings for",
           "required": false
@@ -55,6 +55,10 @@
           "description": "Setting you wish to use",
           "required": false,
           "choices": [
+            {
+              "name": "test",
+              "value": 0
+            }
           ]
         }
       ]

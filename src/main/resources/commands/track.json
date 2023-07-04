@@ -4,7 +4,7 @@
   "type": 1,
   "options": [
     {
-      "name": "gameID",
+      "name": "gameid",
       "type": 4,
       "description": "ID of the game you wish to track",
       "required": true
