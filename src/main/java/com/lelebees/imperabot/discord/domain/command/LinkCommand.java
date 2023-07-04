@@ -28,7 +28,7 @@ public class LinkCommand implements SlashCommand {
 
         BotUser user = userService.findOrCreateUser(id.asLong());
         if (user.isLinked()) {
-            return event.reply().withEphemeral(true).withContent("You are already linked to an Impera account!");
+            return event.reply().withEphemeral(true).withContent("You are already linked to an Impera account. If you wish to re-link, run \"/unlink\" first.");
         }
         return event.reply()
                 .withEphemeral(true)
