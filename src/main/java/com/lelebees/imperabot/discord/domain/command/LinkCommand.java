@@ -15,6 +15,7 @@ public class LinkCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
+        //TODO: Make a new user if one hasn't been found already, and do shtuff.
         return event.reply()
                 .withEphemeral(true)
                 .withContent("""
@@ -26,6 +27,7 @@ public class LinkCommand implements SlashCommand {
                         > 5. Enter the following code into the "Text" field: ||%s||
                         > :warning: **IMPORTANT**: DO ***NOT*** SHARE THIS CODE WITH ANYONE!
                         > 6. Press send!
-                        After completing these steps, we'll know it's you, and you will be linked! You can unlink at any time by using the "/unlink" command!""".formatted(ImperaBotApplication.env.get("IMPERA_USER_NAME"), "CODE_PLACEHOLDER"));
+                        After completing these steps, we'll know it's you, and you will be linked! You can unlink at any time by using the "/unlink" command!"""
+                        .formatted(ImperaBotApplication.env.get("IMPERA_USER_NAME"), "CODE_PLACEHOLDER"));
     }
 }
