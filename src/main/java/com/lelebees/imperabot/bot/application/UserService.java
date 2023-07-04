@@ -1,0 +1,53 @@
+package com.lelebees.imperabot.bot.application;
+
+import com.lelebees.imperabot.bot.data.UserRepository;
+import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.domain.user.UserNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class UserService {
+    private final UserRepository repository;
+
+    public UserService(UserRepository repository) {
+        this.repository = repository;
+    }
+
+    public BotUser verifyUser(String verificationCode, UUID imperaId) {
+        try {
+            BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
+            botUser.setImperaId(imperaId);
+            return repository.save(botUser);
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("Cannot find user with this secret code!");
+        }
+    }
+
+    public BotUser findUser(long id) {
+        try {
+            return userFromOptional(repository.findById(id));
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("Cannot find user [" + id + "]");
+        }
+    }
+
+    public BotUser createNewUser(long id) {
+        return repository.save(new BotUser(id));
+    }
+
+    public BotUser unlinkUser(long id) {
+        BotUser botUser = findUser(id);
+        botUser.unlink();
+        return repository.save(botUser);
+    }
+
+    private BotUser userFromOptional(Optional<BotUser> userOptional) {
+        if (userOptional.isEmpty()) {
+            throw new UserNotFoundException("cannot find user");
+        }
+        return userOptional.get();
+    }
+}
