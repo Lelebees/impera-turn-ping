@@ -27,9 +27,9 @@ public class ImperaService {
         headers.setBearerAuth(getBearerToken().access_token);
         this.entity = new HttpEntity<>(headers);
         //TODO: Replace with declaration of who we logged in as
-        System.out.println("[I] ImperaService ready to make connections!");
-        System.out.println(getGames());
-        System.out.println(getMessages());
+//        System.out.println("[I] ImperaService ready to make connections!");
+//        System.out.println(getGames());
+//        System.out.println(getMessages());
     }
 
     public ImperaLoginDTO getBearerToken() {

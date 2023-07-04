@@ -44,14 +44,14 @@ public class UserService {
         return repository.save(botUser);
     }
 
-    public BotUser linkUser(long discordId) {
+    public BotUser findOrCreateUser(long discordId) {
         BotUser botUser;
         try {
             botUser = findUser(discordId);
         } catch (UserNotFoundException e) {
-            botUser = new BotUser(discordId);
+            botUser = createNewUser(discordId);
         }
-        return repository.save(botUser);
+        return botUser;
     }
 
     private BotUser userFromOptional(Optional<BotUser> userOptional) {
