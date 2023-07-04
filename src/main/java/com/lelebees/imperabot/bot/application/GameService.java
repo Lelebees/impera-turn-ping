@@ -2,7 +2,7 @@ package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.data.GameRepository;
 import com.lelebees.imperabot.bot.domain.game.Game;
-import com.lelebees.imperabot.bot.domain.game.GameNotFoundException;
+import com.lelebees.imperabot.bot.domain.game.exception.GameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

@@ -2,7 +2,7 @@ package com.lelebees.imperabot.discord.application;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
-import com.lelebees.imperabot.bot.domain.user.UserNotFoundException;
+import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import discord4j.core.DiscordClient;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
