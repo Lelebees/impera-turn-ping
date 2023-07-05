@@ -1,11 +1,16 @@
 package com.lelebees.imperabot.impera.application;
 
+import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
 import com.lelebees.imperabot.impera.domain.game.ImperaGameDTO;
+import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -13,8 +18,13 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.lelebees.imperabot.ImperaBotApplication.env;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 @Service
 public class ImperaService {
@@ -26,10 +36,7 @@ public class ImperaService {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(getBearerToken().access_token);
         this.entity = new HttpEntity<>(headers);
-        //TODO: Replace with declaration of who we logged in as
-//        System.out.println("[I] ImperaService ready to make connections!");
-//        System.out.println(getGames());
-//        System.out.println(getMessages());
+        System.out.println("[I] ImperaService ready to make connections!");
     }
 
     public ImperaLoginDTO getBearerToken() {
@@ -46,28 +53,39 @@ public class ImperaService {
 
         String url = imperaURL + "/Account/token";
 
-        ResponseEntity<ImperaLoginDTO> response = restTemplate.exchange(url, HttpMethod.POST, request, ImperaLoginDTO.class);
+        ResponseEntity<ImperaLoginDTO> response = restTemplate.exchange(url, POST, request, ImperaLoginDTO.class);
 
         return response.getBody();
     }
 
     public List<ImperaGameDTO> getGames() {
         String url = imperaURL + "/games/my";
-        ResponseEntity<List<ImperaGameDTO>> response = restTemplate.exchange(url, HttpMethod.GET, this.entity, new ParameterizedTypeReference<>() {
+        ResponseEntity<List<ImperaGameDTO>> response = restTemplate.exchange(url, GET, this.entity, new ParameterizedTypeReference<>() {
         });
         return response.getBody();
     }
 
-    //TODO: Evaluate if this is necessary
-    public ImperaGameViewDTO getGame(int gameID) {
+    public ImperaGameViewDTO getGame(long gameID) {
         String url = imperaURL + "/games/" + gameID;
-        ResponseEntity<ImperaGameViewDTO> response = restTemplate.exchange(url, HttpMethod.GET, this.entity, ImperaGameViewDTO.class);
+        ResponseEntity<ImperaGameViewDTO> response = restTemplate.exchange(url, GET, this.entity, ImperaGameViewDTO.class);
+        return response.getBody();
+    }
+
+    public boolean joinGame(long gameID, String password) {
+        String url = imperaURL + "/games/" + gameID + "/join?password=" + password;
+        ResponseEntity<?> response = restTemplate.exchange(url, POST, this.entity, Map.class);
+        return response.getStatusCode().is2xxSuccessful();
+    }
+
+    public ImperaGameViewDTO surrenderGame(long gameID) {
+        String url = imperaURL + "/games/" + gameID + "/surrender";
+        ResponseEntity<ImperaGameViewDTO> response = restTemplate.exchange(url, POST, this.entity, ImperaGameViewDTO.class);
         return response.getBody();
     }
 
     public List<ImperaMessageDTO> getMessages() {
         String url = imperaURL + "/messages/folder/Inbox";
-        ResponseEntity<List<ImperaMessageDTO>> response = restTemplate.exchange(url, HttpMethod.GET, this.entity, new ParameterizedTypeReference<>() {
+        ResponseEntity<List<ImperaMessageDTO>> response = restTemplate.exchange(url, GET, this.entity, new ParameterizedTypeReference<>() {
         });
         return response.getBody();
     }
@@ -81,5 +99,22 @@ public class ImperaService {
             }
         }
         return linkMessages;
+    }
+
+    public boolean isPlayerInGame(UUID playerId, long gameId) {
+        ImperaGameViewDTO game = getGame(gameId);
+        if (playerId == null) {
+            throw new UserNotVerifiedException("No user was entered!");
+        }
+        ImperaGamePlayerDTO playerDTO = new ImperaGamePlayerDTO();
+        playerDTO.id = playerId.toString();
+
+        AtomicBoolean playerInGame = new AtomicBoolean(false);
+        game.teams.forEach(team -> {
+            if (team.players.contains(playerDTO)) {
+                playerInGame.set(true);
+            }
+        });
+        return playerInGame.get();
     }
 }
