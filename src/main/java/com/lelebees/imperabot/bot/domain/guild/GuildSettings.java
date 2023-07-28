@@ -17,4 +17,26 @@ public class GuildSettings {
     private Long defaultChannelId;
     @Column(name = "notification_setting")
     private int notificationSetting;
+
+    public GuildSettings(long id, @Nullable Long defaultChannelId, int notificationSetting) {
+        this.id = id;
+        this.defaultChannelId = defaultChannelId;
+        this.notificationSetting = notificationSetting;
+    }
+
+    protected GuildSettings() {
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    @Nullable
+    public Long getDefaultChannelId() {
+        return defaultChannelId;
+    }
+
+    public int getNotificationSetting() {
+        return notificationSetting;
+    }
 }

@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.bot.domain;
+package com.lelebees.imperabot.bot.domain.gamechannellink;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -7,7 +7,7 @@ public class GameLinkId implements Serializable {
     private final long gameId;
     private final long channelId;
 
-    public GameLinkId(int gameId, long channelId) {
+    public GameLinkId(long gameId, long channelId) {
         this.gameId = gameId;
         this.channelId = channelId;
     }

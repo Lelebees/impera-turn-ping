@@ -10,6 +10,8 @@ import org.checkerframework.common.aliasing.qual.Unique;
 
 import java.util.UUID;
 
+import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.NO_NOTIFICATIONS;
+
 @Entity
 @Table(name = "bot_user")
 public class BotUser {
@@ -23,7 +25,7 @@ public class BotUser {
     private UUID imperaId;
     @Column(name = "notification_setting")
     //Probably want to turn this into an enum instead!
-    private int notificationSetting;
+    private UserNotificationSetting notificationSetting;
     @Column(name = "super_secret_code")
     @Unique
     private String verificationCode;
@@ -33,10 +35,15 @@ public class BotUser {
     }
 
     public BotUser(long id) {
-        this.userId = id;
-        this.imperaId = null;
-        this.notificationSetting = 0;
+        this(id, null, NO_NOTIFICATIONS, "");
         this.verificationCode = generateVerificationCode();
+    }
+
+    public BotUser(long userId, @Nullable @Unique UUID imperaId, UserNotificationSetting notificationSetting, @Unique String verificationCode) {
+        this.userId = userId;
+        this.imperaId = imperaId;
+        this.notificationSetting = notificationSetting;
+        this.verificationCode = verificationCode;
     }
 
     public long getUserId() {
@@ -64,7 +71,7 @@ public class BotUser {
         return UUID.randomUUID().toString();
     }
 
-    public int getNotificationSetting() {
+    public UserNotificationSetting getNotificationSetting() {
         return notificationSetting;
     }
 

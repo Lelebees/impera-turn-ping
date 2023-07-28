@@ -1,6 +1,6 @@
 package com.lelebees.imperabot.bot.domain.user;
 
-public enum UserNotificationSettings {
+public enum UserNotificationSetting {
     NO_NOTIFICATIONS,
     DMS_ONLY,
     GUILD_ONLY,

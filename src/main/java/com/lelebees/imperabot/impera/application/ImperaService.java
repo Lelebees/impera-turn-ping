@@ -2,6 +2,7 @@ package com.lelebees.imperabot.impera.application;
 
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
+import com.lelebees.imperabot.impera.domain.ImperaMeDTO;
 import com.lelebees.imperabot.impera.domain.game.ImperaGameDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
@@ -19,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.lelebees.imperabot.ImperaBotApplication.env;
@@ -31,11 +31,13 @@ public class ImperaService {
     private final String imperaURL = env.get("IMPERA_API_URL");
     private final HttpEntity<String> entity;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final String botId;
 
     public ImperaService() {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(getBearerToken().access_token);
         this.entity = new HttpEntity<>(headers);
+        this.botId = getMyId().userId;
         System.out.println("[I] ImperaService ready to make connections!");
     }
 
@@ -55,6 +57,12 @@ public class ImperaService {
 
         ResponseEntity<ImperaLoginDTO> response = restTemplate.exchange(url, POST, request, ImperaLoginDTO.class);
 
+        return response.getBody();
+    }
+
+    public ImperaMeDTO getMyId() {
+        String url = imperaURL + "/Account/UserInfo";
+        ResponseEntity<ImperaMeDTO> response = restTemplate.exchange(url, GET, this.entity, ImperaMeDTO.class);
         return response.getBody();
     }
 
@@ -101,13 +109,13 @@ public class ImperaService {
         return linkMessages;
     }
 
-    public boolean isPlayerInGame(UUID playerId, long gameId) {
+    public boolean isPlayerInGame(String playerId, long gameId) {
         ImperaGameViewDTO game = getGame(gameId);
         if (playerId == null) {
             throw new UserNotVerifiedException("No user was entered!");
         }
         ImperaGamePlayerDTO playerDTO = new ImperaGamePlayerDTO();
-        playerDTO.id = playerId.toString();
+        playerDTO.id = playerId;
 
         AtomicBoolean playerInGame = new AtomicBoolean(false);
         game.teams.forEach(team -> {
@@ -116,5 +124,9 @@ public class ImperaService {
             }
         });
         return playerInGame.get();
+    }
+
+    public boolean isBotInGame(long gameID) {
+        return isPlayerInGame(botId, gameID);
     }
 }
