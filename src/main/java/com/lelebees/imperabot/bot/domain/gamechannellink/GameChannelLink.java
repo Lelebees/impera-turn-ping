@@ -13,9 +13,9 @@ public class GameChannelLink {
     private long gameId;
     @Id
     private long channelId;
-    private int notificationSetting;
+    private Integer notificationSetting;
 
-    public GameChannelLink(long gameId, long channelId, int notificationSetting) {
+    public GameChannelLink(long gameId, long channelId, Integer notificationSetting) {
         this.gameId = gameId;
         this.channelId = channelId;
         this.notificationSetting = notificationSetting;
@@ -33,7 +33,7 @@ public class GameChannelLink {
         return channelId;
     }
 
-    public int getNotificationSetting() {
+    public Integer getNotificationSetting() {
         return notificationSetting;
     }
 }
