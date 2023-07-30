@@ -4,6 +4,7 @@ import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
@@ -79,10 +80,6 @@ public class GuildSetGame implements NotificationCommandStrategy {
         }
 
         GameChannelLink link = gameLinkService.findOrCreateLink(gameid, defaultChannelId, null);
-        return event.reply().withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with default notification setting (Currently: `" + switch (defaultNotificationSetting) {
-            case 0 -> "No Notifications";
-            case 1 -> "Notifications On";
-            default -> throw new IllegalStateException("Unexpected value: " + defaultNotificationSetting);
-        } + "`)");
+        return event.reply().withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with default notification setting (Currently: `" + GuildNotificationSettings.values()[defaultNotificationSetting].toString() + "`)");
     }
 }
