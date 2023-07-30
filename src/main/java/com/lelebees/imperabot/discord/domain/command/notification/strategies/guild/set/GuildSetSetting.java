@@ -59,14 +59,14 @@ public class GuildSetSetting implements NotificationCommandStrategy {
         GuildSettingsModificationDTO newSettings = new GuildSettingsModificationDTO(guildSettings.defaultChannelId, setting);
         guildSettingsService.updateGuildSettings(guildIdOptional.get().asLong(), newSettings);
 
-        return event.reply().withContent("Changed default setting from " + switch (oldSetting) {
+        return event.reply().withContent("Changed default setting from `" + switch (oldSetting) {
             case 0 -> "No Notifications";
             case 1 -> "Notifications On";
             default -> throw new IllegalStateException("Unexpected value: " + oldSetting);
-        } + " to " + switch (setting) {
+        } + "` to `" + switch (setting) {
             case 0 -> "No Notifications";
             case 1 -> "Notifications On";
             default -> throw new IllegalStateException("Unexpected value: " + setting);
-        });
+        } + "`");
     }
 }

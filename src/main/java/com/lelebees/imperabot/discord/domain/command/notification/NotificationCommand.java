@@ -1,11 +1,16 @@
 package com.lelebees.imperabot.discord.domain.command.notification;
 
+import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
+import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
+import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectPermissionException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.set.*;
+import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import org.springframework.stereotype.Component;
@@ -21,21 +26,27 @@ import java.util.stream.Collectors;
 public class NotificationCommand implements SlashCommand {
     private final Map<Set<String>, NotificationCommandStrategy> strategyMap;
     private final GuildSettingsService guildSettingsService;
+    private final GameLinkService gameLinkService;
+    private final UserService userService;
+    private final ImperaService imperaService;
 
-    public NotificationCommand(GuildSettingsService guildSettingsService) {
+    public NotificationCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, UserService userService, ImperaService imperaService) {
         this.guildSettingsService = guildSettingsService;
+        this.gameLinkService = gameLinkService;
+        this.userService = userService;
+        this.imperaService = imperaService;
         strategyMap = new HashMap<>();
         // Populate the strategy map with option combinations and corresponding strategies
 
         //Guild
         //Set
-        strategyMap.put(Set.of("guild", "set", "channel"), new GuildSetChannel(guildSettingsService));
+        strategyMap.put(Set.of("guild", "set", "channel"), new GuildSetChannel(this.guildSettingsService));
         strategyMap.put(Set.of("guild", "set", "channel", "gameid"), new GuildSetChannelGame());
         strategyMap.put(Set.of("guild", "set", "channel", "gameid", "setting"), new GuildSetChannelGameSetting());
         strategyMap.put(Set.of("guild", "set", "channel", "setting"), new GuildSetChannelSetting());
-        strategyMap.put(Set.of("guild", "set", "gameid"), new GuildSetGame());
+        strategyMap.put(Set.of("guild", "set", "gameid"), new GuildSetGame(this.guildSettingsService, this.gameLinkService, this.userService, this.imperaService));
         strategyMap.put(Set.of("guild", "set", "gameid", "setting"), new GuildSetGameSetting());
-        strategyMap.put(Set.of("guild", "set", "setting"), new GuildSetSetting(guildSettingsService));
+        strategyMap.put(Set.of("guild", "set", "setting"), new GuildSetSetting(this.guildSettingsService));
         //View
 
         //User
@@ -71,6 +82,10 @@ public class NotificationCommand implements SlashCommand {
                 return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` in private messages!");
             } catch (IncorrectPermissionException e) {
                 return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` without the Manage Channels permission!");
+            } catch (UserNotFoundException e) {
+                return event.reply().withEphemeral(true).withContent("Cannot use this command if you are not registered with the service. Please use /link first!");
+            } catch (UserNotInGameException e) {
+                return event.reply().withEphemeral(true).withContent("You are not allowed to keep track of this game!");
             }
         }
         // Handle the case when no valid option combination is provided

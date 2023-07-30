@@ -24,8 +24,18 @@ public class GameLinkService {
         return getFromOptional(repository.findById(id));
     }
 
-    public GameChannelLink createLink(long gameId, long channelId, int notificationSetting) {
+    public GameChannelLink createLink(long gameId, long channelId, Integer notificationSetting) {
         return repository.save(new GameChannelLink(gameId, channelId, notificationSetting));
+    }
+
+    public GameChannelLink findOrCreateLink(long gameId, long channelId, Integer notificationSetting) {
+        Optional<GameChannelLink> gameChannelLinkOptional = repository.findById(new GameLinkId(gameId, channelId));
+        if (gameChannelLinkOptional.isEmpty()) {
+            return createLink(gameId, channelId, notificationSetting);
+        }
+        GameChannelLink link = gameChannelLinkOptional.get();
+        link.notificationSetting = notificationSetting;
+        return link;
     }
 
     private GameChannelLink getFromOptional(Optional<GameChannelLink> optional) {
