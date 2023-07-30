@@ -2,7 +2,6 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.gu
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
-import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsModificationDTO;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectPermissionException;
@@ -49,13 +48,7 @@ public class GuildSetChannel implements NotificationCommandStrategy {
         }
         Long channelId = channelInput.get().asChannel().block().getId().asLong();
 
-        // GetOrCreate:
-        GuildSettings guildSettings;
-        try {
-            guildSettings = guildSettingsService.getGuildSettingsById(guildIdOptional.get().asLong());
-        } catch (GuildSettingsNotFoundException e) {
-            guildSettings = guildSettingsService.createNewGuildSettings(guildIdOptional.get().asLong());
-        }
+        GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildIdOptional.get().asLong());
         Optional<Long> oldChannelId = Optional.ofNullable(guildSettings.defaultChannelId);
         GuildSettingsModificationDTO newSettings = new GuildSettingsModificationDTO(channelId, guildSettings.notificationSetting);
         guildSettingsService.updateGuildSettings(guildIdOptional.get().asLong(), newSettings);
