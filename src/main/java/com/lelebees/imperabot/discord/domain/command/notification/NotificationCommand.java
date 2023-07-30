@@ -41,7 +41,7 @@ public class NotificationCommand implements SlashCommand {
         //Guild
         //Set
         strategyMap.put(Set.of("guild", "set", "channel"), new GuildSetChannel(this.guildSettingsService));
-        strategyMap.put(Set.of("guild", "set", "channel", "gameid"), new GuildSetChannelGame());
+        strategyMap.put(Set.of("guild", "set", "channel", "gameid"), new GuildSetChannelGame(guildSettingsService, gameLinkService, userService, imperaService));
         strategyMap.put(Set.of("guild", "set", "channel", "gameid", "setting"), new GuildSetChannelGameSetting());
         strategyMap.put(Set.of("guild", "set", "channel", "setting"), new GuildSetChannelSetting());
         strategyMap.put(Set.of("guild", "set", "gameid"), new GuildSetGame(this.guildSettingsService, this.gameLinkService, this.userService, this.imperaService));
@@ -79,16 +79,16 @@ public class NotificationCommand implements SlashCommand {
             try {
                 return strategy.execute(event);
             } catch (IncorrectContextException e) {
-                return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` in private messages!");
+                return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` in private messages.");
             } catch (IncorrectPermissionException e) {
-                return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` without the Manage Channels permission!");
+                return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` without the Manage Channels permission.");
             } catch (UserNotFoundException e) {
-                return event.reply().withEphemeral(true).withContent("Cannot use this command if you are not registered with the service. Please use /link first!");
+                return event.reply().withEphemeral(true).withContent("Cannot use this command if you are not registered with the service. Please use /link first.");
             } catch (UserNotInGameException e) {
-                return event.reply().withEphemeral(true).withContent("You are not allowed to keep track of this game!");
+                return event.reply().withEphemeral(true).withContent("You are not allowed to keep track of this game.");
             }
         }
         // Handle the case when no valid option combination is provided
-        return event.reply().withEphemeral(true).withContent("Please choose at least one valid option");
+        return event.reply().withEphemeral(true).withContent("Please choose at least one valid option.");
     }
 }
