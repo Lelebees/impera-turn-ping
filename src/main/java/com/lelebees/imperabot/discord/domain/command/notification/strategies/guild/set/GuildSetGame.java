@@ -19,6 +19,7 @@ import discord4j.rest.util.Permission;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
+import java.util.UUID;
 
 // Starts tracking a game in a guild on the default channel with default setting
 // TODO: Manage Channels Perm, OR a role set by an admin
@@ -61,10 +62,16 @@ public class GuildSetGame implements NotificationCommandStrategy {
         }
         long gameid = gameInput.get().asLong();
 
+        UUID imperaId = user.getImperaId();
+        if (imperaId == null) {
+            return event.reply().withEphemeral(true).withContent("Cannot log notifications for game because you do not have an Impera account linked");
+        }
+
         if (!imperaService.isPlayerInGame(user.getImperaId().toString(), gameid)) {
             throw new UserNotInGameException("You are not allowed to access this game!");
         }
-        GuildSettings settings = guildSettingsService.getGuildSettingsById(guildIdOptional.get().asLong());
+
+        GuildSettings settings = guildSettingsService.getOrCreateGuildSettings(guildIdOptional.get().asLong());
         Long defaultChannelId = settings.defaultChannelId;
         int defaultNotificationSetting = settings.notificationSetting;
         if (defaultChannelId == null) {

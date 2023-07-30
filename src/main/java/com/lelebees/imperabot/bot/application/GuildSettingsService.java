@@ -35,4 +35,9 @@ public class GuildSettingsService {
         guildSettings.notificationSetting = dto.notificationSetting;
         return repository.save(guildSettings);
     }
+
+    public GuildSettings getOrCreateGuildSettings(long guildId) {
+        Optional<GuildSettings> settingsOptional = repository.findById(guildId);
+        return settingsOptional.orElseGet(() -> createNewGuildSettings(guildId));
+    }
 }
