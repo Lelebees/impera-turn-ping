@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
+import com.lelebees.imperabot.discord.application.NotificationService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectPermissionException;
@@ -29,22 +30,24 @@ public class NotificationCommand implements SlashCommand {
     private final GameLinkService gameLinkService;
     private final UserService userService;
     private final ImperaService imperaService;
+    private final NotificationService notificationService;
 
-    public NotificationCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, UserService userService, ImperaService imperaService) {
+    public NotificationCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, UserService userService, ImperaService imperaService, NotificationService notificationService) {
         this.guildSettingsService = guildSettingsService;
         this.gameLinkService = gameLinkService;
         this.userService = userService;
         this.imperaService = imperaService;
+        this.notificationService = notificationService;
         strategyMap = new HashMap<>();
         // Populate the strategy map with option combinations and corresponding strategies
 
         //Guild
         //Set
         strategyMap.put(Set.of("guild", "set", "channel"), new GuildSetChannel(this.guildSettingsService));
-        strategyMap.put(Set.of("guild", "set", "channel", "gameid"), new GuildSetChannelGame(guildSettingsService, gameLinkService, userService, imperaService));
-        strategyMap.put(Set.of("guild", "set", "channel", "gameid", "setting"), new GuildSetChannelGameSetting(guildSettingsService, gameLinkService, userService, imperaService));
+        strategyMap.put(Set.of("guild", "set", "channel", "gameid"), new GuildSetChannelGame(guildSettingsService, userService, imperaService, notificationService));
+        strategyMap.put(Set.of("guild", "set", "channel", "gameid", "setting"), new GuildSetChannelGameSetting(userService, imperaService, notificationService));
         strategyMap.put(Set.of("guild", "set", "channel", "setting"), new GuildSetChannelSetting());
-        strategyMap.put(Set.of("guild", "set", "gameid"), new GuildSetGame(this.guildSettingsService, this.gameLinkService, this.userService, this.imperaService));
+        strategyMap.put(Set.of("guild", "set", "gameid"), new GuildSetGame(this.guildSettingsService, this.userService, this.imperaService, this.notificationService));
         strategyMap.put(Set.of("guild", "set", "gameid", "setting"), new GuildSetGameSetting());
         strategyMap.put(Set.of("guild", "set", "setting"), new GuildSetSetting(this.guildSettingsService));
         //View

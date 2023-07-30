@@ -1,12 +1,9 @@
 package com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.set;
 
-import com.lelebees.imperabot.bot.application.GameLinkService;
-import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
+import com.lelebees.imperabot.discord.application.NotificationService;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectPermissionException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
@@ -15,6 +12,7 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.rest.util.Permission;
 import reactor.core.publisher.Mono;
@@ -24,16 +22,14 @@ import java.util.UUID;
 
 // Sets the setting for a given channel/game combination to the given setting
 public class GuildSetChannelGameSetting implements NotificationCommandStrategy {
-    private final GuildSettingsService guildSettingsService;
-    private final GameLinkService gameLinkService;
     private final UserService userService;
     private final ImperaService imperaService;
+    private final NotificationService notificationService;
 
-    public GuildSetChannelGameSetting(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, UserService userService, ImperaService imperaService) {
-        this.guildSettingsService = guildSettingsService;
-        this.gameLinkService = gameLinkService;
+    public GuildSetChannelGameSetting(UserService userService, ImperaService imperaService, NotificationService notificationService) {
         this.userService = userService;
         this.imperaService = imperaService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -43,17 +39,13 @@ public class GuildSetChannelGameSetting implements NotificationCommandStrategy {
             throw new IncorrectContextException("You cannot run a guild command outside of a guild!");
         }
 
-        Optional<Member> callingUser = event.getInteraction().getMember();
-        if (callingUser.isEmpty()) {
-            throw new IllegalStateException("No one sent this command???");
-        }
-
+        User callingUser = event.getInteraction().getUser();
         //TODO: Fix these errors
-        if (!callingUser.get().getBasePermissions().block().contains(Permission.MANAGE_CHANNELS)) {
+        Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
+        if (!callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS)) {
             throw new IncorrectPermissionException("You do not have the correct permissions!");
         }
 
-        BotUser user = userService.findUser(callingUser.get().getId().asLong());
 
         Optional<ApplicationCommandInteractionOptionValue> gameInput = event.getOptions().get(0).getOptions().get(0).getOption("gameid").orElseThrow(() -> new NullPointerException("This is impossible, How could gameid not exist?!")).getValue();
         Optional<ApplicationCommandInteractionOptionValue> channelInput = event.getOptions().get(0).getOptions().get(0).getOption("channel").orElseThrow(() -> new NullPointerException("This is impossible, How could channel not exist?!")).getValue();
@@ -77,6 +69,7 @@ public class GuildSetChannelGameSetting implements NotificationCommandStrategy {
         long settingLong = settingInput.get().asLong();
         int setting = Math.toIntExact(settingLong);
 
+        BotUser user = userService.findUser(callingUser.getId().asLong());
         UUID imperaId = user.getImperaId();
         if (imperaId == null) {
             return event.reply().withEphemeral(true).withContent("Cannot log notifications for game because you do not have an Impera account linked");
@@ -85,8 +78,6 @@ public class GuildSetChannelGameSetting implements NotificationCommandStrategy {
         if (!imperaService.isPlayerInGame(user.getImperaId().toString(), gameid)) {
             throw new UserNotInGameException("You are not allowed to access this game!");
         }
-
-        GameChannelLink link = gameLinkService.findOrCreateLink(gameid, channelId, setting);
-        return event.reply().withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with `" + GuildNotificationSettings.values()[link.notificationSetting].toString() + "`");
+        return notificationService.setGame(event, gameid, channelId, setting);
     }
 }
