@@ -2,7 +2,6 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.gu
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.discord.application.NotificationService;
@@ -71,13 +70,6 @@ public class GuildSetGame implements NotificationCommandStrategy {
             throw new UserNotInGameException("You are not allowed to access this game!");
         }
 
-        GuildSettings settings = guildSettingsService.getOrCreateGuildSettings(guildIdOptional.get().asLong());
-        Long defaultChannelId = settings.defaultChannelId;
-        int defaultNotificationSetting = settings.notificationSetting;
-        if (defaultChannelId == null) {
-            return event.reply().withEphemeral(true).withContent("No default channel has been set for this guild. use `/notifications guild set channel` to set the default channel, or use `/notifications guild set channel gameid` to use a channel without setting a default.");
-        }
-
-        return notificationService.setGame(event, gameid, defaultChannelId, defaultNotificationSetting);
+        return notificationService.guildSetGame(event, gameid, null, null);
     }
 }

@@ -80,6 +80,6 @@ public class GuildSetChannelGame implements NotificationCommandStrategy {
             throw new UserNotInGameException("You are not allowed to access this game!");
         }
 
-        return notificationService.setGame(event, gameid, channelId, defaultNotificationSetting);
+        return notificationService.guildSetGame(event, gameid, channelId, defaultNotificationSetting);
     }
 }

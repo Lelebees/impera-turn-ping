@@ -78,6 +78,6 @@ public class GuildSetChannelGameSetting implements NotificationCommandStrategy {
         if (!imperaService.isPlayerInGame(user.getImperaId().toString(), gameid)) {
             throw new UserNotInGameException("You are not allowed to access this game!");
         }
-        return notificationService.setGame(event, gameid, channelId, setting);
+        return notificationService.guildSetGame(event, gameid, channelId, setting);
     }
 }

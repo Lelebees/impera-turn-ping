@@ -58,22 +58,6 @@
               "type": 4,
               "description": "ID of the game you wish to see notification settings for",
               "required": false
-            },
-            {
-              "name": "setting",
-              "type": 4,
-              "description": "Setting you wish to filter on",
-              "choices": [
-                {
-                  "name": "No Notifications",
-                  "value": 0
-                },
-                {
-                  "name": "Notifications On",
-                  "value": 1
-                }
-              ],
-              "required": false
             }
           ]
         }
