@@ -11,6 +11,9 @@ import com.lelebees.imperabot.discord.domain.command.notification.exception.Inco
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectPermissionException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.set.*;
+import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildView;
+import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildViewChannel;
+import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildViewGame;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
@@ -51,7 +54,9 @@ public class NotificationCommand implements SlashCommand {
         strategyMap.put(Set.of("guild", "set", "gameid", "setting"), new GuildSetGameSetting(guildSettingsService, userService, imperaService, notificationService));
         strategyMap.put(Set.of("guild", "set", "setting"), new GuildSetSetting(this.guildSettingsService));
         //View
-
+        strategyMap.put(Set.of("guild", "view"), new GuildView(this.guildSettingsService));
+        strategyMap.put(Set.of("guild", "view", "channel"), new GuildViewChannel());
+        strategyMap.put(Set.of("guild", "view", "gameid"), new GuildViewGame(gameLinkService, guildSettingsService));
         //User
         //Set
 
@@ -77,6 +82,7 @@ public class NotificationCommand implements SlashCommand {
         System.out.println(options);
 
         NotificationCommandStrategy strategy = strategyMap.get(options);
+        //TODO: Check if game id is present and if so, if the game is valid and the user in it.
 
         if (strategy != null) {
             try {

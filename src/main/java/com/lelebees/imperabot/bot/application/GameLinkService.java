@@ -6,6 +6,7 @@ import com.lelebees.imperabot.bot.domain.gamechannellink.GameLinkId;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -40,6 +41,14 @@ public class GameLinkService {
 
     private GameChannelLink getFromOptional(Optional<GameChannelLink> optional) {
         return optional.orElseThrow(() -> new GameChannelLinkNotFoundException("Could not find the link"));
+    }
+
+    public List<GameChannelLink> findLinksByChannel(long channelId) {
+        return repository.findGameChannelLinkByChannelId(channelId);
+    }
+
+    public List<GameChannelLink> findLinksByGame(long gameId) {
+        return repository.findGameChannelLinkByGameId(gameId);
     }
 
 }
