@@ -15,6 +15,7 @@ import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.channel.GuildChannel;
 import discord4j.core.spec.EmbedCreateFields;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.util.Color;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -75,6 +76,7 @@ public class GuildViewGame implements NotificationCommandStrategy {
         EmbedCreateSpec embed = EmbedCreateSpec.builder()
                 .title("Channels connected to [" + gameid + "]")
                 .addAllFields(fields)
+                .color(Color.of(230, 200, 90))
                 .build();
 
         return event.reply().withEmbeds(embed);
