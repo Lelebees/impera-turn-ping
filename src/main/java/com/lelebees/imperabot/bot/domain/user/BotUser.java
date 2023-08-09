@@ -25,7 +25,7 @@ public class BotUser {
     private UUID imperaId;
     @Column(name = "notification_setting")
     //Probably want to turn this into an enum instead!
-    private UserNotificationSetting notificationSetting;
+    public int notificationSetting;
     @Column(name = "super_secret_code")
     @Unique
     private String verificationCode;
@@ -35,11 +35,11 @@ public class BotUser {
     }
 
     public BotUser(long id) {
-        this(id, null, NO_NOTIFICATIONS, "");
+        this(id, null, NO_NOTIFICATIONS.ordinal(), "");
         this.verificationCode = generateVerificationCode();
     }
 
-    public BotUser(long userId, @Nullable @Unique UUID imperaId, UserNotificationSetting notificationSetting, @Unique String verificationCode) {
+    public BotUser(long userId, @Nullable @Unique UUID imperaId, int notificationSetting, @Unique String verificationCode) {
         this.userId = userId;
         this.imperaId = imperaId;
         this.notificationSetting = notificationSetting;
@@ -71,7 +71,7 @@ public class BotUser {
         return UUID.randomUUID().toString();
     }
 
-    public UserNotificationSetting getNotificationSetting() {
+    public int getNotificationSetting() {
         return notificationSetting;
     }
 

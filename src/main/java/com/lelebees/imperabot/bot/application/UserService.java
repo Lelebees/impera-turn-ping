@@ -57,4 +57,10 @@ public class UserService {
     private BotUser userFromOptional(Optional<BotUser> userOptional) {
         return userOptional.orElseThrow(() -> new UserNotFoundException("Could not find user!"));
     }
+
+    public BotUser updateDefaultSetting(long discordId, int setting) {
+        BotUser user = findOrCreateUser(discordId);
+        user.notificationSetting = setting;
+        return repository.save(user);
+    }
 }

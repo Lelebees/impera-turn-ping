@@ -4,7 +4,7 @@ public enum UserNotificationSetting {
     NO_NOTIFICATIONS("No Notifications"),
     DMS_ONLY("DMs Only"),
     GUILD_ONLY("Guild Only"),
-    PREFER_GUILD_OVER_DMS("Guild Over DMs"),
+    PREFER_GUILD_OVER_DMS("Guild > DMs"),
     DMS_AND_GUILD("DMs & Guild");
 
     private final String textForm;

@@ -6,10 +6,13 @@ import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.object.entity.User;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -49,5 +52,11 @@ public class NotificationService {
 
     private GameChannelLink setGame(long gameId, long channelId, Integer setting) {
         return gameLinkService.findOrCreateLink(gameId, channelId, setting);
+    }
+
+    public Mono<Void> userSetGame(ChatInputInteractionEvent event, long gameId, User user, Integer setting) {
+        BotUser botUser = userService.findUser(user.getId().asLong());
+        GameChannelLink link = setGame(gameId, user.getPrivateChannel().block().getId().asLong(), botUser.getNotificationSetting());
+        return event.reply().withEphemeral(true).withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + UserNotificationSetting.values()[link.notificationSetting].toString() + "`"));
     }
 }

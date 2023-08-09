@@ -99,7 +99,7 @@
                   "value": 4
                 }
               ],
-              "required": true
+              "required": false
             },
             {
               "name": "gameid",

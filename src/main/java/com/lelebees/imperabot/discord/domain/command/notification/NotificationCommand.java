@@ -14,6 +14,8 @@ import com.lelebees.imperabot.discord.domain.command.notification.strategies.gui
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildView;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildViewChannel;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildViewGame;
+import com.lelebees.imperabot.discord.domain.command.notification.strategies.user.set.UserSetSetting;
+import com.lelebees.imperabot.discord.domain.command.notification.strategies.user.view.UserView;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
@@ -59,8 +61,9 @@ public class NotificationCommand implements SlashCommand {
         strategyMap.put(Set.of("guild", "view", "gameid"), new GuildViewGame(gameLinkService, guildSettingsService));
         //User
         //Set
-
+        strategyMap.put(Set.of("user", "set", "setting"), new UserSetSetting(userService));
         //View
+        strategyMap.put(Set.of("user", "view"), new UserView(userService));
     }
 
     @Override
