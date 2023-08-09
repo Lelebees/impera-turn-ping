@@ -3,6 +3,7 @@ package com.lelebees.imperabot.discord.domain.command.notification;
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.discord.application.NotificationService;
@@ -14,8 +15,10 @@ import com.lelebees.imperabot.discord.domain.command.notification.strategies.gui
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildView;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildViewChannel;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view.GuildViewGame;
+import com.lelebees.imperabot.discord.domain.command.notification.strategies.user.set.UserSetGame;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.user.set.UserSetSetting;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.user.view.UserView;
+import com.lelebees.imperabot.discord.domain.command.notification.strategies.user.view.UserViewGame;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
@@ -62,8 +65,10 @@ public class NotificationCommand implements SlashCommand {
         //User
         //Set
         strategyMap.put(Set.of("user", "set", "setting"), new UserSetSetting(userService));
+        strategyMap.put(Set.of("user", "set", "gameid"), new UserSetGame(userService, imperaService, notificationService));
         //View
         strategyMap.put(Set.of("user", "view"), new UserView(userService));
+        strategyMap.put(Set.of("user", "view", "gameid"), new UserViewGame(gameLinkService, userService));
     }
 
     @Override
@@ -85,7 +90,6 @@ public class NotificationCommand implements SlashCommand {
         System.out.println(options);
 
         NotificationCommandStrategy strategy = strategyMap.get(options);
-        //TODO: Check if game id is present and if so, if the game is valid and the user in it.
 
         if (strategy != null) {
             try {
@@ -98,6 +102,8 @@ public class NotificationCommand implements SlashCommand {
                 return event.reply().withEphemeral(true).withContent("Cannot use this command if you are not registered with the service. Please use /link first.");
             } catch (UserNotInGameException e) {
                 return event.reply().withEphemeral(true).withContent("You are not allowed to keep track of this game.");
+            } catch (GameChannelLinkNotFoundException e) {
+                return event.reply().withEphemeral(true).withContent("Cannot find the combination of game and channel. Perhaps you need to use `/notifications set` first?");
             }
         }
         // Handle the case when no valid option combination is provided
