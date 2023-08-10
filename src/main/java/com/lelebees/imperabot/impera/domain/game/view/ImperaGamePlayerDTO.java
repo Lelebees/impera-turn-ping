@@ -17,7 +17,7 @@ public class ImperaGamePlayerDTO {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ImperaGamePlayerDTO that = (ImperaGamePlayerDTO) o;
-        return Objects.equals(userId, that.userId);
+        return Objects.equals(this.userId, that.userId);
     }
 
     @Override

@@ -1,9 +1,6 @@
 package com.lelebees.imperabot.bot.domain.gamechannellink;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "bot_game_channel")
@@ -13,6 +10,7 @@ public class GameChannelLink {
     private long gameId;
     @Id
     private long channelId;
+    @Column(nullable = true, name = "notification_setting")
     public Integer notificationSetting;
 
     public GameChannelLink(long gameId, long channelId, Integer notificationSetting) {

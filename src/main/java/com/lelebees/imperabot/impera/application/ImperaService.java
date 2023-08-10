@@ -115,7 +115,7 @@ public class ImperaService {
             throw new UserNotVerifiedException("No user was entered!");
         }
         ImperaGamePlayerDTO playerDTO = new ImperaGamePlayerDTO();
-        playerDTO.id = playerId;
+        playerDTO.userId = playerId;
 
         AtomicBoolean playerInGame = new AtomicBoolean(false);
         game.teams.forEach(team -> {

@@ -23,6 +23,7 @@ import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
@@ -104,6 +105,8 @@ public class NotificationCommand implements SlashCommand {
                 return event.reply().withEphemeral(true).withContent("You are not allowed to keep track of this game.");
             } catch (GameChannelLinkNotFoundException e) {
                 return event.reply().withEphemeral(true).withContent("Cannot find the combination of game and channel. Perhaps you need to use `/notifications set` first?");
+            } catch (HttpClientErrorException.BadRequest e) {
+                return event.reply().withEphemeral(true).withContent("Something went wrong, but due to API limitations, we cannot assert what. Please check if you have entered the correct information");
             }
         }
         // Handle the case when no valid option combination is provided
