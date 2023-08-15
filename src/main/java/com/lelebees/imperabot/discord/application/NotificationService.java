@@ -56,7 +56,7 @@ public class NotificationService {
 
     public Mono<Void> userSetGame(ChatInputInteractionEvent event, long gameId, User user, Integer setting) {
         BotUser botUser = userService.findUser(user.getId().asLong());
-        GameChannelLink link = setGame(gameId, user.getPrivateChannel().block().getId().asLong(), botUser.getNotificationSetting());
+        GameChannelLink link = setGame(gameId, user.getPrivateChannel().block().getId().asLong(), setting);
         return event.reply().withEphemeral(true).withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + UserNotificationSetting.values()[link.notificationSetting].toString() + "`"));
     }
 }
