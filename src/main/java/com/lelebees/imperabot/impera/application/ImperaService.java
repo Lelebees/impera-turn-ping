@@ -23,8 +23,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.lelebees.imperabot.ImperaBotApplication.env;
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.*;
 
 @Service
 public class ImperaService {
@@ -32,10 +31,14 @@ public class ImperaService {
     private final HttpEntity<String> entity;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String botId;
+    public ImperaLoginDTO bearerToken;
+    private String access_token;
 
     public ImperaService() {
+        this.bearerToken = getBearerToken();
+        this.access_token = bearerToken.access_token;
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(getBearerToken().access_token);
+        headers.setBearerAuth(access_token);
         this.entity = new HttpEntity<>(headers);
         this.botId = getMyId().userId;
         System.out.println("[I] ImperaService ready to make connections!");
@@ -128,5 +131,21 @@ public class ImperaService {
 
     public boolean isBotInGame(long gameID) {
         return isPlayerInGame(botId, gameID);
+    }
+
+    public Runnable updateAccessToken() {
+        return () -> {
+            try {
+                this.access_token = getBearerToken().access_token;
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        };
+    }
+
+    public Object deleteMessage(String id) {
+        String url = imperaURL + "/messages/" + id;
+        ResponseEntity<?> response = restTemplate.exchange(url, DELETE, this.entity, Map.class);
+        return response.getBody();
     }
 }
