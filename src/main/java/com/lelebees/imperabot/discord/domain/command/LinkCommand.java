@@ -37,7 +37,7 @@ public class LinkCommand implements SlashCommand {
                         > 1. Go to https://imperaonline.de and log in
                         > 2. Click on the messages icon and click Compose
                         > 3. Enter "%s" in the "User" field
-                        > 4. Enter "Link Request" in the subject field.
+                        > 4. Enter "link" in the subject field.
                         > 5. Enter the following code into the "Text" field: ||%s||
                         > :warning: **IMPORTANT**: DO ***NOT*** SHARE THIS CODE WITH ANYONE!
                         > 6. Press send!
