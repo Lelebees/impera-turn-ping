@@ -1,6 +1,8 @@
 package com.lelebees.imperabot.bot.domain.guild;
 
-public enum GuildNotificationSettings {
+import com.lelebees.imperabot.bot.domain.NotificationSettings;
+
+public enum GuildNotificationSettings implements NotificationSettings {
     NO_NOTIFICATIONS("No Notifications"),
     NOTIFICATIONS_ON("Notifications On");
 

@@ -63,4 +63,8 @@ public class UserService {
         user.notificationSetting = setting;
         return repository.save(user);
     }
+
+    public Optional<BotUser> findImperaUser(UUID imperaId) {
+        return repository.getUserByImperaId(imperaId);
+    }
 }

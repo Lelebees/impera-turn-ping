@@ -1,6 +1,8 @@
 package com.lelebees.imperabot.bot.domain.user;
 
-public enum UserNotificationSetting {
+import com.lelebees.imperabot.bot.domain.NotificationSettings;
+
+public enum UserNotificationSetting implements NotificationSettings {
     NO_NOTIFICATIONS("No Notifications"),
     DMS_ONLY("DMs Only"),
     GUILD_ONLY("Guild Only"),
