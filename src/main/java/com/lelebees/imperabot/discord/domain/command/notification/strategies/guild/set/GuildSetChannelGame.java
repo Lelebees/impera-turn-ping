@@ -2,6 +2,7 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.gu
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
@@ -68,7 +69,7 @@ public class GuildSetChannelGame implements NotificationCommandStrategy {
         long channelId = channel.getId().asLong();
 
         GuildSettings settings = guildSettingsService.getOrCreateGuildSettings(guildIdOptional.get().asLong());
-        int defaultNotificationSetting = settings.notificationSetting;
+        NotificationSettings defaultNotificationSetting = settings.notificationSetting;
 
         BotUser user = userService.findUser(callingUser.get().getId().asLong());
         UUID imperaId = user.getImperaId();

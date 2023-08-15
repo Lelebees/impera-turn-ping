@@ -2,6 +2,7 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.gu
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.discord.application.NotificationService;
@@ -70,6 +71,6 @@ public class GuildSetGameSetting implements NotificationCommandStrategy {
             throw new UserNotInGameException("You are not allowed to access this game!");
         }
 
-        return notificationService.guildSetGame(event, gameid, null, setting);
+        return notificationService.guildSetGame(event, gameid, null, GuildNotificationSettings.values()[setting]);
     }
 }

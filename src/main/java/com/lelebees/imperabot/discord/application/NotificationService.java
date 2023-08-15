@@ -3,11 +3,10 @@ package com.lelebees.imperabot.discord.application;
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
-import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.common.util.Snowflake;
@@ -33,7 +32,7 @@ public class NotificationService {
         this.imperaService = imperaService;
     }
 
-    public Mono<Void> guildSetGame(ChatInputInteractionEvent event, long gameId, Long channelId, Integer setting) {
+    public Mono<Void> guildSetGame(ChatInputInteractionEvent event, long gameId, Long channelId, NotificationSettings setting) {
         Optional<Snowflake> guildIdOptional = event.getInteraction().getGuildId();
         if (guildIdOptional.isEmpty()) {
             throw new IncorrectContextException("Cannot run guild command outside of guild");
@@ -47,16 +46,16 @@ public class NotificationService {
         }
 
         GameChannelLink link = setGame(gameId, (channelId == null ? settings.defaultChannelId : channelId), setting);
-        return event.reply().withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + GuildNotificationSettings.values()[link.notificationSetting].toString() + "`"));
+        return event.reply().withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + link.notificationSetting.toString() + "`"));
     }
 
-    private GameChannelLink setGame(long gameId, long channelId, Integer setting) {
+    private GameChannelLink setGame(long gameId, long channelId, NotificationSettings setting) {
         return gameLinkService.findOrCreateLink(gameId, channelId, setting);
     }
 
-    public Mono<Void> userSetGame(ChatInputInteractionEvent event, long gameId, User user, Integer setting) {
+    public Mono<Void> userSetGame(ChatInputInteractionEvent event, long gameId, User user, NotificationSettings setting) {
         BotUser botUser = userService.findUser(user.getId().asLong());
         GameChannelLink link = setGame(gameId, user.getPrivateChannel().block().getId().asLong(), setting);
-        return event.reply().withEphemeral(true).withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + UserNotificationSetting.values()[link.notificationSetting].toString() + "`"));
+        return event.reply().withEphemeral(true).withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + link.notificationSetting.toString() + "`"));
     }
 }

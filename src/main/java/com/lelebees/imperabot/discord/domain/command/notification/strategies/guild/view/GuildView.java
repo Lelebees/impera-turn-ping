@@ -1,7 +1,6 @@
 package com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view;
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
@@ -36,7 +35,7 @@ public class GuildView implements NotificationCommandStrategy {
         EmbedCreateSpec embed = EmbedCreateSpec.builder()
                 .title("Settings for " + guildName)
                 .addField("Default channel:", "<#" + settings.defaultChannelId + ">", false)
-                .addField("Default notification setting:", "`" + GuildNotificationSettings.values()[settings.notificationSetting].toString() + "`", false)
+                .addField("Default notification setting:", "`" + settings.notificationSetting.toString() + "`", false)
                 .color(Color.of(230, 200, 90))
                 .build();
         return event.reply().withEmbeds(List.of(embed));

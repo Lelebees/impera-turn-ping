@@ -1,5 +1,6 @@
 package com.lelebees.imperabot.bot.domain.gamechannellink;
 
+import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,10 +14,10 @@ public class GameChannelLink {
     @Column(nullable = true, name = "notification_setting")
     public Integer notificationSetting;
 
-    public GameChannelLink(long gameId, long channelId, Integer notificationSetting) {
+    public GameChannelLink(long gameId, long channelId, NotificationSettings notificationSetting) {
         this.gameId = gameId;
         this.channelId = channelId;
-        this.notificationSetting = notificationSetting;
+        this.notificationSetting = notificationSetting.ordinal();
     }
 
     protected GameChannelLink() {

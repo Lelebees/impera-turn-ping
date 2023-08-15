@@ -1,6 +1,7 @@
 package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.data.GuildSettingsRepository;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsModificationDTO;
@@ -26,7 +27,7 @@ public class GuildSettingsService {
     }
 
     public GuildSettings createNewGuildSettings(long guildId) {
-        return repository.save(new GuildSettings(guildId, null, 0));
+        return repository.save(new GuildSettings(guildId, null, GuildNotificationSettings.NO_NOTIFICATIONS));
     }
 
     public GuildSettings updateGuildSettings(long guildId, GuildSettingsModificationDTO dto) {

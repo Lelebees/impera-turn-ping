@@ -1,10 +1,8 @@
 package com.lelebees.imperabot.bot.domain.guild;
 
+import com.lelebees.imperabot.bot.data.converter.GuildNotificationSettingsConverter;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "bot_guild_settings")
@@ -16,9 +14,10 @@ public class GuildSettings {
     @Nullable
     public Long defaultChannelId;
     @Column(name = "notification_setting")
-    public int notificationSetting;
+    @Convert(converter = GuildNotificationSettingsConverter.class)
+    public GuildNotificationSettings notificationSetting;
 
-    public GuildSettings(long id, @Nullable Long defaultChannelId, int notificationSetting) {
+    public GuildSettings(long id, @Nullable Long defaultChannelId, GuildNotificationSettings notificationSetting) {
         this.id = id;
         this.defaultChannelId = defaultChannelId;
         this.notificationSetting = notificationSetting;

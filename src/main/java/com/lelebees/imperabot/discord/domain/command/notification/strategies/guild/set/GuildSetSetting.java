@@ -1,6 +1,7 @@
 package com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.set;
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsModificationDTO;
@@ -55,18 +56,10 @@ public class GuildSetSetting implements NotificationCommandStrategy {
         } catch (GuildSettingsNotFoundException e) {
             guildSettings = guildSettingsService.createNewGuildSettings(guildIdOptional.get().asLong());
         }
-        int oldSetting = guildSettings.notificationSetting;
-        GuildSettingsModificationDTO newSettings = new GuildSettingsModificationDTO(guildSettings.defaultChannelId, setting);
+        GuildNotificationSettings oldSetting = guildSettings.notificationSetting;
+        GuildSettingsModificationDTO newSettings = new GuildSettingsModificationDTO(guildSettings.defaultChannelId, GuildNotificationSettings.values()[setting]);
         guildSettingsService.updateGuildSettings(guildIdOptional.get().asLong(), newSettings);
 
-        return event.reply().withContent("Changed default setting from `" + switch (oldSetting) {
-            case 0 -> "No Notifications";
-            case 1 -> "Notifications On";
-            default -> throw new IllegalStateException("Unexpected value: " + oldSetting);
-        } + "` to `" + switch (setting) {
-            case 0 -> "No Notifications";
-            case 1 -> "Notifications On";
-            default -> throw new IllegalStateException("Unexpected value: " + setting);
-        } + "`");
+        return event.reply().withContent("Changed default setting from `" + oldSetting.toString() + "` to `" + newSettings.notificationSetting.toString() + "`");
     }
 }

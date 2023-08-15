@@ -28,7 +28,7 @@ public class UserSetSetting implements NotificationCommandStrategy {
         }
         int settingInt = Math.toIntExact(setting.get().asLong());
 
-        BotUser user = userService.updateDefaultSetting(callingUser.getId().asLong(), settingInt);
-        return event.reply().withEphemeral(true).withContent("Updated notification setting to `" + UserNotificationSetting.values()[user.getNotificationSetting()].toString() + "`");
+        BotUser user = userService.updateDefaultSetting(callingUser.getId().asLong(), UserNotificationSetting.values()[settingInt]);
+        return event.reply().withEphemeral(true).withContent("Updated notification setting to `" + user.getNotificationSetting().toString() + "`");
     }
 }

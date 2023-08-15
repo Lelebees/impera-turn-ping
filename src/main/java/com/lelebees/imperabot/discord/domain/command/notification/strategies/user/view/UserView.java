@@ -2,7 +2,6 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.us
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
-import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
@@ -28,12 +27,7 @@ public class UserView implements NotificationCommandStrategy {
         PrivateChannel channel = user.getPrivateChannel().block();
 
 
-        EmbedCreateSpec embed = EmbedCreateSpec.builder()
-                .title("Settings for " + user.getUsername())
-                .addField("Channel: ", "<#" + channel.getId().asLong() + ">", false)
-                .addField("Default notification setting: ", "`" + UserNotificationSetting.values()[botUser.getNotificationSetting()].toString() + "`", false)
-                .color(Color.of(230, 200, 90))
-                .build();
+        EmbedCreateSpec embed = EmbedCreateSpec.builder().title("Settings for " + user.getUsername()).addField("Channel: ", "<#" + channel.getId().asLong() + ">", false).addField("Default notification setting: ", "`" + botUser.getNotificationSetting().toString() + "`", false).color(Color.of(230, 200, 90)).build();
 
         return event.reply().withEphemeral(true).withEmbeds(embed);
     }

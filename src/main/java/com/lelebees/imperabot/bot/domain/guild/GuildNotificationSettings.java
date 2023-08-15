@@ -6,14 +6,14 @@ public enum GuildNotificationSettings implements NotificationSettings {
     NO_NOTIFICATIONS("No Notifications"),
     NOTIFICATIONS_ON("Notifications On");
 
-    private final String textForm;
+    private final String value;
 
-    GuildNotificationSettings(final String textForm) {
-        this.textForm = textForm;
+    GuildNotificationSettings(final String value) {
+        this.value = value;
     }
 
     @Override
     public String toString() {
-        return textForm;
+        return value;
     }
 }

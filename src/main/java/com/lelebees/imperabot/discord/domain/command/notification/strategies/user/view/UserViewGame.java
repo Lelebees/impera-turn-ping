@@ -2,6 +2,7 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.us
 
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameLinkId;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
@@ -38,11 +39,11 @@ public class UserViewGame implements NotificationCommandStrategy {
 
 
         GameChannelLink link = gameLinkService.findLink(new GameLinkId(gameid, channel.getId().asLong()));
-        int notificationSetting = Objects.requireNonNullElseGet(link.notificationSetting, () -> userService.findUser(callingUser.getId().asLong()).notificationSetting);
+        NotificationSettings notificationSetting = Objects.requireNonNullElseGet(UserNotificationSetting.values()[link.notificationSetting], () -> userService.findUser(callingUser.getId().asLong()).notificationSetting);
 
         EmbedCreateSpec embed = EmbedCreateSpec.builder()
                 .title("Settings for game [" + gameid + "]")
-                .addField("Setting: ", "`" + UserNotificationSetting.values()[notificationSetting].toString() + "`", false)
+                .addField("Setting: ", "`" + notificationSetting + "`", false)
                 .addField("Channel: ", "<#" + channel.getId() + ">", false)
                 .build();
 

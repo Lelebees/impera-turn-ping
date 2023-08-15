@@ -1,11 +1,9 @@
 package com.lelebees.imperabot.bot.domain.user;
 
+import com.lelebees.imperabot.bot.data.converter.UserNotificationSettingsConverter;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.checkerframework.common.aliasing.qual.Unique;
 
 import java.util.UUID;
@@ -24,8 +22,8 @@ public class BotUser {
     @Nullable
     private UUID imperaId;
     @Column(name = "notification_setting")
-    //Probably want to turn this into an enum instead!
-    public int notificationSetting;
+    @Convert(converter = UserNotificationSettingsConverter.class)
+    public UserNotificationSetting notificationSetting;
     @Column(name = "super_secret_code")
     @Unique
     private String verificationCode;
@@ -35,11 +33,11 @@ public class BotUser {
     }
 
     public BotUser(long id) {
-        this(id, null, NO_NOTIFICATIONS.ordinal(), "");
+        this(id, null, NO_NOTIFICATIONS, "");
         this.verificationCode = generateVerificationCode();
     }
 
-    public BotUser(long userId, @Nullable @Unique UUID imperaId, int notificationSetting, @Unique String verificationCode) {
+    public BotUser(long userId, @Nullable @Unique UUID imperaId, UserNotificationSetting notificationSetting, @Unique String verificationCode) {
         this.userId = userId;
         this.imperaId = imperaId;
         this.notificationSetting = notificationSetting;
@@ -71,7 +69,7 @@ public class BotUser {
         return UUID.randomUUID().toString();
     }
 
-    public int getNotificationSetting() {
+    public UserNotificationSetting getNotificationSetting() {
         return notificationSetting;
     }
 

@@ -9,14 +9,14 @@ public enum UserNotificationSetting implements NotificationSettings {
     PREFER_GUILD_OVER_DMS("Guild > DMs"),
     DMS_AND_GUILD("DMs & Guild");
 
-    private final String textForm;
+    private final String value;
 
-    UserNotificationSetting(final String textForm) {
-        this.textForm = textForm;
+    UserNotificationSetting(final String value) {
+        this.value = value;
     }
 
     @Override
     public String toString() {
-        return this.textForm;
+        return this.value;
     }
 }

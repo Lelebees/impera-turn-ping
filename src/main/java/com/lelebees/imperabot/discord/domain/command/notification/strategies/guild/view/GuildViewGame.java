@@ -62,15 +62,15 @@ public class GuildViewGame implements NotificationCommandStrategy {
         List<EmbedCreateFields.Field> fields = new ArrayList<>();
         for (GuildChannel channel : resultList) {
             GameChannelLink link = gameLinkService.findLink(new GameLinkId(gameid, channel.getId().asLong()));
-            int notificationSetting;
+            GuildNotificationSettings notificationSetting;
             if (link.notificationSetting == null) {
                 GuildSettings guildSettings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
                 notificationSetting = guildSettings.notificationSetting;
             } else {
-                notificationSetting = link.notificationSetting;
+                notificationSetting = GuildNotificationSettings.values()[link.notificationSetting];
             }
 
-            fields.add(new EmbedField("<#" + channel.getId() + ">", "`" + GuildNotificationSettings.values()[notificationSetting] + "`", false));
+            fields.add(new EmbedField("<#" + channel.getId() + ">", "`" + notificationSetting.toString() + "`", false));
         }
 
         EmbedCreateSpec embed = EmbedCreateSpec.builder()

@@ -2,6 +2,7 @@ package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.data.UserRepository;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +59,7 @@ public class UserService {
         return userOptional.orElseThrow(() -> new UserNotFoundException("Could not find user!"));
     }
 
-    public BotUser updateDefaultSetting(long discordId, int setting) {
+    public BotUser updateDefaultSetting(long discordId, UserNotificationSetting setting) {
         BotUser user = findOrCreateUser(discordId);
         user.notificationSetting = setting;
         return repository.save(user);

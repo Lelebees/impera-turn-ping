@@ -1,9 +1,12 @@
 package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.data.GameChannelLinkRepository;
+import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameLinkId;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
+import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.channel.Channel;
@@ -37,17 +40,17 @@ public class GameLinkService {
         return getFromOptional(repository.findById(id));
     }
 
-    public GameChannelLink createLink(long gameId, long channelId, Integer notificationSetting) {
+    public GameChannelLink createLink(long gameId, long channelId, NotificationSettings notificationSetting) {
         return repository.save(new GameChannelLink(gameId, channelId, notificationSetting));
     }
 
-    public GameChannelLink findOrCreateLink(long gameId, long channelId, Integer notificationSetting) {
+    public GameChannelLink findOrCreateLink(long gameId, long channelId, NotificationSettings notificationSetting) {
         Optional<GameChannelLink> gameChannelLinkOptional = repository.findById(new GameLinkId(gameId, channelId));
         if (gameChannelLinkOptional.isEmpty()) {
             return createLink(gameId, channelId, notificationSetting);
         }
         GameChannelLink link = gameChannelLinkOptional.get();
-        link.notificationSetting = notificationSetting;
+        link.notificationSetting = notificationSetting.ordinal();
         return link;
     }
 
@@ -63,15 +66,14 @@ public class GameLinkService {
         return repository.findGameChannelLinkByGameId(gameId);
     }
 
-    public int deepGetNotificationSetting(GameLinkId id) {
+    public NotificationSettings deepGetNotificationSetting(GameLinkId id) {
         GameChannelLink gameChannelLink = findLink(id);
-        if (gameChannelLink.notificationSetting != null) {
-            return gameChannelLink.notificationSetting;
-        }
-
         long channelId = gameChannelLink.getChannelId();
         Channel channel = discordService.getChannelById(channelId);
         if (discordService.channelIsDM(channelId)) {
+            if (gameChannelLink.notificationSetting != null) {
+                return UserNotificationSetting.values()[gameChannelLink.notificationSetting];
+            }
             PrivateChannel dmChannel = (PrivateChannel) channel;
             Set<Snowflake> people = dmChannel.getRecipientIds();
             Snowflake user = Snowflake.of(0);
@@ -82,6 +84,9 @@ public class GameLinkService {
             }
             return userService.findUser(user.asLong()).getNotificationSetting();
         } else if (discordService.channelIsGuildChannel(channelId)) {
+            if (gameChannelLink.notificationSetting != null) {
+                return GuildNotificationSettings.values()[gameChannelLink.notificationSetting];
+            }
             GuildMessageChannel guildChannel = (GuildMessageChannel) channel;
             long guildId = guildChannel.getGuildId().asLong();
             return guildSettingsService.getGuildSettingsById(guildId).notificationSetting;
