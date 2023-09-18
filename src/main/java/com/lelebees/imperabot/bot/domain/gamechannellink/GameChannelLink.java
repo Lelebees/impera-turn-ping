@@ -17,7 +17,7 @@ public class GameChannelLink {
     public GameChannelLink(long gameId, long channelId, NotificationSettings notificationSetting) {
         this.gameId = gameId;
         this.channelId = channelId;
-        this.notificationSetting = notificationSetting.ordinal();
+        this.notificationSetting = (notificationSetting == null ? null : notificationSetting.ordinal());
     }
 
     protected GameChannelLink() {
@@ -30,5 +30,9 @@ public class GameChannelLink {
 
     public long getChannelId() {
         return channelId;
+    }
+
+    public GameLinkId getGameLinkId() {
+        return new GameLinkId(this.gameId, this.channelId);
     }
 }

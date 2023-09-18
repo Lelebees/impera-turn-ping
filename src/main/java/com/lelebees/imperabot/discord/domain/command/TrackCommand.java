@@ -96,6 +96,7 @@ public class TrackCommand implements SlashCommand {
         // Solution: Don't do this here. Instead, in the same routine where we check if we can surrender, we also add all users that have joined the game.
         // This should not create problems for users who have already manually set their notification settings for that game.
         Game game = gameService.findOrCreateGame(gameId);
+//        imperaService.surrenderGame(gameId);
         return event.reply().withEphemeral(true).withContent("Now tracking game [" + gameId + "]!");
     }
 }

@@ -1,8 +1,10 @@
 package com.lelebees.imperabot.discord.application;
 
+import com.lelebees.imperabot.bot.domain.user.BotUser;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.PrivateChannel;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -16,12 +18,12 @@ public class DiscordService {
     }
 
 
-    public void sendMessage(long channelId, boolean halfTimeNotice, String username) {
-        Channel channel = gatewayClient.getChannelById(Snowflake.of(channelId)).block();
+    public void sendMessage(long channelId, boolean halfTimeNotice, String username, long gameid) {
+        Channel channel = getChannelById(channelId);
         if (halfTimeNotice) {
-            channel.getRestChannel().createMessage(username + ", you have half time remaining!").block();
+            channel.getRestChannel().createMessage(username + ", you have half time remaining in [" + gameid + "]!").block();
         } else {
-            channel.getRestChannel().createMessage(username + ", it is your turn!").block();
+            channel.getRestChannel().createMessage(username + ", it is your turn in [" + gameid + "]!").block();
         }
     }
 
@@ -40,5 +42,25 @@ public class DiscordService {
     public boolean channelIsGuildChannel(long channelId) {
         Set<Channel.Type> guildChannelTypes = Set.of(Channel.Type.GUILD_TEXT, Channel.Type.GUILD_NEWS);
         return guildChannelTypes.contains(getChannelById(channelId).getType());
+    }
+
+    public long getChannelOwner(long channelId) {
+        Channel channel = getChannelById(channelId);
+        if (channel.getClass() != PrivateChannel.class || channel.getType() != Channel.Type.DM) {
+            throw new NullPointerException("Non-Private channel has no owner!");
+        }
+        PrivateChannel dmChannel = (PrivateChannel) channel;
+        Set<Snowflake> recipients = dmChannel.getRecipientIds();
+        for (Snowflake recipient : recipients) {
+            if (!isMe(recipient.asLong())) {
+                return recipient.asLong();
+            }
+        }
+        throw new IllegalStateException("There is no one but me!");
+    }
+
+    public boolean botUserCanAccessChannel(long channelId, BotUser user) {
+        Channel channel = getChannelById(channelId);
+        return true;
     }
 }

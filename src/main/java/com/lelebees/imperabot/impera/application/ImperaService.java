@@ -31,12 +31,12 @@ public class ImperaService {
     private final HttpEntity<String> entity;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String botId;
-    public ImperaLoginDTO bearerToken;
-    private String access_token;
+    public static ImperaLoginDTO bearerToken;
+    private static String access_token;
 
     public ImperaService() {
-        this.bearerToken = getBearerToken();
-        this.access_token = bearerToken.access_token;
+        bearerToken = getBearerToken();
+        access_token = bearerToken.access_token;
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(access_token);
         this.entity = new HttpEntity<>(headers);

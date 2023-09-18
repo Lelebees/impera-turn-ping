@@ -44,4 +44,11 @@ public class GameService {
         game.halfTimeNotice = true;
         return gameRepository.save(game);
     }
+
+    public Game turnChanged(long gameId, int turn) {
+        Game game = findGameByID(gameId);
+        game.currentTurn = turn;
+        game.halfTimeNotice = false;
+        return gameRepository.save(game);
+    }
 }
