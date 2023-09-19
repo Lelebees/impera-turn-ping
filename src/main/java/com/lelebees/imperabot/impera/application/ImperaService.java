@@ -28,28 +28,27 @@ import static org.springframework.http.HttpMethod.*;
 @Service
 public class ImperaService {
     private final String imperaURL = env.get("IMPERA_API_URL");
-    private final HttpEntity<String> entity;
+    private HttpEntity<String> entity;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String botId;
     public static ImperaLoginDTO bearerToken;
-    private static String access_token;
 
     public ImperaService() {
-        bearerToken = getBearerToken();
-        access_token = bearerToken.access_token;
+        bearerToken = getBearerToken(null);
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(access_token);
+        headers.setBearerAuth(bearerToken.access_token);
         this.entity = new HttpEntity<>(headers);
         this.botId = getMyId().userId;
         System.out.println("[I] ImperaService ready to make connections!");
     }
 
-    public ImperaLoginDTO getBearerToken() {
+    public ImperaLoginDTO getBearerToken(String refreshToken) {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("grant_type", "password");
         map.add("username", env.get("IMPERA_USER_NAME"));
         map.add("password", env.get("IMPERA_USER_PASSWORD"));
         map.add("scope", "openid offline_access roles");
+        map.add("refresh_token", (refreshToken == null ? "" : refreshToken));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -59,7 +58,6 @@ public class ImperaService {
         String url = imperaURL + "/Account/token";
 
         ResponseEntity<ImperaLoginDTO> response = restTemplate.exchange(url, POST, request, ImperaLoginDTO.class);
-
         return response.getBody();
     }
 
@@ -136,7 +134,13 @@ public class ImperaService {
     public Runnable updateAccessToken() {
         return () -> {
             try {
-                this.access_token = getBearerToken().access_token;
+                System.out.println("Updating bearer token!");
+//                System.out.println(bearerToken.access_token);
+                bearerToken = getBearerToken(bearerToken.refresh_token);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(bearerToken.access_token);
+                this.entity = new HttpEntity<>(headers);
+//                System.out.println(bearerToken.access_token);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }

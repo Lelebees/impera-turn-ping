@@ -39,9 +39,9 @@ public class SchedulerService {
         this.gameLinkService = gameLinkService;
         this.discordService = discordService;
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        linkHandle = executorService.scheduleAtFixedRate(checkVerifyRequests(), 0, 1, TimeUnit.MINUTES);
+        linkHandle = executorService.scheduleAtFixedRate(checkVerifyRequests(), 0, 5, TimeUnit.MINUTES);
         // Update the token a minute before it expires, and then 5 seconds before it expires thereafter.
-        relogHandle = executorService.scheduleAtFixedRate(imperaService.updateAccessToken(), (ImperaService.bearerToken.expires_in - 60), (ImperaService.bearerToken.expires_in - 5), TimeUnit.SECONDS);
+        relogHandle = executorService.scheduleAtFixedRate(imperaService.updateAccessToken(), (ImperaService.bearerToken.expires_in - 60), (ImperaService.bearerToken.expires_in), TimeUnit.SECONDS);
         gameUpdateHandle = executorService.scheduleAtFixedRate(checkTurns(), 0, 1, TimeUnit.MINUTES);
 
     }
@@ -77,7 +77,7 @@ public class SchedulerService {
                     ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
 
                     boolean turnChanged = game.currentTurn != imperaGame.turnCounter;
-                    boolean halfTimeNotNoticed = !game.halfTimeNotice && imperaGame.timeoutSecondsLeft <= imperaGame.options.timeoutInSeconds;
+                    boolean halfTimeNotNoticed = !game.halfTimeNotice && (imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2));
                     // If nothing has changed (we don't need to ping anyone)
                     if (!turnChanged && !halfTimeNotNoticed) {
                         continue;
@@ -85,7 +85,6 @@ public class SchedulerService {
 
                     Optional<BotUser> currentPlayer = userService.findImperaUser(UUID.fromString(imperaGame.currentPlayer.userId));
                     String userString = currentPlayer.map(botUser -> "<@" + botUser.getUserId() + ">").orElseGet(() -> imperaGame.currentPlayer.name);
-
 
                     Map<GameChannelLink, GuildNotificationSettings> GuildChannels = new HashMap<>();
                     Map<GameChannelLink, UserNotificationSetting> DMChannels = new HashMap<>();
@@ -124,6 +123,7 @@ public class SchedulerService {
 
                     if (turnChanged) {
                         //Send notice
+                        System.out.println("Sending turn notice!");
                         GuildChannels.forEach((gameChannelLink, notificationSettings) -> {
                             discordService.sendMessage(gameChannelLink.getChannelId(), false, userString, gameChannelLink.getGameId());
                         });
@@ -131,6 +131,7 @@ public class SchedulerService {
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
                         //Send half time notice
+                        System.out.println("Sending half time notice!");
                         GuildChannels.forEach((gameChannelLink, notificationSettings) -> {
                             discordService.sendMessage(gameChannelLink.getChannelId(), true, userString, gameChannelLink.getGameId());
                         });

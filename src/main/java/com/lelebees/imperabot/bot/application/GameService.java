@@ -45,9 +45,9 @@ public class GameService {
         return gameRepository.save(game);
     }
 
-    public Game turnChanged(long gameId, int turn) {
+    public Game turnChanged(long gameId, int newTurn) {
         Game game = findGameByID(gameId);
-        game.currentTurn = turn;
+        game.currentTurn = newTurn;
         game.halfTimeNotice = false;
         return gameRepository.save(game);
     }
