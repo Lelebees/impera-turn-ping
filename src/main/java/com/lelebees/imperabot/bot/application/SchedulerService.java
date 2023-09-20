@@ -53,7 +53,7 @@ public class SchedulerService {
                 List<ImperaMessageDTO> linkMessages = imperaService.getLinkMessages();
                 for (ImperaMessageDTO linkMessage : linkMessages) {
                     try {
-                        userService.verifyUser(linkMessage.text, UUID.fromString(linkMessage.from.id));
+                        userService.verifyUser(linkMessage.text.trim(), UUID.fromString(linkMessage.from.id));
                         imperaService.deleteMessage(linkMessage.id);
                     } catch (UserNotFoundException e) {
                         System.out.println("User matching code " + linkMessage.text + " Not found, skipping...");
