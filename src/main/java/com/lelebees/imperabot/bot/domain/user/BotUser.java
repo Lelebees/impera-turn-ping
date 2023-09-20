@@ -8,7 +8,7 @@ import org.checkerframework.common.aliasing.qual.Unique;
 
 import java.util.UUID;
 
-import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.NO_NOTIFICATIONS;
+import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.DMS_ONLY;
 
 @Entity
 @Table(name = "bot_user")
@@ -33,7 +33,7 @@ public class BotUser {
     }
 
     public BotUser(long id) {
-        this(id, null, NO_NOTIFICATIONS, "");
+        this(id, null, DMS_ONLY, "");
         this.verificationCode = generateVerificationCode();
     }
 
