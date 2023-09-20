@@ -1,10 +1,10 @@
 package com.lelebees.imperabot.discord.domain.command;
 
-import com.lelebees.imperabot.ImperaBotApplication;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.discordjson.Id;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -12,6 +12,8 @@ import reactor.core.publisher.Mono;
 public class LinkCommand implements SlashCommand {
 
     final UserService userService;
+    @Value("${impera.username}")
+    private String imperaUsername;
 
     public LinkCommand(UserService userService) {
         this.userService = userService;
@@ -42,6 +44,6 @@ public class LinkCommand implements SlashCommand {
                         > :warning: **IMPORTANT**: DO ***NOT*** SHARE THIS CODE WITH ANYONE!
                         > 6. Press send!
                         After completing these steps, we'll know it's you, and you will be linked! You can unlink at any time by using the "/unlink" command!"""
-                        .formatted(ImperaBotApplication.env.get("IMPERA_USER_NAME"), user.getVerificationCode()));
+                        .formatted(imperaUsername, user.getVerificationCode()));
     }
 }
