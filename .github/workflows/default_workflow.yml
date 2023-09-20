@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ACCESS_TOKEN}}
+          token: ${{ secrets.ACCESS_TOKEN }}
       - name: Push to deploy
         run: |
           git config --global user.name 'GitHub Action'
