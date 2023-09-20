@@ -19,6 +19,10 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
+        env:
+          IMPERA_USER_NAME: ${{ secrets.IMPERA_USER_NAME }}
+          IMPERA_USER_PASSWORD: ${{ secrets.IMPERA_USER_NAME }}
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: mvn --batch-mode --update-snapshots package -Dspring.profiles.active=test
       - name: Push to deploy
         run: |
