@@ -7,6 +7,7 @@ import com.lelebees.imperabot.impera.domain.game.ImperaGameDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,13 +28,16 @@ import static org.springframework.http.HttpMethod.*;
 
 @Service
 public class ImperaService {
-    private final String imperaURL = env.get("IMPERA_API_URL");
+
+    @Value("${{ impera.api.url }}")
+    private String imperaURL;
     private HttpEntity<String> entity;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String botId;
     public static ImperaLoginDTO bearerToken;
 
     public ImperaService() {
+        System.out.println(imperaURL);
         bearerToken = getBearerToken(null);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearerToken.access_token);
