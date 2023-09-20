@@ -23,21 +23,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.lelebees.imperabot.ImperaBotApplication.env;
 import static org.springframework.http.HttpMethod.*;
 
 @Service
 public class ImperaService {
-
-    @Value("${{ impera.api.url }}")
-    private String imperaURL;
+    private final String imperaURL;
+    private final String imperaUsername;
+    private final String imperaPassword;
     private HttpEntity<String> entity;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String botId;
     public static ImperaLoginDTO bearerToken;
 
-    public ImperaService() {
-        System.out.println(imperaURL);
+    public ImperaService(@Value("${impera.api.url}") String imperaURL, @Value("${impera.username}") String imperaUsername, @Value("${impera.password}") String imperaPassword) {
+        this.imperaURL = imperaURL;
+        this.imperaUsername = imperaUsername;
+        this.imperaPassword = imperaPassword;
         bearerToken = getBearerToken(null);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearerToken.access_token);
@@ -49,8 +50,8 @@ public class ImperaService {
     public ImperaLoginDTO getBearerToken(String refreshToken) {
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
         map.add("grant_type", "password");
-        map.add("username", env.get("IMPERA_USER_NAME"));
-        map.add("password", env.get("IMPERA_USER_PASSWORD"));
+        map.add("username", imperaUsername);
+        map.add("password", imperaPassword);
         map.add("scope", "openid offline_access roles");
         map.add("refresh_token", (refreshToken == null ? "" : refreshToken));
 

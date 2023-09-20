@@ -5,15 +5,15 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
 import discord4j.rest.RestClient;
-import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class ImperaBotApplication {
-    public static final Dotenv env = Dotenv.load();
+//    public static final Dotenv env = Dotenv.load();
 
     public static void main(String[] args) {
         SpringApplication.run(ImperaBotApplication.class, args);
@@ -25,9 +25,9 @@ public class ImperaBotApplication {
     }
 
     @Bean
-    public GatewayDiscordClient gatewayDiscordClient() {
+    public GatewayDiscordClient gatewayDiscordClient(@Value("${discord.token}") String discordToken) {
         // TODO: Learn how to do this with System.env maybe?
-        return DiscordClientBuilder.create(env.get("DISCORD_TOKEN")).build()
+        return DiscordClientBuilder.create(discordToken).build()
                 .gateway()
                 .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.listening("to /commands")))
                 .login()
