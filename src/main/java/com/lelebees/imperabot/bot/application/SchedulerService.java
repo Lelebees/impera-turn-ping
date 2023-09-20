@@ -127,7 +127,9 @@ public class SchedulerService {
                         GuildChannels.forEach((gameChannelLink, notificationSettings) -> {
                             discordService.sendMessage(gameChannelLink.getChannelId(), false, userString, gameChannelLink.getGameId());
                         });
-                        DMChannels.forEach(((gameChannelLink, userNotificationSetting) -> discordService.sendMessage(gameChannelLink.getChannelId(), false, userString, gameChannelLink.getGameId())));
+                        if (currentPlayer.isEmpty() || currentPlayer.get().getNotificationSetting() != UserNotificationSetting.PREFER_GUILD_OVER_DMS) {
+                            DMChannels.forEach(((gameChannelLink, userNotificationSetting) -> discordService.sendMessage(gameChannelLink.getChannelId(), false, userString, gameChannelLink.getGameId())));
+                        }
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
                         //Send half time notice
@@ -135,7 +137,9 @@ public class SchedulerService {
                         GuildChannels.forEach((gameChannelLink, notificationSettings) -> {
                             discordService.sendMessage(gameChannelLink.getChannelId(), true, userString, gameChannelLink.getGameId());
                         });
-                        DMChannels.forEach(((gameChannelLink, userNotificationSetting) -> discordService.sendMessage(gameChannelLink.getChannelId(), true, userString, gameChannelLink.getGameId())));
+                        if (currentPlayer.isEmpty() || currentPlayer.get().getNotificationSetting() != UserNotificationSetting.PREFER_GUILD_OVER_DMS) {
+                            DMChannels.forEach(((gameChannelLink, userNotificationSetting) -> discordService.sendMessage(gameChannelLink.getChannelId(), true, userString, gameChannelLink.getGameId())));
+                        }
                         gameService.setHalfTimeNoticeForGame(game.getId());
                     }
                 }
