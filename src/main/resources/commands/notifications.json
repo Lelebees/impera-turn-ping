@@ -1,0 +1,156 @@
+{
+  "name": "notifications",
+  "description": "Change notification settings",
+  "options": [
+    {
+      "name": "guild",
+      "description": "Settings for this guild",
+      "type": 2,
+      "options": [
+        {
+          "name": "set",
+          "type": 1,
+          "description": "Change settings",
+          "options": [
+            {
+              "name": "channel",
+              "type": 7,
+              "description": "Channel you wish to change notification settings for",
+              "required": false
+            },
+            {
+              "name": "gameid",
+              "type": 4,
+              "description": "ID of the game you wish to change notification settings for",
+              "required": false
+            },
+            {
+              "name": "setting",
+              "type": 4,
+              "description": "Setting you wish to use",
+              "choices": [
+                {
+                  "name": "No Notifications",
+                  "value": 0
+                },
+                {
+                  "name": "Notifications On",
+                  "value": 1
+                }
+              ],
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "view",
+          "type": 1,
+          "description": "View settings",
+          "options": [
+            {
+              "name": "channel",
+              "type": 7,
+              "description": "channel you wish to see notification settings for",
+              "required": false
+            },
+            {
+              "name": "gameid",
+              "type": 4,
+              "description": "ID of the game you wish to see notification settings for",
+              "required": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "user",
+      "type": 2,
+      "description": "Personal settings",
+      "options": [
+        {
+          "name": "set",
+          "type": 1,
+          "description": "Change settings",
+          "options": [
+            {
+              "name": "setting",
+              "type": 4,
+              "description": "Setting you wish to use",
+              "choices": [
+                {
+                  "name": "No Notifications",
+                  "value": 0
+                },
+                {
+                  "name": "DMs Only",
+                  "value": 1
+                },
+                {
+                  "name": "Guild Only",
+                  "value": 2
+                },
+                {
+                  "name": "Guild > DMs",
+                  "value": 3
+                },
+                {
+                  "name": "DMs & Guild",
+                  "value": 4
+                }
+              ],
+              "required": false
+            },
+            {
+              "name": "gameid",
+              "type": 4,
+              "description": "ID of the game you wish to see/change notification settings for",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "view",
+          "type": 1,
+          "description": "View settings",
+          "options": [
+            {
+              "name": "gameid",
+              "type": 4,
+              "description": "ID of the game you wish to see notification settings for",
+              "required": false
+            },
+            {
+              "name": "setting",
+              "type": 4,
+              "description": "Setting you wish to filter on",
+              "choices": [
+                {
+                  "name": "No Notifications",
+                  "value": 0
+                },
+                {
+                  "name": "DMs Only",
+                  "value": 1
+                },
+                {
+                  "name": "Guild Only",
+                  "value": 2
+                },
+                {
+                  "name": "Guild > DMs",
+                  "value": 3
+                },
+                {
+                  "name": "DMs & Guild",
+                  "value": 4
+                }
+              ],
+              "required": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

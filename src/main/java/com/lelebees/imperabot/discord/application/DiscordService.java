@@ -1,62 +1,66 @@
 package com.lelebees.imperabot.discord.application;
 
-import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
-import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.event.domain.lifecycle.ReadyEvent;
-import discord4j.core.object.entity.User;
-import discord4j.core.object.presence.ClientPresence;
-import discord4j.core.shard.GatewayBootstrap;
-import discord4j.gateway.GatewayOptions;
-import discord4j.gateway.intent.IntentSet;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.PrivateChannel;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
-import static com.lelebees.imperabot.ImperaBotApplication.env;
+import java.util.Set;
 
 @Service
 public class DiscordService {
-    UserService userService;
+    private final GatewayDiscordClient gatewayClient;
 
-    public DiscordService(UserService userService) {
-        this.userService = userService;
+    public DiscordService(GatewayDiscordClient gatewayClient) {
+        this.gatewayClient = gatewayClient;
     }
 
-    public void run() {
-        GatewayBootstrap<GatewayOptions> client = DiscordClient.create(env.get("DISCORD_TOKEN")).gateway().setEnabledIntents(IntentSet.nonPrivileged()).setInitialPresence(s -> ClientPresence.online());
-        Mono<Void> login = client.withGateway((GatewayDiscordClient gateway) -> {
-            //TODO:Handle all commands!
-            //Command handling!
-            Mono<Void> handleSlashCommands = gateway.on(ChatInputInteractionEvent.class, event -> switch (event.getCommandName()) {
-                case "test2" -> event.reply("Electric Boogaloo!");
-                case "link" ->
-                        event.reply("WIP" + getLinkCode(event.getInteraction().getMember().get().getMemberData().user().id().asLong()));
-                case "unlink" -> event.reply("WIP");
-                case "track" -> event.reply("WIP");
-                default -> null;
-            }).then();
 
-            Mono<Void> printOnLogin =
-                    gateway.on(ReadyEvent.class, ready -> Mono.fromRunnable(() -> {
-                                final User self = ready.getSelf();
-                                System.out.println("[D] Logged in as " + self.getUsername() + "#" + self.getDiscriminator());
-                            }
-                    )).then();
-            return printOnLogin.and(handleSlashCommands);
-        });
-        login.block();
-    }
-
-    public String getLinkCode(long callerId) {
-        BotUser botUser;
-        try {
-            botUser = userService.findUser(callerId);
-        } catch (UserNotFoundException e) {
-            botUser = userService.createNewUser(callerId);
+    public void sendMessage(long channelId, boolean halfTimeNotice, String username, long gameid) {
+        Channel channel = getChannelById(channelId);
+        if (halfTimeNotice) {
+            channel.getRestChannel().createMessage(username + ", you have half time remaining in [" + gameid + "]!").block();
+        } else {
+            channel.getRestChannel().createMessage(username + ", it is your turn in [" + gameid + "]!").block();
         }
-        return botUser.getVerificationCode();
+    }
+
+    public Channel getChannelById(long channelId) {
+        return gatewayClient.getChannelById(Snowflake.of(channelId)).block();
+    }
+
+    public boolean isMe(long userId) {
+        return gatewayClient.getSelfId().equals(Snowflake.of(userId));
+    }
+
+    public boolean channelIsDM(long channelId) {
+        return getChannelById(channelId).getType() == Channel.Type.DM;
+    }
+
+    public boolean channelIsGuildChannel(long channelId) {
+        Set<Channel.Type> guildChannelTypes = Set.of(Channel.Type.GUILD_TEXT, Channel.Type.GUILD_NEWS);
+        return guildChannelTypes.contains(getChannelById(channelId).getType());
+    }
+
+    public long getChannelOwner(long channelId) {
+        Channel channel = getChannelById(channelId);
+        if (channel.getClass() != PrivateChannel.class || channel.getType() != Channel.Type.DM) {
+            throw new NullPointerException("Non-Private channel has no owner!");
+        }
+        PrivateChannel dmChannel = (PrivateChannel) channel;
+        Set<Snowflake> recipients = dmChannel.getRecipientIds();
+        for (Snowflake recipient : recipients) {
+            if (!isMe(recipient.asLong())) {
+                return recipient.asLong();
+            }
+        }
+        throw new IllegalStateException("There is no one but me!");
+    }
+
+    public boolean botUserCanAccessChannel(long channelId, BotUser user) {
+        Channel channel = getChannelById(channelId);
+        return true;
     }
 }
