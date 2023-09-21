@@ -50,7 +50,7 @@ public class GameLinkService {
             return createLink(gameId, channelId, notificationSetting);
         }
         GameChannelLink link = gameChannelLinkOptional.get();
-        link.notificationSetting = notificationSetting.ordinal();
+        link.notificationSetting = (notificationSetting == null ? null : notificationSetting.ordinal());
         return link;
     }
 
