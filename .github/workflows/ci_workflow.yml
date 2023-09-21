@@ -2,7 +2,9 @@ name: Java Deploy
 
 on:
   push:
-    branches: ! [ master, deploy ]
+    branches:
+      - '!master'
+      - '!deploy'
 jobs:
   build:
     runs-on: ubuntu-latest
