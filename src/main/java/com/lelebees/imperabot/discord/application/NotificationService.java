@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
@@ -46,7 +47,7 @@ public class NotificationService {
         }
 
         GameChannelLink link = setGame(gameId, (channelId == null ? settings.defaultChannelId : channelId), setting);
-        return event.reply().withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + link.notificationSetting.toString() + "`"));
+        return event.reply().withContent("Started logging notifications for game [" + link.getGameId() + "] in <#" + link.getChannelId() + "> with " + (setting == null ? "default setting" : "`" + GuildNotificationSettings.values()[link.notificationSetting] + "`"));
     }
 
     private GameChannelLink setGame(long gameId, long channelId, NotificationSettings setting) {
