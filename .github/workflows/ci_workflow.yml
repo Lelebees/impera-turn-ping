@@ -5,6 +5,7 @@ on:
     branches:
       - '!master'
       - '!deploy'
+      - '**'
 jobs:
   build:
     runs-on: ubuntu-latest
