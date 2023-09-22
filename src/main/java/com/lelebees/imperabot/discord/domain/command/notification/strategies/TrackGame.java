@@ -1,10 +1,9 @@
-package com.lelebees.imperabot.discord.domain.command.notification;
+package com.lelebees.imperabot.discord.domain.command.notification.strategies;
 
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
 import com.lelebees.imperabot.discord.application.NotificationService;
-import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
