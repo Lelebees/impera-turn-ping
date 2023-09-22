@@ -40,7 +40,7 @@ public class DiscordService {
     }
 
     public boolean channelIsGuildChannel(long channelId) {
-        Set<Channel.Type> guildChannelTypes = Set.of(Channel.Type.GUILD_TEXT, Channel.Type.GUILD_NEWS);
+        Set<Channel.Type> guildChannelTypes = Set.of(Channel.Type.GUILD_TEXT, Channel.Type.GUILD_NEWS, Channel.Type.GUILD_PUBLIC_THREAD, Channel.Type.GUILD_PRIVATE_THREAD);
         return guildChannelTypes.contains(getChannelById(channelId).getType());
     }
 
