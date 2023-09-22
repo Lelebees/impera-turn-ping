@@ -22,10 +22,8 @@ public class UserView implements NotificationCommandStrategy {
     @Override
     public Mono<Void> execute(ChatInputInteractionEvent event) {
         User user = event.getInteraction().getUser();
-        long userId = user.getId().asLong();
-        BotUser botUser = userService.findOrCreateUser(userId);
+        BotUser botUser = userService.findOrCreateUser(user.getId().asLong());
         PrivateChannel channel = user.getPrivateChannel().block();
-
 
         EmbedCreateSpec embed = EmbedCreateSpec.builder().title("Settings for " + user.getUsername()).addField("Channel: ", "<#" + channel.getId().asLong() + ">", false).addField("Default notification setting: ", "`" + botUser.getNotificationSetting().toString() + "`", false).color(Color.of(230, 200, 90)).build();
 
