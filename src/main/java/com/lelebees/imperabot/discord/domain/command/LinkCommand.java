@@ -2,8 +2,8 @@ package com.lelebees.imperabot.discord.domain.command;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
+import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.discordjson.Id;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -26,7 +26,7 @@ public class LinkCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
-        Id id = event.getInteraction().getMember().orElseThrow(() -> new NullPointerException("No user made this request?!")).getMemberData().user().id();
+        Snowflake id = event.getInteraction().getMember().orElseThrow(() -> new NullPointerException("No user made this request?!")).getId();
 
         BotUser user = userService.findOrCreateUser(id.asLong());
         if (user.isLinked()) {
