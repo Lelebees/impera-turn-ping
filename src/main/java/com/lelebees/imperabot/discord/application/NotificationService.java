@@ -99,4 +99,8 @@ public class NotificationService {
         }
         return guildSettingsService.updateGuildSettings(guildId, channelId, setting);
     }
+
+    public String getGameName(long gameId) {
+        return imperaService.getGame(gameId).name;
+    }
 }

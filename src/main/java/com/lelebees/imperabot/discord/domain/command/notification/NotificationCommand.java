@@ -38,10 +38,10 @@ public class NotificationCommand implements SlashCommand {
         // Set
         // Guild
         strategyMap.put(Set.of("set", "guild", "channel"), new SetGuildChannel(guildSettingsService, notificationService));
-        strategyMap.put(Set.of("set", "guild", "channel", "game"), new SetGuildChannelGame(notificationService));
-        strategyMap.put(Set.of("set", "guild", "channel", "game", "setting"), new SetGuildChannelGameSetting(notificationService));
-        strategyMap.put(Set.of("set", "guild", "game"), new SetGuildGame(notificationService));
-        strategyMap.put(Set.of("set", "guild", "game", "setting"), new SetGuildGameSetting(notificationService));
+        strategyMap.put(Set.of("set", "guild", "channel", "gameid"), new SetGuildChannelGame(notificationService));
+        strategyMap.put(Set.of("set", "guild", "channel", "gameid", "setting"), new SetGuildChannelGameSetting(notificationService));
+        strategyMap.put(Set.of("set", "guild", "gameid"), new SetGuildGame(notificationService));
+        strategyMap.put(Set.of("set", "guild", "gameid", "setting"), new SetGuildGameSetting(notificationService));
         strategyMap.put(Set.of("set", "guild", "setting"), new SetGuildSetting(guildSettingsService, notificationService));
         // User
         strategyMap.put(Set.of("set", "user", "setting"), new SetUserSetting(userService));
@@ -53,7 +53,7 @@ public class NotificationCommand implements SlashCommand {
         strategyMap.put(Set.of("view", "user"), new ViewUser(userService));
 
         // Track
-        strategyMap.put(Set.of("track", "game"), new TrackGame(notificationService));
+        strategyMap.put(Set.of("track", "gameid"), new TrackGame(notificationService));
     }
 
     @Override

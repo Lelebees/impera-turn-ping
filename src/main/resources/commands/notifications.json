@@ -10,7 +10,8 @@
         {
           "name": "guild",
           "type": 1,
-          "description": "View guild settings"
+          "description": "View guild settings",
+          "dm_permission": false
         },
         {
           "name": "user",
@@ -28,6 +29,7 @@
           "name": "guild",
           "type": 1,
           "description": "Change guild settings",
+          "dm_permission": false,
           "options": [
             {
               "name": "channel",
@@ -37,7 +39,7 @@
             },
             {
               "name": "gameid",
-              "type": 3,
+              "type": 4,
               "description": "Game ID you wish to use",
               "required": false
             },
@@ -102,7 +104,7 @@
       "options": [
         {
           "name": "gameid",
-          "type": 3,
+          "type": 4,
           "description": "Game ID you wish to track",
           "required": true
         }

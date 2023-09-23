@@ -34,10 +34,10 @@ public class SchedulerService {
         this.gameLinkService = gameLinkService;
         this.discordService = discordService;
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(checkVerifyRequests(), 0, 5, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(checkVerifyRequests(), 1, 5, TimeUnit.MINUTES);
         // Update the token a minute before it expires.
         executorService.scheduleAtFixedRate(imperaService.updateAccessToken(), (ImperaService.bearerToken.expires_in - 60), (ImperaService.bearerToken.expires_in), TimeUnit.SECONDS);
-        executorService.scheduleAtFixedRate(checkTurns(), 0, 1, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(checkTurns(), 1, 1, TimeUnit.MINUTES);
 
     }
 
@@ -124,12 +124,12 @@ public class SchedulerService {
                     if (turnChanged) {
                         //Send notice
                         System.out.println("Sending turn notice!");
-                        channels.forEach((channel) -> discordService.sendMessage(channel, false, finalUserString, game.getId()));
+                        channels.forEach((channel) -> discordService.sendMessage(channel, false, finalUserString, game.getId(), imperaGame.name));
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
                         //Send half time notice
                         System.out.println("Sending half time notice!");
-                        channels.forEach((channel) -> discordService.sendMessage(channel, true, finalUserString, game.getId()));
+                        channels.forEach((channel) -> discordService.sendMessage(channel, true, finalUserString, game.getId(), imperaGame.name));
                         gameService.setHalfTimeNoticeForGame(game.getId());
                     }
                 }

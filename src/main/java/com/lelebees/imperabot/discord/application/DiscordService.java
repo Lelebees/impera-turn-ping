@@ -19,12 +19,12 @@ public class DiscordService {
     }
 
 
-    public void sendMessage(long channelId, boolean halfTimeNotice, String username, long gameid) {
+    public void sendMessage(long channelId, boolean halfTimeNotice, String username, long gameid, String name) {
         Channel channel = getChannelById(channelId);
         if (halfTimeNotice) {
-            channel.getRestChannel().createMessage(username + ", you have half time remaining in [" + gameid + "]!").block();
+            channel.getRestChannel().createMessage(username + ", you have half time remaining in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!").block();
         } else {
-            channel.getRestChannel().createMessage(username + ", it is your turn in [" + gameid + "]!").block();
+            channel.getRestChannel().createMessage(username + ", it is your turn in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!").block();
         }
     }
 

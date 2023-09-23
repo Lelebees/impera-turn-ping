@@ -32,7 +32,7 @@ public class TrackGame implements NotificationCommandStrategy {
 
         try {
             Game game = notificationService.trackGame(gameId, userId.asLong());
-            return event.reply().withEphemeral(true).withContent("Now tracking [" + game.getId() + "]");
+            return event.reply().withEphemeral(true).withContent("Now tracking [" + notificationService.getGameName(game.getId()) + "](https://imperaonline.de/game/play/" + game.getId() + ")");
         } catch (UserNotVerifiedException e) {
             return event.reply().withEphemeral(true).withContent("Game [" + gameId + "] cannot be tracked because you are not linked to an impera account");
         } catch (UserNotInGameException e) {

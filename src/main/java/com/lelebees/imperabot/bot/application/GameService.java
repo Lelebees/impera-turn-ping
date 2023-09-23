@@ -3,12 +3,14 @@ package com.lelebees.imperabot.bot.application;
 import com.lelebees.imperabot.bot.data.GameRepository;
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.game.exception.GameNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class GameService {
     private final GameRepository gameRepository;
     private final GameLinkService gameLinkService;
