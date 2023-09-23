@@ -112,7 +112,7 @@ public class NotificationService {
         return EmbedCreateSpec.builder()
                 .title("Settings for " + user.getUsername())
                 .addField("Default notification setting: ", "`" + botUser.getNotificationSetting().toString() + "`", false)
-                .footer("You are " + (botUser.isLinked() ? "linked to: " + botUser.getImperaId() : " not linked to an Impera account"), null)
+                .footer("You are " + (botUser.isLinked() ? "linked to: " + botUser.getImperaId() : "not linked to an Impera account"), null)
                 .color(Color.of(230, 200, 90))
                 .build();
     }
