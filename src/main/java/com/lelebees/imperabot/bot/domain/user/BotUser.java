@@ -8,7 +8,7 @@ import org.checkerframework.common.aliasing.qual.Unique;
 
 import java.util.UUID;
 
-import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.DMS_ONLY;
+import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.PREFER_GUILD_OVER_DMS;
 
 @Entity
 @Table(name = "bot_user")
@@ -33,7 +33,7 @@ public class BotUser {
     }
 
     public BotUser(long id) {
-        this(id, null, DMS_ONLY, "");
+        this(id, null, PREFER_GUILD_OVER_DMS, "");
         this.verificationCode = generateVerificationCode();
     }
 
@@ -48,6 +48,7 @@ public class BotUser {
         return userId;
     }
 
+    @Nullable
     public UUID getImperaId() {
         return imperaId;
     }
