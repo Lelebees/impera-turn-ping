@@ -15,6 +15,9 @@ import com.lelebees.imperabot.discord.domain.command.notification.exception.Inco
 import com.lelebees.imperabot.discord.domain.exception.NoDefaultChannelException;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.User;
+import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.util.Color;
 import discord4j.rest.util.Permission;
 import org.springframework.stereotype.Service;
 
@@ -102,5 +105,15 @@ public class NotificationService {
 
     public String getGameName(long gameId) {
         return imperaService.getGame(gameId).name;
+    }
+
+    public EmbedCreateSpec getUserSettingsEmbed(User user) {
+        BotUser botUser = userService.findOrCreateUser(user.getId().asLong());
+        return EmbedCreateSpec.builder()
+                .title("Settings for " + user.getUsername())
+                .addField("Default notification setting: ", "`" + botUser.getNotificationSetting().toString() + "`", false)
+                .footer("You are " + (botUser.isLinked() ? "linked to: " + botUser.getImperaId() : " not linked to an Impera account"), null)
+                .color(Color.of(230, 200, 90))
+                .build();
     }
 }

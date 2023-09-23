@@ -50,7 +50,7 @@ public class NotificationCommand implements SlashCommand {
         // Guild
         strategyMap.put(Set.of("view", "guild"), new ViewGuild(guildSettingsService));
         // User
-        strategyMap.put(Set.of("view", "user"), new ViewUser(userService));
+        strategyMap.put(Set.of("view", "user"), new ViewUser(notificationService));
 
         // Track
         strategyMap.put(Set.of("track", "gameid"), new TrackGame(notificationService));
