@@ -69,4 +69,8 @@ public class DiscordService {
         User user = gatewayClient.getUserById(Snowflake.of(userId)).block();
         return user.getPrivateChannel().block();
     }
+
+    public void sendVictorMessage(Long channel, long id, String gameName, String playerName) {
+        getChannelById(channel).getRestChannel().createMessage("Game [" + gameName + "](https://imperaonline.de/game/play/" + id + ") has ended! " + playerName + " has won!").block();
+    }
 }

@@ -11,7 +11,10 @@ import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -72,16 +75,12 @@ public class SchedulerService {
                 List<Game> trackedGames = gameService.findAllGames();
                 for (Game game : trackedGames) {
                     ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
-                    if (Objects.equals(imperaGame.state, "Ended")) {
-                        System.out.println("Game " + game.getId() + " has ended!");
-                        gameService.deleteGame(game.getId());
-                        continue;
-                    }
 
+                    boolean gameEnded = imperaGame.state.equals("Ended");
                     boolean turnChanged = game.currentTurn != imperaGame.turnCounter;
                     boolean halfTimeNotNoticed = !game.halfTimeNotice && (imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2));
                     // If nothing has changed (we don't need to ping anyone)
-                    if (!turnChanged && !halfTimeNotNoticed) {
+                    if (!turnChanged && !halfTimeNotNoticed && !gameEnded) {
                         continue;
                     }
 
@@ -121,13 +120,19 @@ public class SchedulerService {
                     }
                     String finalUserString = userString;
 
-                    if (turnChanged) {
+                    // There is probably a better way to do this, but I'm not sure what it is.
+                    if (gameEnded) {
+                        System.out.println("Game " + game.getId() + " has ended!");
+                        // Send a message to all channels that are tracking this game, who won
+                        channels.forEach((channel) -> discordService.sendVictorMessage(channel, game.getId(), imperaGame.name, finalUserString));
+                        gameService.deleteGame(game.getId());
+                    } else if (turnChanged) {
                         //Send notice
                         System.out.println("Sending turn notice!");
                         channels.forEach((channel) -> discordService.sendMessage(channel, false, finalUserString, game.getId(), imperaGame.name));
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
-                        //Send half time notice
+                        //Send half-time notice
                         System.out.println("Sending half time notice!");
                         channels.forEach((channel) -> discordService.sendMessage(channel, true, finalUserString, game.getId(), imperaGame.name));
                         gameService.setHalfTimeNoticeForGame(game.getId());
