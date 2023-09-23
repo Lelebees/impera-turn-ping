@@ -113,7 +113,8 @@ public class ImperaService {
         List<ImperaMessageDTO> allMessages = getMessages();
         List<ImperaMessageDTO> linkMessages = new ArrayList<>();
         for (ImperaMessageDTO message : allMessages) {
-            if (message.subject.equalsIgnoreCase("link")) {
+            if (message.subject.trim().equalsIgnoreCase("link")) {
+                System.out.println("Found link message!");
                 linkMessages.add(message);
             }
         }
