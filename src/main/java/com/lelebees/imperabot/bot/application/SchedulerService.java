@@ -72,7 +72,7 @@ public class SchedulerService {
                 List<Game> trackedGames = gameService.findAllGames();
                 for (Game game : trackedGames) {
                     ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
-                    if (Objects.equals(imperaGame.playState, "Finished")) {
+                    if (Objects.equals(imperaGame.state, "Ended")) {
                         System.out.println("Game " + game.getId() + " has ended!");
                         gameService.deleteGame(game.getId());
                         continue;
