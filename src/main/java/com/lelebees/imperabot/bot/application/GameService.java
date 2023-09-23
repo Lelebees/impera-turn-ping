@@ -11,9 +11,11 @@ import java.util.Optional;
 @Service
 public class GameService {
     private final GameRepository gameRepository;
+    private final GameLinkService gameLinkService;
 
-    public GameService(GameRepository gameRepository) {
+    public GameService(GameRepository gameRepository, GameLinkService gameLinkService) {
         this.gameRepository = gameRepository;
+        this.gameLinkService = gameLinkService;
     }
 
     public Game findGameByID(long ID) {
@@ -54,5 +56,10 @@ public class GameService {
 
     public boolean gameExists(long gameId) {
         return gameRepository.existsById(gameId);
+    }
+
+    public void deleteGame(long id) {
+        gameLinkService.deleteLinksForGame(id);
+        gameRepository.deleteById(id);
     }
 }

@@ -3,6 +3,7 @@ package com.lelebees.imperabot.discord.application;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.object.entity.channel.PrivateChannel;
 import org.springframework.stereotype.Service;
@@ -62,5 +63,10 @@ public class DiscordService {
     public boolean botUserCanAccessChannel(long channelId, BotUser user) {
         Channel channel = getChannelById(channelId);
         return true;
+    }
+
+    public PrivateChannel getDMChannelByOwner(long userId) {
+        User user = gatewayClient.getUserById(Snowflake.of(userId)).block();
+        return user.getPrivateChannel().block();
     }
 }

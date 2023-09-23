@@ -103,4 +103,8 @@ public class GameLinkService {
         GameChannelLink gameChannelLink = findLink(new GameLinkId(gameId, channelId));
         repository.delete(gameChannelLink);
     }
+
+    public void deleteLinksForGame(long gameId) {
+        repository.deleteGameChannelLinksByGameId(gameId);
+    }
 }
