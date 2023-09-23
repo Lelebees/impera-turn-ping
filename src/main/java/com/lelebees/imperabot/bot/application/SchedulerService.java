@@ -1,11 +1,8 @@
 package com.lelebees.imperabot.bot.application;
 
-import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
-import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.discord.application.DiscordService;
@@ -14,11 +11,16 @@ import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings.NO_NOTIFICATIONS;
 
 @Service
 public class SchedulerService {
@@ -27,10 +29,6 @@ public class SchedulerService {
     private final GameService gameService;
     private final GameLinkService gameLinkService;
     private final DiscordService discordService;
-    private final ScheduledFuture<?> linkHandle;
-    private final ScheduledFuture<?> relogHandle;
-
-    private final ScheduledFuture<?> gameUpdateHandle;
 
     public SchedulerService(ImperaService imperaService, UserService userService, GameService gameService, GameLinkService gameLinkService, DiscordService discordService) {
         this.imperaService = imperaService;
@@ -39,10 +37,10 @@ public class SchedulerService {
         this.gameLinkService = gameLinkService;
         this.discordService = discordService;
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        linkHandle = executorService.scheduleAtFixedRate(checkVerifyRequests(), 0, 5, TimeUnit.MINUTES);
-        // Update the token a minute before it expires, and then 5 seconds before it expires thereafter.
-        relogHandle = executorService.scheduleAtFixedRate(imperaService.updateAccessToken(), (ImperaService.bearerToken.expires_in - 60), (ImperaService.bearerToken.expires_in), TimeUnit.SECONDS);
-        gameUpdateHandle = executorService.scheduleAtFixedRate(checkTurns(), 0, 1, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(checkVerifyRequests(), 1, 5, TimeUnit.MINUTES);
+        // Update the token a minute before it expires.
+        executorService.scheduleAtFixedRate(imperaService.updateAccessToken(), (ImperaService.bearerToken.expires_in - 60), (ImperaService.bearerToken.expires_in), TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(checkTurns(), 1, 1, TimeUnit.MINUTES);
 
     }
 
@@ -68,6 +66,8 @@ public class SchedulerService {
         };
     }
 
+    //TODO: Delete games if they've ended
+    //TODO: Notify users when someone has lost or won
     public Runnable checkTurns() {
         return () -> {
             try {
@@ -76,70 +76,65 @@ public class SchedulerService {
                 for (Game game : trackedGames) {
                     ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
 
+                    boolean gameEnded = imperaGame.state.equals("Ended");
                     boolean turnChanged = game.currentTurn != imperaGame.turnCounter;
                     boolean halfTimeNotNoticed = !game.halfTimeNotice && (imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2));
                     // If nothing has changed (we don't need to ping anyone)
-                    if (!turnChanged && !halfTimeNotNoticed) {
+                    if (!turnChanged && !halfTimeNotNoticed && !gameEnded) {
                         continue;
                     }
 
+                    // Get all channels that want to receive updates for this game.
+                    Set<Long> channels = gameLinkService.findLinksByGame(game.getId())
+                            .stream()
+                            .filter(gameChannelLink ->
+                                    gameLinkService.deepGetNotificationSetting(gameChannelLink.getGameLinkId()) != NO_NOTIFICATIONS)
+                            .map(GameChannelLink::getChannelId)
+                            .collect(Collectors.toSet());
+
                     Optional<BotUser> currentPlayer = userService.findImperaUser(UUID.fromString(imperaGame.currentPlayer.userId));
-                    String userString = currentPlayer.map(botUser -> "<@" + botUser.getUserId() + ">").orElseGet(() -> imperaGame.currentPlayer.name);
-
-                    Map<GameChannelLink, GuildNotificationSettings> GuildChannels = new HashMap<>();
-                    Map<GameChannelLink, UserNotificationSetting> DMChannels = new HashMap<>();
-                    for (GameChannelLink gameChannelLink : gameLinkService.findLinksByGame(game.getId())) {
-                        NotificationSettings notificationSettings = gameLinkService.deepGetNotificationSetting(gameChannelLink.getGameLinkId());
-                        // If it's No notifications...
-                        // TODO: Hardcoded reference to enum position
-                        if (notificationSettings.ordinal() == 0) {
-                            continue;
-                        }
-                        // If it's a DM channel
-                        if (notificationSettings.getClass() == UserNotificationSetting.class) {
-                            if (currentPlayer.isEmpty()) {
-                                System.out.println("currentPlayer is Empty!");
-                                continue;
+                    String userString;
+                    if (currentPlayer.isEmpty()) {
+                        // The user is not registered with the service, so we can't send a DM
+                        userString = imperaGame.currentPlayer.name;
+                    } else {
+                        BotUser player = currentPlayer.get();
+                        userString = "<@" + player.getUserId() + ">";
+                        switch (player.getNotificationSetting()) {
+                            case NO_NOTIFICATIONS -> userString = imperaGame.currentPlayer.name;
+                            case GUILD_ONLY -> {
                             }
-                            if (currentPlayer.get().getUserId() != discordService.getChannelOwner(gameChannelLink.getChannelId())) {
-                                continue;
+                            case DMS_ONLY -> {
+                                userString = imperaGame.currentPlayer.name;
+                                channels.add(discordService.getDMChannelByOwner(player.getUserId()).getId().asLong());
                             }
-                            UserNotificationSetting userNotificationSetting = (UserNotificationSetting) notificationSettings;
-                            if (userNotificationSetting == UserNotificationSetting.GUILD_ONLY) {
-                                continue;
+                            case PREFER_GUILD_OVER_DMS -> {
+                                if (channels.isEmpty()) {
+                                    userString = imperaGame.currentPlayer.name;
+                                    channels.add(discordService.getDMChannelByOwner(player.getUserId()).getId().asLong());
+                                }
                             }
-                            DMChannels.put(gameChannelLink, userNotificationSetting);
-
-                        }
-                        // If it's a guild channel
-                        if (notificationSettings.getClass() == GuildNotificationSettings.class) {
-                            GuildNotificationSettings guildNotificationSettings = (GuildNotificationSettings) notificationSettings;
-                            if (guildNotificationSettings == GuildNotificationSettings.NO_NOTIFICATIONS) {
-                                continue;
-                            }
-                            GuildChannels.put(gameChannelLink, guildNotificationSettings);
+                            case DMS_AND_GUILD ->
+                                    channels.add(discordService.getDMChannelByOwner(player.getUserId()).getId().asLong());
                         }
                     }
+                    String finalUserString = userString;
 
-                    if (turnChanged) {
+                    // There is probably a better way to do this, but I'm not sure what it is.
+                    if (gameEnded) {
+                        System.out.println("Game " + game.getId() + " has ended!");
+                        // Send a message to all channels that are tracking this game, who won
+                        channels.forEach((channel) -> discordService.sendVictorMessage(channel, game.getId(), imperaGame.name, finalUserString));
+                        gameService.deleteGame(game.getId());
+                    } else if (turnChanged) {
                         //Send notice
                         System.out.println("Sending turn notice!");
-                        GuildChannels.forEach((gameChannelLink, notificationSettings) -> {
-                            discordService.sendMessage(gameChannelLink.getChannelId(), false, userString, gameChannelLink.getGameId());
-                        });
-                        if (currentPlayer.isEmpty() || currentPlayer.get().getNotificationSetting() != UserNotificationSetting.PREFER_GUILD_OVER_DMS) {
-                            DMChannels.forEach(((gameChannelLink, userNotificationSetting) -> discordService.sendMessage(gameChannelLink.getChannelId(), false, userString, gameChannelLink.getGameId())));
-                        }
+                        channels.forEach((channel) -> discordService.sendMessage(channel, false, finalUserString, game.getId(), imperaGame.name));
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
-                        //Send half time notice
+                        //Send half-time notice
                         System.out.println("Sending half time notice!");
-                        GuildChannels.forEach((gameChannelLink, notificationSettings) -> {
-                            discordService.sendMessage(gameChannelLink.getChannelId(), true, userString, gameChannelLink.getGameId());
-                        });
-                        if (currentPlayer.isEmpty() || currentPlayer.get().getNotificationSetting() != UserNotificationSetting.PREFER_GUILD_OVER_DMS) {
-                            DMChannels.forEach(((gameChannelLink, userNotificationSetting) -> discordService.sendMessage(gameChannelLink.getChannelId(), true, userString, gameChannelLink.getGameId())));
-                        }
+                        channels.forEach((channel) -> discordService.sendMessage(channel, true, finalUserString, game.getId(), imperaGame.name));
                         gameService.setHalfTimeNoticeForGame(game.getId());
                     }
                 }

@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.discord.domain.command.notification.strategies.user.set;
+package com.lelebees.imperabot.discord.domain.command.notification.strategies.set.user;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
@@ -11,10 +11,12 @@ import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
-public class UserSetSetting implements NotificationCommandStrategy {
+public class SetUserSetting implements NotificationCommandStrategy {
+
     private final UserService userService;
 
-    public UserSetSetting(UserService userService) {
+
+    public SetUserSetting(UserService userService) {
         this.userService = userService;
     }
 

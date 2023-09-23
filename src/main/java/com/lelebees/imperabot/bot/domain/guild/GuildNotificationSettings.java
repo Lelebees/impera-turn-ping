@@ -16,4 +16,8 @@ public enum GuildNotificationSettings implements NotificationSettings {
     public String toString() {
         return value;
     }
+
+    public static GuildNotificationSettings get(int ordinal) {
+        return GuildNotificationSettings.values()[ordinal];
+    }
 }

@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.discord.domain.command.notification.strategies.guild.view;
+package com.lelebees.imperabot.discord.domain.command.notification.strategies.view.guild;
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 // Overview of guild settings
-public class GuildView implements NotificationCommandStrategy {
+public class ViewGuild implements NotificationCommandStrategy {
 
     private final GuildSettingsService guildSettingsService;
 
-    public GuildView(GuildSettingsService guildSettingsService) {
+    public ViewGuild(GuildSettingsService guildSettingsService) {
         this.guildSettingsService = guildSettingsService;
     }
 

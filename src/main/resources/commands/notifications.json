@@ -1,27 +1,46 @@
 {
   "name": "notifications",
-  "description": "Change notification settings",
+  "description": "Change or view notification settings",
   "options": [
     {
-      "name": "guild",
-      "description": "Settings for this guild",
+      "name": "view",
       "type": 2,
+      "description": "View notification settings",
       "options": [
         {
-          "name": "set",
+          "name": "guild",
           "type": 1,
-          "description": "Change settings",
+          "description": "View guild settings",
+          "dm_permission": false
+        },
+        {
+          "name": "user",
+          "type": 1,
+          "description": "View personal settings"
+        }
+      ]
+    },
+    {
+      "name": "set",
+      "type": 2,
+      "description": "Change notification settings",
+      "options": [
+        {
+          "name": "guild",
+          "type": 1,
+          "description": "Change guild settings",
+          "dm_permission": false,
           "options": [
             {
               "name": "channel",
               "type": 7,
-              "description": "Channel you wish to change notification settings for",
+              "description": "Channel you wish to use",
               "required": false
             },
             {
               "name": "gameid",
               "type": 4,
-              "description": "ID of the game you wish to change notification settings for",
+              "description": "Game ID you wish to use",
               "required": false
             },
             {
@@ -37,41 +56,14 @@
                   "name": "Notifications On",
                   "value": 1
                 }
-              ],
-              "required": false
+              ]
             }
           ]
         },
         {
-          "name": "view",
+          "name": "user",
           "type": 1,
-          "description": "View settings",
-          "options": [
-            {
-              "name": "channel",
-              "type": 7,
-              "description": "channel you wish to see notification settings for",
-              "required": false
-            },
-            {
-              "name": "gameid",
-              "type": 4,
-              "description": "ID of the game you wish to see notification settings for",
-              "required": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "user",
-      "type": 2,
-      "description": "Personal settings",
-      "options": [
-        {
-          "name": "set",
-          "type": 1,
-          "description": "Change settings",
+          "description": "Change personal settings",
           "options": [
             {
               "name": "setting",
@@ -99,56 +91,22 @@
                   "value": 4
                 }
               ],
-              "required": false
-            },
-            {
-              "name": "gameid",
-              "type": 4,
-              "description": "ID of the game you wish to see/change notification settings for",
-              "required": false
+              "required": true
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "name": "track",
+      "type": 1,
+      "description": "Track a game",
+      "options": [
         {
-          "name": "view",
-          "type": 1,
-          "description": "View settings",
-          "options": [
-            {
-              "name": "gameid",
-              "type": 4,
-              "description": "ID of the game you wish to see notification settings for",
-              "required": false
-            },
-            {
-              "name": "setting",
-              "type": 4,
-              "description": "Setting you wish to filter on",
-              "choices": [
-                {
-                  "name": "No Notifications",
-                  "value": 0
-                },
-                {
-                  "name": "DMs Only",
-                  "value": 1
-                },
-                {
-                  "name": "Guild Only",
-                  "value": 2
-                },
-                {
-                  "name": "Guild > DMs",
-                  "value": 3
-                },
-                {
-                  "name": "DMs & Guild",
-                  "value": 4
-                }
-              ],
-              "required": false
-            }
-          ]
+          "name": "gameid",
+          "type": 4,
+          "description": "Game ID you wish to track",
+          "required": true
         }
       ]
     }

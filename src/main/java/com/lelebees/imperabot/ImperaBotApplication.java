@@ -26,10 +26,9 @@ public class ImperaBotApplication {
 
     @Bean
     public GatewayDiscordClient gatewayDiscordClient(@Value("${discord.token}") String discordToken) {
-        // TODO: Learn how to do this with System.env maybe?
         return DiscordClientBuilder.create(discordToken).build()
                 .gateway()
-                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.listening("to /commands")))
+                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.watching("you make poor decisions")))
                 .login()
                 .block();
     }

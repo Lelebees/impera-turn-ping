@@ -4,6 +4,7 @@ import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
 import com.lelebees.imperabot.impera.domain.ImperaMeDTO;
 import com.lelebees.imperabot.impera.domain.game.ImperaGameDTO;
+import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
@@ -80,9 +81,13 @@ public class ImperaService {
     }
 
     public ImperaGameViewDTO getGame(long gameID) {
-        String url = imperaURL + "/games/" + gameID;
-        ResponseEntity<ImperaGameViewDTO> response = restTemplate.exchange(url, GET, this.entity, ImperaGameViewDTO.class);
-        return response.getBody();
+        try {
+            String url = imperaURL + "/games/" + gameID;
+            ResponseEntity<ImperaGameViewDTO> response = restTemplate.exchange(url, GET, this.entity, ImperaGameViewDTO.class);
+            return response.getBody();
+        } catch (Exception e) {
+            throw new ImperaGameNotFoundException(e.getMessage());
+        }
     }
 
     public boolean joinGame(long gameID, String password) {

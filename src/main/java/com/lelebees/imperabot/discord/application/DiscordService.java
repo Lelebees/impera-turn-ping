@@ -3,6 +3,7 @@ package com.lelebees.imperabot.discord.application;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.object.entity.channel.PrivateChannel;
 import org.springframework.stereotype.Service;
@@ -18,12 +19,12 @@ public class DiscordService {
     }
 
 
-    public void sendMessage(long channelId, boolean halfTimeNotice, String username, long gameid) {
+    public void sendMessage(long channelId, boolean halfTimeNotice, String username, long gameid, String name) {
         Channel channel = getChannelById(channelId);
         if (halfTimeNotice) {
-            channel.getRestChannel().createMessage(username + ", you have half time remaining in [" + gameid + "]!").block();
+            channel.getRestChannel().createMessage(username + ", you have half time remaining in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!").block();
         } else {
-            channel.getRestChannel().createMessage(username + ", it is your turn in [" + gameid + "]!").block();
+            channel.getRestChannel().createMessage(username + ", it is your turn in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!").block();
         }
     }
 
@@ -62,5 +63,14 @@ public class DiscordService {
     public boolean botUserCanAccessChannel(long channelId, BotUser user) {
         Channel channel = getChannelById(channelId);
         return true;
+    }
+
+    public PrivateChannel getDMChannelByOwner(long userId) {
+        User user = gatewayClient.getUserById(Snowflake.of(userId)).block();
+        return user.getPrivateChannel().block();
+    }
+
+    public void sendVictorMessage(Long channel, long id, String gameName, String playerName) {
+        getChannelById(channel).getRestChannel().createMessage("Game [" + gameName + "](https://imperaonline.de/game/play/" + id + ") has ended! " + playerName + " has won!").block();
     }
 }
