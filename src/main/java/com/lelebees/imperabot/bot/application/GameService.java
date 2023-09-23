@@ -51,4 +51,8 @@ public class GameService {
         game.halfTimeNotice = false;
         return gameRepository.save(game);
     }
+
+    public boolean gameExists(long gameId) {
+        return gameRepository.existsById(gameId);
+    }
 }

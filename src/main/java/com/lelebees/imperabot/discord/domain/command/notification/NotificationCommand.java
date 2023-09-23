@@ -32,18 +32,8 @@ import java.util.stream.Collectors;
 @Component
 public class NotificationCommand implements SlashCommand {
     private final Map<Set<String>, NotificationCommandStrategy> strategyMap;
-    private final GuildSettingsService guildSettingsService;
-    private final GameLinkService gameLinkService;
-    private final UserService userService;
-    private final ImperaService imperaService;
-    private final NotificationService notificationService;
 
     public NotificationCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, UserService userService, ImperaService imperaService, NotificationService notificationService) {
-        this.guildSettingsService = guildSettingsService;
-        this.gameLinkService = gameLinkService;
-        this.userService = userService;
-        this.imperaService = imperaService;
-        this.notificationService = notificationService;
         strategyMap = new HashMap<>();
         // Populate the strategy map with option combinations and corresponding strategies
 
@@ -54,7 +44,7 @@ public class NotificationCommand implements SlashCommand {
         strategyMap.put(Set.of("set", "guild", "channel", "game", "setting"), new SetGuildChannelGameSetting(userService, imperaService, notificationService));
         strategyMap.put(Set.of("set", "guild", "game"), new SetGuildGame(guildSettingsService, userService, imperaService, notificationService));
         strategyMap.put(Set.of("set", "guild", "game", "setting"), new SetGuildGameSetting(guildSettingsService, userService, imperaService, notificationService));
-        strategyMap.put(Set.of("set", "guild", "setting"), new SetGuildSetting(guildSettingsService));
+        strategyMap.put(Set.of("set", "guild", "setting"), new SetGuildSetting(guildSettingsService, notificationService));
         // User
         strategyMap.put(Set.of("set", "user", "setting"), new SetUserSetting(userService));
 
@@ -76,11 +66,11 @@ public class NotificationCommand implements SlashCommand {
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         Set<String> options = new HashSet<>();
-        ApplicationCommandInteractionOption guildOrUser = event.getOptions().get(0);
-        ApplicationCommandInteractionOption setOrView = guildOrUser.getOptions().get(0);
+        ApplicationCommandInteractionOption setOrViewOrTrack = event.getOptions().get(0);
+        ApplicationCommandInteractionOption guildOrUser = setOrViewOrTrack.getOptions().get(0);
+        options.add(setOrViewOrTrack.getName());
         options.add(guildOrUser.getName());
-        options.add(setOrView.getName());
-        options.addAll(setOrView.getOptions().stream()
+        options.addAll(guildOrUser.getOptions().stream()
                 .map(ApplicationCommandInteractionOption::getName)
                 .collect(Collectors.toSet()));
 
@@ -88,24 +78,25 @@ public class NotificationCommand implements SlashCommand {
 
         NotificationCommandStrategy strategy = strategyMap.get(options);
 
-        if (strategy != null) {
-            try {
-                return strategy.execute(event);
-            } catch (IncorrectContextException e) {
-                return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` in private messages.");
-            } catch (IncorrectPermissionException e) {
-                return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` without the Manage Channels permission.");
-            } catch (UserNotFoundException e) {
-                return event.reply().withEphemeral(true).withContent("Cannot use this command if you are not registered with the service. Please use /link first.");
-            } catch (UserNotInGameException e) {
-                return event.reply().withEphemeral(true).withContent("You are not allowed to keep track of this game.");
-            } catch (GameChannelLinkNotFoundException e) {
-                return event.reply().withEphemeral(true).withContent("Cannot find the combination of game and channel. Perhaps you need to use `/notifications set` first?");
-            } catch (HttpClientErrorException.BadRequest e) {
-                return event.reply().withEphemeral(true).withContent("Something went wrong, but due to API limitations, we cannot assert what. Please check if you have entered the correct information");
-            }
-        }
         // Handle the case when no valid option combination is provided
-        return event.reply().withEphemeral(true).withContent("Please choose at least one valid option.");
+        if (strategy == null) {
+            return event.reply().withEphemeral(true).withContent("Please choose at least one valid option.");
+        }
+
+        try {
+            return strategy.execute(event);
+        } catch (IncorrectContextException e) {
+            return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` in private messages.");
+        } catch (IncorrectPermissionException e) {
+            return event.reply().withEphemeral(true).withContent("Cannot use `/notifications guild` without the Manage Channels permission.");
+        } catch (UserNotFoundException e) {
+            return event.reply().withEphemeral(true).withContent("Cannot use this command if you are not registered with the service. Please use /link first.");
+        } catch (UserNotInGameException e) {
+            return event.reply().withEphemeral(true).withContent("You are not allowed to keep track of this game.");
+        } catch (GameChannelLinkNotFoundException e) {
+            return event.reply().withEphemeral(true).withContent("Cannot find the combination of game and channel. Perhaps you need to use `/notifications set` first?");
+        } catch (HttpClientErrorException.BadRequest e) {
+            return event.reply().withEphemeral(true).withContent("Something went wrong, but due to API limitations, we cannot assert what. Please check if you have entered the correct information");
+        }
     }
 }

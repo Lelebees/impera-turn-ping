@@ -94,4 +94,13 @@ public class GameLinkService {
             throw new IllegalStateException("Incorrect channel type!");
         }
     }
+
+    public boolean linkExists(long gameId, long channelId) {
+        return repository.existsById(new GameLinkId(gameId, channelId));
+    }
+
+    public void deleteLink(long gameId, long channelId) {
+        GameChannelLink gameChannelLink = findLink(new GameLinkId(gameId, channelId));
+        repository.delete(gameChannelLink);
+    }
 }
