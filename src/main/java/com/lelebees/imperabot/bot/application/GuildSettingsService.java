@@ -40,4 +40,8 @@ public class GuildSettingsService {
         Optional<GuildSettings> settingsOptional = repository.findById(guildId);
         return settingsOptional.orElseGet(() -> createNewGuildSettings(guildId));
     }
+
+    public boolean guildSettingsExist(long guildId) {
+        return repository.existsById(guildId);
+    }
 }

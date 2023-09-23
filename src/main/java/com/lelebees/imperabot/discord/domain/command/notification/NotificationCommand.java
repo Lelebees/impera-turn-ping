@@ -1,6 +1,5 @@
 package com.lelebees.imperabot.discord.domain.command.notification;
 
-import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
@@ -16,7 +15,6 @@ import com.lelebees.imperabot.discord.domain.command.notification.strategies.set
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.set.user.SetUserSetting;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.view.guild.ViewGuild;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.view.user.ViewUser;
-import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import org.springframework.stereotype.Component;
@@ -33,17 +31,17 @@ import java.util.stream.Collectors;
 public class NotificationCommand implements SlashCommand {
     private final Map<Set<String>, NotificationCommandStrategy> strategyMap;
 
-    public NotificationCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, UserService userService, ImperaService imperaService, NotificationService notificationService) {
+    public NotificationCommand(GuildSettingsService guildSettingsService, UserService userService, NotificationService notificationService) {
         strategyMap = new HashMap<>();
         // Populate the strategy map with option combinations and corresponding strategies
 
         // Set
         // Guild
         strategyMap.put(Set.of("set", "guild", "channel"), new SetGuildChannel(guildSettingsService));
-        strategyMap.put(Set.of("set", "guild", "channel", "game"), new SetGuildChannelGame(guildSettingsService, userService, imperaService, notificationService));
-        strategyMap.put(Set.of("set", "guild", "channel", "game", "setting"), new SetGuildChannelGameSetting(userService, imperaService, notificationService));
-        strategyMap.put(Set.of("set", "guild", "game"), new SetGuildGame(guildSettingsService, userService, imperaService, notificationService));
-        strategyMap.put(Set.of("set", "guild", "game", "setting"), new SetGuildGameSetting(guildSettingsService, userService, imperaService, notificationService));
+        strategyMap.put(Set.of("set", "guild", "channel", "game"), new SetGuildChannelGame(notificationService));
+        strategyMap.put(Set.of("set", "guild", "channel", "game", "setting"), new SetGuildChannelGameSetting(notificationService));
+        strategyMap.put(Set.of("set", "guild", "game"), new SetGuildGame(notificationService));
+        strategyMap.put(Set.of("set", "guild", "game", "setting"), new SetGuildGameSetting(notificationService));
         strategyMap.put(Set.of("set", "guild", "setting"), new SetGuildSetting(guildSettingsService, notificationService));
         // User
         strategyMap.put(Set.of("set", "user", "setting"), new SetUserSetting(userService));

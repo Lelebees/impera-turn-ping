@@ -1,7 +1,5 @@
 package com.lelebees.imperabot.discord.domain.command.notification.strategies.set.guild;
 
-import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
@@ -9,7 +7,6 @@ import com.lelebees.imperabot.discord.application.NotificationService;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import com.lelebees.imperabot.discord.domain.exception.NoDefaultChannelException;
-import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
@@ -21,15 +18,9 @@ import java.util.Optional;
 
 // Starts tracking a given game in a given channel, with default setting
 public class SetGuildChannelGame implements NotificationCommandStrategy {
-    private final GuildSettingsService guildSettingsService;
-    private final UserService userService;
-    private final ImperaService imperaService;
     private final NotificationService notificationService;
 
-    public SetGuildChannelGame(GuildSettingsService guildSettingsService, UserService userService, ImperaService imperaService, NotificationService notificationService) {
-        this.guildSettingsService = guildSettingsService;
-        this.userService = userService;
-        this.imperaService = imperaService;
+    public SetGuildChannelGame(NotificationService notificationService) {
         this.notificationService = notificationService;
     }
 
