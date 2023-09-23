@@ -1,9 +1,9 @@
 package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.data.GuildSettingsRepository;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsModificationDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -29,10 +29,12 @@ public class GuildSettingsService {
         return repository.save(new GuildSettings(guildId));
     }
 
-    public GuildSettings updateGuildSettings(long guildId, GuildSettingsModificationDTO dto) {
+    public GuildSettings updateGuildSettings(long guildId, Long channelId, GuildNotificationSettings notificationSetting) {
         GuildSettings guildSettings = getGuildSettingsById(guildId);
-        guildSettings.defaultChannelId = dto.channelId;
-        guildSettings.notificationSetting = dto.notificationSetting;
+        guildSettings.defaultChannelId = channelId;
+        if (notificationSetting != null) {
+            guildSettings.notificationSetting = notificationSetting;
+        }
         return repository.save(guildSettings);
     }
 

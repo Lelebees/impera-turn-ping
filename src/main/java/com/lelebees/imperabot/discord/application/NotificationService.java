@@ -11,7 +11,6 @@ import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
-import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsModificationDTO;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectPermissionException;
 import com.lelebees.imperabot.discord.domain.exception.NoDefaultChannelException;
 import com.lelebees.imperabot.impera.application.ImperaService;
@@ -93,7 +92,11 @@ public class NotificationService {
         if (!callingUser.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS)) {
             throw new IncorrectPermissionException("You're not allowed to change this!");
         }
-        GuildSettingsModificationDTO newSettings = new GuildSettingsModificationDTO(channelId, setting);
-        return guildSettingsService.updateGuildSettings(guildId, newSettings);
+        // ANOTHER findorcreate implementation
+        // I'm doing something wrong!
+        if (!guildSettingsService.guildSettingsExist(guildId)) {
+            guildSettingsService.createNewGuildSettings(guildId);
+        }
+        return guildSettingsService.updateGuildSettings(guildId, channelId, setting);
     }
 }
