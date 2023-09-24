@@ -66,7 +66,6 @@ public class SchedulerService {
         };
     }
 
-    //TODO: Delete games if they've ended
     //TODO: Notify users when someone has lost or won
     public Runnable checkTurns() {
         return () -> {
@@ -77,10 +76,12 @@ public class SchedulerService {
                     ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
 
                     boolean gameEnded = imperaGame.state.equals("Ended");
+                    boolean gameOpen = imperaGame.state.equals("Open");
                     boolean turnChanged = game.currentTurn != imperaGame.turnCounter;
                     boolean halfTimeNotNoticed = !game.halfTimeNotice && (imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2));
                     // If nothing has changed (we don't need to ping anyone)
-                    if (!turnChanged && !halfTimeNotNoticed && !gameEnded) {
+                    // If the turn hasnt changed, and the half time notice has been sent, and the game hasn't ended, or the game is open
+                    if ((!turnChanged && !halfTimeNotNoticed && !gameEnded) || gameOpen) {
                         continue;
                     }
 
