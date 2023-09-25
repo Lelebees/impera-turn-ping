@@ -6,6 +6,8 @@ import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
 import discord4j.rest.RestClient;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,15 +15,21 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class ImperaBotApplication {
-//    public static final Dotenv env = Dotenv.load();
+    private static final Logger logger = LoggerFactory.getLogger(ImperaBotApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(ImperaBotApplication.class, args);
+
+//        logger.info("Info log");
+//        logger.warn("Hey, This is a warning!");
+//        logger.error("Oops! We have an Error. OK");
+//        logger.debug("Debugging log");
+//        logger.trace("Trace log");
     }
 
     @PostConstruct
     public void runOrdinaryApp() {
-        System.out.println("System up and running");
+        logger.info("System up and running");
     }
 
     @Bean

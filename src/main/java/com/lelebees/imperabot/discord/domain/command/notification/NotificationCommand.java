@@ -17,6 +17,8 @@ import com.lelebees.imperabot.discord.domain.command.notification.strategies.vie
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.view.user.ViewUser;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import reactor.core.publisher.Mono;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @Component
 public class NotificationCommand implements SlashCommand {
     private final Map<Set<String>, NotificationCommandStrategy> strategyMap;
+    private static final Logger logger = LoggerFactory.getLogger(NotificationCommand.class);
 
     public NotificationCommand(GuildSettingsService guildSettingsService, UserService userService, NotificationService notificationService) {
         strategyMap = new HashMap<>();
@@ -72,7 +75,7 @@ public class NotificationCommand implements SlashCommand {
                 .map(ApplicationCommandInteractionOption::getName)
                 .collect(Collectors.toSet()));
 
-        System.out.println(options);
+        logger.info(options.toString());
 
         NotificationCommandStrategy strategy = strategyMap.get(options);
 
