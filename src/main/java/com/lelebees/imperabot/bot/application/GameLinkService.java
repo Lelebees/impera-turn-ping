@@ -8,15 +8,10 @@ import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLi
 import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.discord.application.DiscordService;
-import discord4j.common.util.Snowflake;
-import discord4j.core.object.entity.channel.Channel;
-import discord4j.core.object.entity.channel.GuildMessageChannel;
-import discord4j.core.object.entity.channel.PrivateChannel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class GameLinkService {
@@ -69,30 +64,21 @@ public class GameLinkService {
     public NotificationSettings deepGetNotificationSetting(GameLinkId id) {
         GameChannelLink gameChannelLink = findLink(id);
         long channelId = gameChannelLink.getChannelId();
-        Channel channel = discordService.getChannelById(channelId);
         if (discordService.channelIsDM(channelId)) {
             if (gameChannelLink.notificationSetting != null) {
                 return UserNotificationSetting.values()[gameChannelLink.notificationSetting];
             }
-            PrivateChannel dmChannel = (PrivateChannel) channel;
-            Set<Snowflake> people = dmChannel.getRecipientIds();
-            Snowflake user = Snowflake.of(0);
-            for (Snowflake userId : people) {
-                if (!discordService.isMe(userId.asLong())) {
-                    user = userId;
-                }
-            }
-            return userService.findUser(user.asLong()).getNotificationSetting();
-        } else if (discordService.channelIsGuildChannel(channelId)) {
+            long user = discordService.getChannelOwner(channelId);
+            return userService.findUser(user).getNotificationSetting();
+        }
+        if (discordService.channelIsGuildChannel(channelId)) {
             if (gameChannelLink.notificationSetting != null) {
                 return GuildNotificationSettings.values()[gameChannelLink.notificationSetting];
             }
-            GuildMessageChannel guildChannel = (GuildMessageChannel) channel;
-            long guildId = guildChannel.getGuildId().asLong();
+            long guildId = discordService.getGuildChannelGuild(channelId);
             return guildSettingsService.getGuildSettingsById(guildId).notificationSetting;
-        } else {
-            throw new IllegalStateException("Incorrect channel type!");
         }
+        throw new IllegalStateException("Incorrect channel type!");
     }
 
     public boolean linkExists(long gameId, long channelId) {

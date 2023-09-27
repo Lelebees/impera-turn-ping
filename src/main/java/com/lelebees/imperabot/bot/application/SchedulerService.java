@@ -79,12 +79,12 @@ public class SchedulerService {
                     ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
 
                     boolean gameEnded = imperaGame.state.equals("Ended");
-                    boolean gameOpen = imperaGame.state.equals("Open");
-                    boolean turnChanged = game.currentTurn != imperaGame.turnCounter;
-                    boolean halfTimeNotNoticed = !game.halfTimeNotice && (imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2));
-                    // If nothing has changed (we don't need to ping anyone)
-                    // If the turn hasnt changed, and the half time notice has been sent, and the game hasn't ended, or the game is open
-                    if ((!turnChanged && !halfTimeNotNoticed && !gameEnded) || gameOpen) {
+                    boolean gameHasYetToStart = imperaGame.state.equals("Open");
+                    boolean turnHasChanged = game.currentTurn != imperaGame.turnCounter;
+                    boolean halfOfTurnTimeHasPassed = imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2);
+                    // If the turn hasn't changed, and it has not been half-time OR the notice has already been sent, and the game hasn't ended, or the game is open
+                    if ((!turnHasChanged && (!halfOfTurnTimeHasPassed || game.halfTimeNotice) && !gameEnded) || gameHasYetToStart) {
+                        // Skip this game
                         continue;
                     }
 
@@ -97,13 +97,10 @@ public class SchedulerService {
                             .collect(Collectors.toSet());
 
                     Optional<BotUser> currentPlayer = userService.findImperaUser(UUID.fromString(imperaGame.currentPlayer.userId));
-                    String userString;
-                    if (currentPlayer.isEmpty()) {
-                        // The user is not registered with the service, so we can't send a DM
-                        userString = imperaGame.currentPlayer.name;
-                    } else {
+                    String userString = imperaGame.currentPlayer.name;
+                    if (currentPlayer.isPresent()) {
                         BotUser player = currentPlayer.get();
-                        userString = "<@" + player.getUserId() + ">";
+                        userString = player.getMention();
                         switch (player.getNotificationSetting()) {
                             case NO_NOTIFICATIONS -> userString = imperaGame.currentPlayer.name;
                             case GUILD_ONLY -> {
@@ -130,15 +127,15 @@ public class SchedulerService {
                         // Send a message to all channels that are tracking this game, who won
                         channels.forEach((channel) -> discordService.sendVictorMessage(channel, game.getId(), imperaGame.name, finalUserString));
                         gameService.deleteGame(game.getId());
-                    } else if (turnChanged) {
+                    } else if (turnHasChanged) {
                         //Send notice
                         logger.info("Sending turn notice!");
-                        channels.forEach((channel) -> discordService.sendMessage(channel, false, finalUserString, game.getId(), imperaGame.name));
+                        channels.forEach((channel) -> discordService.sendNewTurnMessage(channel, finalUserString, game.getId(), imperaGame.name));
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
                         //Send half-time notice
                         logger.info("Sending half time notice!");
-                        channels.forEach((channel) -> discordService.sendMessage(channel, true, finalUserString, game.getId(), imperaGame.name));
+                        channels.forEach((channel) -> discordService.sendHalfTimeMessage(channel, finalUserString, game.getId(), imperaGame.name));
                         gameService.setHalfTimeNoticeForGame(game.getId());
                     }
                 }

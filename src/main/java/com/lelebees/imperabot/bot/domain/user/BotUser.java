@@ -82,4 +82,8 @@ public class BotUser {
         this.imperaId = null;
         this.verificationCode = generateVerificationCode();
     }
+
+    public String getMention() {
+        return "<@" + this.userId + ">";
+    }
 }
