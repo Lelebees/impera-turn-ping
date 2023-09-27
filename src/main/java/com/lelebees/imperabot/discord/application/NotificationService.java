@@ -55,6 +55,11 @@ public class NotificationService {
             throw new UserNotInGameException("You are not allowed to access this game!");
         }
 
+        // If the game is not currently being tracked, track it.
+        if (!gameService.gameExists(gameId)) {
+            trackGame(gameId, callingUser.getId().asLong());
+        }
+
         if (channelId != null) {
             return setGame(gameId, channelId, notificationSettings);
         }
@@ -63,15 +68,11 @@ public class NotificationService {
         if (defaultChannelId == null) {
             throw new NoDefaultChannelException("No default channel set for this guild!");
         }
-        // If the game is not currently being tracked, track it.
-        if (!gameService.gameExists(gameId)) {
-            trackGame(gameId, callingUser.getId().asLong());
-        }
         return setGame(gameId, defaultChannelId, notificationSettings);
     }
 
     private GameChannelLink setGame(long gameId, long channelId, GuildNotificationSettings setting) {
-        if (gameLinkService.linkExists(gameId, channelId) && setting == GuildNotificationSettings.NO_NOTIFICATIONS) {
+        if (setting == GuildNotificationSettings.NO_NOTIFICATIONS && gameLinkService.linkExists(gameId, channelId)) {
             gameLinkService.deleteLink(gameId, channelId);
             return null;
         }
