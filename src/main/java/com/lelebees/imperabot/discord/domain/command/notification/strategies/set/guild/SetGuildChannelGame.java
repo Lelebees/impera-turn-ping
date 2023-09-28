@@ -48,7 +48,7 @@ public class SetGuildChannelGame implements NotificationCommandStrategy {
             if (gameChannelLink == null) {
                 return event.reply().withContent("Stopped logging notifications for [" + gameid + "]");
             }
-            return event.reply().withContent("Logging notifications for [" + notificationService.getGameName(gameChannelLink.getGameId()) + "] (https://imperaonline.de/game/play/" + gameChannelLink.getGameId() + ") in default channel (<#" + gameChannelLink.getChannelId() + ">)");
+            return event.reply().withContent("Logging notifications for [" + notificationService.getGameName(gameChannelLink.getGameId()) + "](https://imperaonline.de/game/play/" + gameChannelLink.getGameId() + ") in default channel (<#" + gameChannelLink.getChannelId() + ">)");
         } catch (UserNotVerifiedException e) {
             return event.reply().withContent("You are not linked to an Impera account!").withEphemeral(true);
         } catch (UserNotInGameException e) {
