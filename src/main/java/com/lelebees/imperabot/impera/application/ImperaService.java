@@ -21,10 +21,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpMethod.*;
 
@@ -111,15 +111,9 @@ public class ImperaService {
     }
 
     public List<ImperaMessageDTO> getLinkMessages() {
-        List<ImperaMessageDTO> allMessages = getMessages();
-        List<ImperaMessageDTO> linkMessages = new ArrayList<>();
-        for (ImperaMessageDTO message : allMessages) {
-            if (message.subject.trim().equalsIgnoreCase("link")) {
-                logger.info("Found link message!");
-                linkMessages.add(message);
-            }
-        }
-        return linkMessages;
+        return getMessages().stream()
+                .filter(message -> message.subject.trim().equalsIgnoreCase("link"))
+                .collect(Collectors.toList());
     }
 
     public boolean isPlayerInGame(String playerId, long gameId) {
