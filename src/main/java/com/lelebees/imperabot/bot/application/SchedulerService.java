@@ -140,7 +140,7 @@ public class SchedulerService {
                     }
                 }
             } catch (Exception e) {
-                logger.error("Handled Error: " + e.getMessage());
+                logger.error("Handled Error: " + e.getMessage(), e);
             }
         };
     }
