@@ -3,13 +3,13 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.se
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.application.NotificationService;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import com.lelebees.imperabot.discord.domain.exception.NoDefaultChannelException;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.entity.Member;
 import reactor.core.publisher.Mono;
 
@@ -20,9 +20,11 @@ import java.util.Optional;
 public class SetGuildGame implements NotificationCommandStrategy {
 
     private final NotificationService notificationService;
+    private final DiscordService discordService;
 
-    public SetGuildGame(NotificationService notificationService) {
+    public SetGuildGame(NotificationService notificationService, DiscordService discordService) {
         this.notificationService = notificationService;
+        this.discordService = discordService;
     }
 
     @Override
@@ -37,11 +39,7 @@ public class SetGuildGame implements NotificationCommandStrategy {
             throw new IllegalStateException("No one sent this command???");
         }
 
-        Optional<ApplicationCommandInteractionOptionValue> gameInput = event.getOptions().get(0).getOptions().get(0).getOption("gameid").orElseThrow(() -> new NullPointerException("This is impossible, How could gameid not exist?!")).getValue();
-        if (gameInput.isEmpty()) {
-            throw new NullPointerException("HOW IS THIS POSSIBLE?! NO GAME?!");
-        }
-        long gameid = gameInput.get().asLong();
+        long gameid = discordService.getGameIdOption(event);
 
         try {
             GameChannelLink gameChannelLink = notificationService.setGuildGame(guildIdOptional.get().asLong(), gameid, null, null, callingUser.get());

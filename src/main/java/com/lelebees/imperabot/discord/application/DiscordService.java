@@ -1,10 +1,14 @@
 package com.lelebees.imperabot.discord.application;
 
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.GuildMessageChannel;
 import discord4j.core.object.entity.channel.PrivateChannel;
 import org.springframework.stereotype.Service;
 
@@ -18,22 +22,22 @@ public class DiscordService {
         this.gatewayClient = gatewayClient;
     }
 
-
-    public void sendMessage(long channelId, boolean halfTimeNotice, String username, long gameid, String name) {
-        Channel channel = getChannelById(channelId);
-        if (halfTimeNotice) {
-            channel.getRestChannel().createMessage(username + ", you have half time remaining in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!").block();
-        } else {
-            channel.getRestChannel().createMessage(username + ", it is your turn in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!").block();
-        }
+    public void sendNewTurnMessage(long channelId, String username, long gameid, String name) {
+        getChannelById(channelId).getRestChannel()
+                .createMessage(username + ", it is your turn in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!")
+                .block();
     }
 
-    public Channel getChannelById(long channelId) {
-        return gatewayClient.getChannelById(Snowflake.of(channelId)).block();
+    public void sendHalfTimeMessage(long channelId, String username, long gameid, String name) {
+        getChannelById(channelId).getRestChannel()
+                .createMessage(username + ", you have half time remaining in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!")
+                .block();
     }
 
-    public boolean isMe(long userId) {
-        return gatewayClient.getSelfId().equals(Snowflake.of(userId));
+    public void sendVictorMessage(Long channel, long id, String gameName, String playerName) {
+        getChannelById(channel).getRestChannel()
+                .createMessage("Game [" + gameName + "](https://imperaonline.de/game/play/" + id + ") has ended! " + playerName + " has won!")
+                .block();
     }
 
     public boolean channelIsDM(long channelId) {
@@ -60,6 +64,14 @@ public class DiscordService {
         throw new IllegalStateException("There is no one but me!");
     }
 
+    public long getGuildChannelGuild(long channelId) {
+        Channel channel = getChannelById(channelId);
+        if (!(channel instanceof GuildMessageChannel guildChannel)) {
+            throw new NullPointerException("Non-Guild channel has no guild!");
+        }
+        return guildChannel.getGuildId().asLong();
+    }
+
     public boolean botUserCanAccessChannel(long channelId, BotUser user) {
         Channel channel = getChannelById(channelId);
         return true;
@@ -70,7 +82,57 @@ public class DiscordService {
         return user.getPrivateChannel().block();
     }
 
-    public void sendVictorMessage(Long channel, long id, String gameName, String playerName) {
-        getChannelById(channel).getRestChannel().createMessage("Game [" + gameName + "](https://imperaonline.de/game/play/" + id + ") has ended! " + playerName + " has won!").block();
+    public long getGameIdOption(ChatInputInteractionEvent event) {
+        return event.getOptions()
+                .get(0)
+                .getOptions()
+                .get(0)
+                .getOption("gameid")
+                .orElseThrow(() -> new NullPointerException("This is impossible, How could gameid not exist?!"))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("No gameid?!?!"))
+                .asLong();
     }
+
+    public Channel getChannelOption(ChatInputInteractionEvent event) {
+        return event.getOptions()
+                .get(0)
+                .getOptions()
+                .get(0)
+                .getOption("channel")
+                .orElseThrow(() -> new NullPointerException("This is impossible, How could channel not exist?!"))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("No channel?!?!"))
+                .asChannel()
+                .block();
+    }
+
+    public GuildNotificationSettings getGuildSettingOption(ChatInputInteractionEvent event) {
+        return GuildNotificationSettings.get(getSettingOption(event));
+    }
+
+    public UserNotificationSetting getUserSettingOption(ChatInputInteractionEvent event) {
+        return UserNotificationSetting.get(getSettingOption(event));
+    }
+
+    private int getSettingOption(ChatInputInteractionEvent event) {
+        return Math.toIntExact(event.getOptions()
+                .get(0)
+                .getOptions()
+                .get(0)
+                .getOption("setting")
+                .orElseThrow(() -> new NullPointerException("This is impossible, How could setting not exist?!"))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("No setting?!?!"))
+                .asLong());
+    }
+
+    private boolean isMe(long userId) {
+        return gatewayClient.getSelfId().equals(Snowflake.of(userId));
+    }
+
+    private Channel getChannelById(long channelId) {
+        return gatewayClient.getChannelById(Snowflake.of(channelId)).block();
+    }
+
 }

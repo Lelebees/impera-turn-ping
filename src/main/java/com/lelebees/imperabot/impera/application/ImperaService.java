@@ -8,6 +8,8 @@ import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundExc
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -19,10 +21,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpMethod.*;
 
@@ -32,9 +34,9 @@ public class ImperaService {
     private final String imperaUsername;
     private final String imperaPassword;
     private HttpEntity<String> entity;
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final String botId;
+    private static final RestTemplate restTemplate = new RestTemplate();
     public static ImperaLoginDTO bearerToken;
+    private static final Logger logger = LoggerFactory.getLogger(ImperaService.class);
 
     public ImperaService(@Value("${impera.api.url}") String imperaURL, @Value("${impera.username}") String imperaUsername, @Value("${impera.password}") String imperaPassword) {
         this.imperaURL = imperaURL;
@@ -44,8 +46,7 @@ public class ImperaService {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(bearerToken.access_token);
         this.entity = new HttpEntity<>(headers);
-        this.botId = getMyId().userId;
-        System.out.println("[I] ImperaService ready to make connections!");
+        logger.info("ImperaService ready to make connections!");
     }
 
     public ImperaLoginDTO getBearerToken(String refreshToken) {
@@ -110,14 +111,9 @@ public class ImperaService {
     }
 
     public List<ImperaMessageDTO> getLinkMessages() {
-        List<ImperaMessageDTO> allMessages = getMessages();
-        List<ImperaMessageDTO> linkMessages = new ArrayList<>();
-        for (ImperaMessageDTO message : allMessages) {
-            if (message.subject.equalsIgnoreCase("link")) {
-                linkMessages.add(message);
-            }
-        }
-        return linkMessages;
+        return getMessages().stream()
+                .filter(message -> message.subject.trim().equalsIgnoreCase("link"))
+                .collect(Collectors.toList());
     }
 
     public boolean isPlayerInGame(String playerId, long gameId) {
@@ -137,20 +133,14 @@ public class ImperaService {
         return playerInGame.get();
     }
 
-    public boolean isBotInGame(long gameID) {
-        return isPlayerInGame(botId, gameID);
-    }
-
     public Runnable updateAccessToken() {
         return () -> {
             try {
-                System.out.println("Updating bearer token!");
-//                System.out.println(bearerToken.access_token);
+                logger.info("Updating bearer token!");
                 bearerToken = getBearerToken(bearerToken.refresh_token);
                 HttpHeaders headers = new HttpHeaders();
                 headers.setBearerAuth(bearerToken.access_token);
                 this.entity = new HttpEntity<>(headers);
-//                System.out.println(bearerToken.access_token);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }

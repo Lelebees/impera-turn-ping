@@ -9,6 +9,8 @@ import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public class SchedulerService {
     private final GameService gameService;
     private final GameLinkService gameLinkService;
     private final DiscordService discordService;
+    private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
     public SchedulerService(ImperaService imperaService, UserService userService, GameService gameService, GameLinkService gameLinkService, DiscordService discordService) {
         this.imperaService = imperaService;
@@ -47,40 +50,41 @@ public class SchedulerService {
     public Runnable checkVerifyRequests() {
         return () -> {
             try {
-                System.out.println("Checking verify requests");
+                logger.info("Checking verify requests");
                 List<ImperaMessageDTO> linkMessages = imperaService.getLinkMessages();
                 for (ImperaMessageDTO linkMessage : linkMessages) {
                     try {
                         userService.verifyUser(linkMessage.text.trim(), UUID.fromString(linkMessage.from.id));
                         imperaService.deleteMessage(linkMessage.id);
                     } catch (UserNotFoundException e) {
-                        System.out.println("User matching code " + linkMessage.text + " Not found, skipping...");
+                        logger.warn("User matching code " + linkMessage.text + " Not found, skipping...");
                     } catch (UserAlreadyVerfiedException e) {
-                        System.out.println("User already verified");
+                        logger.warn("User already verified");
                         imperaService.deleteMessage(linkMessage.id);
                     }
                 }
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                logger.error("Handled Error: " + e.getMessage());
             }
         };
     }
 
-    //TODO: Delete games if they've ended
     //TODO: Notify users when someone has lost or won
     public Runnable checkTurns() {
         return () -> {
             try {
-                System.out.println("Checking turns!");
+                logger.info("Checking turns!");
                 List<Game> trackedGames = gameService.findAllGames();
                 for (Game game : trackedGames) {
                     ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
 
                     boolean gameEnded = imperaGame.state.equals("Ended");
-                    boolean turnChanged = game.currentTurn != imperaGame.turnCounter;
-                    boolean halfTimeNotNoticed = !game.halfTimeNotice && (imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2));
-                    // If nothing has changed (we don't need to ping anyone)
-                    if (!turnChanged && !halfTimeNotNoticed && !gameEnded) {
+                    boolean gameHasYetToStart = imperaGame.state.equals("Open");
+                    boolean turnHasChanged = game.currentTurn != imperaGame.turnCounter;
+                    boolean halfOfTurnTimeHasPassed = imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2);
+                    // If the turn hasn't changed, and it has not been half-time OR the notice has already been sent, and the game hasn't ended, or the game is open
+                    if ((!turnHasChanged && (!halfOfTurnTimeHasPassed || game.halfTimeNotice) && !gameEnded) || gameHasYetToStart) {
+                        // Skip this game
                         continue;
                     }
 
@@ -93,13 +97,10 @@ public class SchedulerService {
                             .collect(Collectors.toSet());
 
                     Optional<BotUser> currentPlayer = userService.findImperaUser(UUID.fromString(imperaGame.currentPlayer.userId));
-                    String userString;
-                    if (currentPlayer.isEmpty()) {
-                        // The user is not registered with the service, so we can't send a DM
-                        userString = imperaGame.currentPlayer.name;
-                    } else {
+                    String userString = imperaGame.currentPlayer.name;
+                    if (currentPlayer.isPresent()) {
                         BotUser player = currentPlayer.get();
-                        userString = "<@" + player.getUserId() + ">";
+                        userString = player.getMention();
                         switch (player.getNotificationSetting()) {
                             case NO_NOTIFICATIONS -> userString = imperaGame.currentPlayer.name;
                             case GUILD_ONLY -> {
@@ -122,24 +123,24 @@ public class SchedulerService {
 
                     // There is probably a better way to do this, but I'm not sure what it is.
                     if (gameEnded) {
-                        System.out.println("Game " + game.getId() + " has ended!");
+                        logger.info("Game " + game.getId() + " has ended!");
                         // Send a message to all channels that are tracking this game, who won
                         channels.forEach((channel) -> discordService.sendVictorMessage(channel, game.getId(), imperaGame.name, finalUserString));
                         gameService.deleteGame(game.getId());
-                    } else if (turnChanged) {
+                    } else if (turnHasChanged) {
                         //Send notice
-                        System.out.println("Sending turn notice!");
-                        channels.forEach((channel) -> discordService.sendMessage(channel, false, finalUserString, game.getId(), imperaGame.name));
+                        logger.info("Sending turn notice!");
+                        channels.forEach((channel) -> discordService.sendNewTurnMessage(channel, finalUserString, game.getId(), imperaGame.name));
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
                         //Send half-time notice
-                        System.out.println("Sending half time notice!");
-                        channels.forEach((channel) -> discordService.sendMessage(channel, true, finalUserString, game.getId(), imperaGame.name));
+                        logger.info("Sending half time notice!");
+                        channels.forEach((channel) -> discordService.sendHalfTimeMessage(channel, finalUserString, game.getId(), imperaGame.name));
                         gameService.setHalfTimeNoticeForGame(game.getId());
                     }
                 }
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                logger.error("Handled Error: " + e.getMessage(), e);
             }
         };
     }

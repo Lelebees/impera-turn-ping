@@ -3,12 +3,12 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.se
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.application.NotificationService;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.entity.Member;
 import reactor.core.publisher.Mono;
 
@@ -18,10 +18,12 @@ import java.util.Optional;
 public class SetGuildSetting implements NotificationCommandStrategy {
     private final GuildSettingsService guildSettingsService;
     private final NotificationService notificationService;
+    private final DiscordService discordService;
 
-    public SetGuildSetting(GuildSettingsService guildSettingsService, NotificationService notificationService) {
+    public SetGuildSetting(GuildSettingsService guildSettingsService, NotificationService notificationService, DiscordService discordService) {
         this.guildSettingsService = guildSettingsService;
         this.notificationService = notificationService;
+        this.discordService = discordService;
     }
 
     @Override
@@ -36,14 +38,7 @@ public class SetGuildSetting implements NotificationCommandStrategy {
             throw new IllegalStateException("No one sent this command???");
         }
 
-        // Dip into guild, then set, then find channel.
-        Optional<ApplicationCommandInteractionOptionValue> settingInput = event.getOptions().get(0).getOptions().get(0).getOption("setting").orElseThrow(() -> new NullPointerException("No channel present! (How?!?!)")).getValue();
-        if (settingInput.isEmpty()) {
-            throw new NullPointerException("There is no channel entered! (HOOOWWW?!?!!?!?!)");
-        }
-        long settingLong = settingInput.get().asLong();
-        int settingInt = Math.toIntExact(settingLong);
-        GuildNotificationSettings setting = GuildNotificationSettings.get(settingInt);
+        GuildNotificationSettings setting = discordService.getGuildSettingOption(event);
         // TODO: Find a smarter and reuseable way to do this
         long guildId = guildIdOptional.get().asLong();
 
