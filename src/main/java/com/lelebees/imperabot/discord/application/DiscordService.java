@@ -1,8 +1,11 @@
 package com.lelebees.imperabot.discord.application;
 
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.object.entity.channel.GuildMessageChannel;
@@ -77,6 +80,51 @@ public class DiscordService {
     public PrivateChannel getDMChannelByOwner(long userId) {
         User user = gatewayClient.getUserById(Snowflake.of(userId)).block();
         return user.getPrivateChannel().block();
+    }
+
+    public long getGameIdOption(ChatInputInteractionEvent event) {
+        return event.getOptions()
+                .get(0)
+                .getOptions()
+                .get(0)
+                .getOption("gameid")
+                .orElseThrow(() -> new NullPointerException("This is impossible, How could gameid not exist?!"))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("No gameid?!?!"))
+                .asLong();
+    }
+
+    public Channel getChannelOption(ChatInputInteractionEvent event) {
+        return event.getOptions()
+                .get(0)
+                .getOptions()
+                .get(0)
+                .getOption("channel")
+                .orElseThrow(() -> new NullPointerException("This is impossible, How could channel not exist?!"))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("No channel?!?!"))
+                .asChannel()
+                .block();
+    }
+
+    public GuildNotificationSettings getGuildSettingOption(ChatInputInteractionEvent event) {
+        return GuildNotificationSettings.get(getSettingOption(event));
+    }
+
+    public UserNotificationSetting getUserSettingOption(ChatInputInteractionEvent event) {
+        return UserNotificationSetting.get(getSettingOption(event));
+    }
+
+    private int getSettingOption(ChatInputInteractionEvent event) {
+        return Math.toIntExact(event.getOptions()
+                .get(0)
+                .getOptions()
+                .get(0)
+                .getOption("setting")
+                .orElseThrow(() -> new NullPointerException("This is impossible, How could setting not exist?!"))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("No setting?!?!"))
+                .asLong());
     }
 
     private boolean isMe(long userId) {

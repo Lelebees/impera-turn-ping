@@ -2,12 +2,12 @@ package com.lelebees.imperabot.discord.domain.command.notification.strategies.se
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.application.NotificationService;
 import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
 import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.entity.Member;
 import reactor.core.publisher.Mono;
 
@@ -18,10 +18,12 @@ public class SetGuildChannel implements NotificationCommandStrategy {
 
     private final GuildSettingsService guildSettingsService;
     private final NotificationService notificationService;
+    private final DiscordService discordService;
 
-    public SetGuildChannel(GuildSettingsService guildSettingsService, NotificationService notificationService) {
+    public SetGuildChannel(GuildSettingsService guildSettingsService, NotificationService notificationService, DiscordService discordService) {
         this.guildSettingsService = guildSettingsService;
         this.notificationService = notificationService;
+        this.discordService = discordService;
     }
 
     @Override
@@ -36,12 +38,7 @@ public class SetGuildChannel implements NotificationCommandStrategy {
             throw new IllegalStateException("No one sent this command???");
         }
 
-        // Dip into guild, then set, then find channel.
-        Optional<ApplicationCommandInteractionOptionValue> channelInput = event.getOptions().get(0).getOptions().get(0).getOption("channel").orElseThrow(() -> new NullPointerException("No channel present! (How?!?!)")).getValue();
-        if (channelInput.isEmpty()) {
-            throw new NullPointerException("There is no channel entered! (HOOOWWW?!?!!?!?!)");
-        }
-        Long channelId = channelInput.get().asChannel().block().getId().asLong();
+        Long channelId = discordService.getChannelOption(event).getId().asLong();
         long guildId = guildIdOptional.get().asLong();
 
         // This is a findOrCreate implementation

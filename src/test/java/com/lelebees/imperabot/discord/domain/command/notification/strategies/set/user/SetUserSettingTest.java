@@ -39,7 +39,7 @@ class SetUserSettingTest {
         Mockito.when(userService.updateDefaultSetting(botUserId, any())).thenReturn(user);
         Mockito.when(user.getNotificationSetting()).thenReturn(UserNotificationSetting.DMS_ONLY);
 
-        assertDoesNotThrow(() -> new SetUserSetting(userService).execute(event).block());
+        assertDoesNotThrow(() -> new SetUserSetting(userService, null).execute(event).block());
     }
 
 }

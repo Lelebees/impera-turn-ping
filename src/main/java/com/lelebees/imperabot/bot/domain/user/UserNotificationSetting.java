@@ -15,6 +15,10 @@ public enum UserNotificationSetting implements NotificationSettings {
         this.value = value;
     }
 
+    public static UserNotificationSetting get(int settingOption) {
+        return UserNotificationSetting.values()[settingOption];
+    }
+
     @Override
     public String toString() {
         return this.value;
