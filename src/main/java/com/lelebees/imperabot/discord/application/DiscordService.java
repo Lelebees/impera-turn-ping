@@ -28,15 +28,27 @@ public class DiscordService {
                 .block();
     }
 
-    public void sendHalfTimeMessage(long channelId, String username, long gameid, String name) {
+    public void sendHalfTimeMessage(Long channelId, String username, long gameId, String name) {
         getChannelById(channelId).getRestChannel()
-                .createMessage(username + ", you have half time remaining in [" + name + "](https://imperaonline.de/game/play/" + gameid + ")!")
+                .createMessage(username + ", you have half time remaining in [" + name + "](https://imperaonline.de/game/play/" + gameId + ")!")
                 .block();
     }
 
-    public void sendVictorMessage(Long channel, long id, String gameName, String playerName) {
+    public void sendVictorMessage(Long channel, String playerName, long gameId, String gameName) {
         getChannelById(channel).getRestChannel()
-                .createMessage("Game [" + gameName + "](https://imperaonline.de/game/play/" + id + ") has ended! " + playerName + " has won!")
+                .createMessage("Game [" + gameName + "](https://imperaonline.de/game/play/" + gameId + ") has ended! " + playerName + " has won!")
+                .block();
+    }
+
+    public void sendDefeatedMessage(Long channel, String playerName, long gameId, String gameName) {
+        getChannelById(channel).getRestChannel()
+                .createMessage(playerName + " has been defeated in [" + gameName + "](https://imperaonline.de/game/play/" + gameId + ")!")
+                .block();
+    }
+
+    public void sendSurrenderMessage(Long channel, String playerName, long gameId, String gameName) {
+        getChannelById(channel).getRestChannel()
+                .createMessage(playerName + " has surrendered in [" + gameName + "](https://imperaonline.de/game/play/" + gameId + ")!")
                 .block();
     }
 
@@ -134,5 +146,4 @@ public class DiscordService {
     private Channel getChannelById(long channelId) {
         return gatewayClient.getChannelById(Snowflake.of(channelId)).block();
     }
-
 }
