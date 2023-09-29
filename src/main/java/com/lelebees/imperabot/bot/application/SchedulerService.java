@@ -2,6 +2,7 @@ package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
@@ -19,8 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
-
-import static com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings.NO_NOTIFICATIONS;
 
 @Service
 public class SchedulerService {
@@ -99,9 +98,20 @@ public class SchedulerService {
                     List<Long> channels = new ArrayList<>(gameLinkService.findLinksByGame(game.getId())
                             .stream()
                             .filter(gameChannelLink ->
-                                    gameLinkService.deepGetNotificationSetting(gameChannelLink.getGameLinkId()) != NO_NOTIFICATIONS)
+                                    gameLinkService.deepGetNotificationSetting(gameChannelLink.getGameLinkId()) != GuildNotificationSettings.NO_NOTIFICATIONS)
                             .map(GameChannelLink::getChannelId)
                             .toList());
+
+                    //TODO: Respect a player's notification settings
+                    defeatedPlayers.forEach(player -> {
+                        logger.info("Sending defeated notice!");
+                        String playerName = (userService.findImperaUser(UUID.fromString(player.userId)).isPresent()) ? userService.findImperaUser(UUID.fromString(player.userId)).get().getMention() : player.name;
+                        channels.forEach((channel) -> discordService.sendDefeatedMessage(channel, playerName, game.getId(), imperaGame.name));
+                    });
+                    surrenderedPlayers.forEach(gamePlayer -> {
+                        logger.info("Sending surrendered notice!");
+                        channels.forEach((channel) -> discordService.sendSurrenderMessage(channel, gamePlayer.name, game.getId(), imperaGame.name));
+                    });
 
                     Optional<BotUser> currentPlayer = userService.findImperaUser(UUID.fromString(imperaGame.currentPlayer.userId));
                     String userString = imperaGame.currentPlayer.name;
@@ -126,17 +136,6 @@ public class SchedulerService {
                                     channels.add(discordService.getDMChannelByOwner(player.getUserId()).getId().asLong());
                         }
                     }
-
-                    defeatedPlayers.forEach(player -> {
-                        logger.info("Sending defeated notice!");
-                        String playerName = (userService.findImperaUser(UUID.fromString(player.userId)).isPresent()) ? userService.findImperaUser(UUID.fromString(player.userId)).get().getMention() : player.name;
-                        channels.forEach((channel) -> discordService.sendDefeatedMessage(channel, playerName, game.getId(), imperaGame.name));
-                    });
-                    surrenderedPlayers.forEach(gamePlayer -> {
-                        logger.info("Sending surrendered notice!");
-                        channels.forEach((channel) -> discordService.sendSurrenderMessage(channel, gamePlayer.name, game.getId(), imperaGame.name));
-                    });
-
 
                     String finalUserString = userString;
 
