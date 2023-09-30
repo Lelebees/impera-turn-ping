@@ -121,10 +121,18 @@ public class SchedulerService {
                     if (gameEnded) {
                         logger.info("Game " + game.getId() + " has ended!");
                         logger.info("Sending victory notice!");
+                        List<ImperaGamePlayerDTO> winningPlayers = imperaGame.teams.stream()
+                                .filter(team -> team.players.stream().anyMatch(player -> player.outcome.equals("Won")))
+                                .map(team -> team.players.stream()
+                                        .filter(player -> player.outcome.equals("Won"))
+                                        .toList())
+                                .flatMap(Collection::stream)
+                                .toList();
                         // Send a message to all channels that are tracking this game, who won
                         // TODO: Allow an entire team to win
                         // TODO: Fix user being declared winner when they surrendered on their turn
-                        discordService.sendVictorMessage(channels, imperaGame.currentPlayer, imperaGame);
+                        winningPlayers.forEach(winner -> discordService.sendVictorMessage(channels, winner, imperaGame));
+//                        discordService.sendVictorMessage(channels, imperaGame.currentPlayer, imperaGame);
                         gameService.deleteGame(game.getId());
                     } else if (turnHasChanged) {
                         //Send notice
