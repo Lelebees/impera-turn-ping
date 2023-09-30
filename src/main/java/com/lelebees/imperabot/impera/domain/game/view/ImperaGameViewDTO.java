@@ -28,4 +28,12 @@ public class ImperaGameViewDTO {
     public String toString() {
         return "{ " + this.id + "; \"" + this.name + "\" }";
     }
+
+    public ImperaGamePlayerDTO findPlayerByGameId(String playerId) {
+        return this.teams.stream()
+                .flatMap(team -> team.players.stream())
+                .filter(player -> player.id.equals(playerId))
+                .findFirst()
+                .orElse(null);
+    }
 }

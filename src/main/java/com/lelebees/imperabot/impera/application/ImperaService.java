@@ -1,6 +1,7 @@
 package com.lelebees.imperabot.impera.application;
 
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
+import com.lelebees.imperabot.impera.domain.ImperaGameHistoryDTO;
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
 import com.lelebees.imperabot.impera.domain.ImperaMeDTO;
 import com.lelebees.imperabot.impera.domain.game.ImperaGameDTO;
@@ -150,6 +151,44 @@ public class ImperaService {
     public Object deleteMessage(String id) {
         String url = imperaURL + "/messages/" + id;
         ResponseEntity<?> response = restTemplate.exchange(url, DELETE, this.entity, Map.class);
+        return response.getBody();
+    }
+
+    public boolean playerWasAlreadyDefeated(long gameId, String playerId, int turnId) {
+        ImperaGameHistoryDTO turnState = getTurnState(gameId, turnId);
+        if (turnState == null) {
+            return false;
+        }
+        return turnState.game.findPlayerByGameId(playerId).outcome.equals("Defeated");
+    }
+
+    public List<String> playersThatSurrendered(long gameId, int turnId) {
+        ImperaGameHistoryDTO turnState = getTurnState(gameId, turnId);
+        if (turnState == null) {
+            return null;
+        }
+        return turnState.actions.stream().filter(action -> action.action.equals("PlayerSurrendered")).map(action -> action.actorId).toList();
+    }
+
+    public List<String> playersThatWereDefeated(long gameId, int turnId) {
+        ImperaGameHistoryDTO turnState = getTurnState(gameId, turnId);
+        if (turnState == null) {
+            return null;
+        }
+        return turnState.actions.stream().filter(action -> action.action.equals("PlayerLost")).map(action -> action.actorId).toList();
+    }
+
+    public boolean playerAlreadySurrendered(long gameId, String playerId, int turnId) {
+        ImperaGameHistoryDTO turnState = getTurnState(gameId, turnId);
+        if (turnState == null) {
+            return false;
+        }
+        return turnState.game.findPlayerByGameId(playerId).outcome.equals("Surrendered");
+    }
+
+    private ImperaGameHistoryDTO getTurnState(long gameId, int turnId) {
+        String url = imperaURL + "/games/" + gameId + "/history/" + turnId;
+        ResponseEntity<ImperaGameHistoryDTO> response = restTemplate.exchange(url, GET, this.entity, ImperaGameHistoryDTO.class);
         return response.getBody();
     }
 }

@@ -2,27 +2,27 @@ package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
+import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
+import discord4j.core.object.entity.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings.NO_NOTIFICATIONS;
+import java.util.stream.IntStream;
 
 @Service
 public class SchedulerService {
@@ -87,55 +87,62 @@ public class SchedulerService {
                         // Skip this game
                         continue;
                     }
+                    // Get all players that have been defeated since the last turn change
+                    List<ImperaGamePlayerDTO> defeatedPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter + 1)
+                            .mapToObj(turn -> imperaService.playersThatWereDefeated(game.getId(), turn))
+                            .flatMap(Collection::stream)
+                            .map(imperaGame::findPlayerByGameId)
+                            .toList();
+                    // Get all players that surrendered in the last turn(s)
+                    List<ImperaGamePlayerDTO> surrenderedPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter + 1)
+                            .mapToObj(turn -> imperaService.playersThatSurrendered(game.getId(), turn))
+                            .flatMap(Collection::stream)
+                            .map(imperaGame::findPlayerByGameId)
+                            .toList();
 
                     // Get all channels that want to receive updates for this game.
-                    Set<Long> channels = gameLinkService.findLinksByGame(game.getId())
+                    List<Channel> channels = new ArrayList<>(gameLinkService.findLinksByGame(game.getId())
                             .stream()
                             .filter(gameChannelLink ->
-                                    gameLinkService.deepGetNotificationSetting(gameChannelLink.getGameLinkId()) != NO_NOTIFICATIONS)
+                                    gameLinkService.deepGetNotificationSetting(gameChannelLink.getGameLinkId()) != GuildNotificationSettings.NO_NOTIFICATIONS)
                             .map(GameChannelLink::getChannelId)
-                            .collect(Collectors.toSet());
+                            .map(discordService::getChannelById)
+                            .toList());
 
-                    Optional<BotUser> currentPlayer = userService.findImperaUser(UUID.fromString(imperaGame.currentPlayer.userId));
-                    String userString = imperaGame.currentPlayer.name;
-                    if (currentPlayer.isPresent()) {
-                        BotUser player = currentPlayer.get();
-                        userString = player.getMention();
-                        switch (player.getNotificationSetting()) {
-                            case NO_NOTIFICATIONS -> userString = imperaGame.currentPlayer.name;
-                            case GUILD_ONLY -> {
-                            }
-                            case DMS_ONLY -> {
-                                userString = imperaGame.currentPlayer.name;
-                                channels.add(discordService.getDMChannelByOwner(player.getUserId()).getId().asLong());
-                            }
-                            case PREFER_GUILD_OVER_DMS -> {
-                                if (channels.isEmpty()) {
-                                    userString = imperaGame.currentPlayer.name;
-                                    channels.add(discordService.getDMChannelByOwner(player.getUserId()).getId().asLong());
-                                }
-                            }
-                            case DMS_AND_GUILD ->
-                                    channels.add(discordService.getDMChannelByOwner(player.getUserId()).getId().asLong());
-                        }
-                    }
-                    String finalUserString = userString;
-
+                    defeatedPlayers.forEach(player -> {
+                        logger.info("Sending defeated notice!");
+                        discordService.sendDefeatedMessage(channels, player, imperaGame);
+                    });
+                    surrenderedPlayers.forEach(gamePlayer -> {
+                        logger.info("Sending surrendered notice!");
+                        discordService.sendSurrenderMessage(channels, gamePlayer, imperaGame);
+                    });
                     // There is probably a better way to do this, but I'm not sure what it is.
                     if (gameEnded) {
                         logger.info("Game " + game.getId() + " has ended!");
+                        logger.info("Sending victory notice!");
+                        List<ImperaGamePlayerDTO> winningPlayers = imperaGame.teams.stream()
+                                .filter(team -> team.players.stream().anyMatch(player -> player.outcome.equals("Won")))
+                                .map(team -> team.players.stream()
+                                        .filter(player -> player.outcome.equals("Won"))
+                                        .toList())
+                                .flatMap(Collection::stream)
+                                .toList();
                         // Send a message to all channels that are tracking this game, who won
-                        channels.forEach((channel) -> discordService.sendVictorMessage(channel, game.getId(), imperaGame.name, finalUserString));
+                        // TODO: Allow an entire team to win
+                        // TODO: Fix user being declared winner when they surrendered on their turn
+                        winningPlayers.forEach(winner -> discordService.sendVictorMessage(channels, winner, imperaGame));
+//                        discordService.sendVictorMessage(channels, imperaGame.currentPlayer, imperaGame);
                         gameService.deleteGame(game.getId());
                     } else if (turnHasChanged) {
                         //Send notice
                         logger.info("Sending turn notice!");
-                        channels.forEach((channel) -> discordService.sendNewTurnMessage(channel, finalUserString, game.getId(), imperaGame.name));
+                        discordService.sendNewTurnMessage(channels, imperaGame.currentPlayer, imperaGame);
                         gameService.turnChanged(game.getId(), imperaGame.turnCounter);
                     } else {
                         //Send half-time notice
                         logger.info("Sending half time notice!");
-                        channels.forEach((channel) -> discordService.sendHalfTimeMessage(channel, finalUserString, game.getId(), imperaGame.name));
+                        discordService.sendHalfTimeMessage(channels, imperaGame.currentPlayer, imperaGame);
                         gameService.setHalfTimeNoticeForGame(game.getId());
                     }
                 }
