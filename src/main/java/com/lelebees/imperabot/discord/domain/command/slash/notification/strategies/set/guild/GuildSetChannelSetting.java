@@ -1,6 +1,6 @@
-package com.lelebees.imperabot.discord.domain.command.notification.strategies.set.guild;
+package com.lelebees.imperabot.discord.domain.command.slash.notification.strategies.set.guild;
 
-import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
+import com.lelebees.imperabot.discord.domain.command.slash.notification.strategies.NotificationCommandStrategy;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import reactor.core.publisher.Mono;
 

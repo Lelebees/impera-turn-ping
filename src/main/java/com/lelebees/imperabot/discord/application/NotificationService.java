@@ -11,7 +11,7 @@ import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotVerifiedException;
-import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectPermissionException;
+import com.lelebees.imperabot.discord.domain.command.slash.notification.exception.IncorrectPermissionException;
 import com.lelebees.imperabot.discord.domain.exception.NoDefaultChannelException;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import discord4j.core.object.entity.Member;

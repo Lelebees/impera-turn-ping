@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.discord.domain.command;
+package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
