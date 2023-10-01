@@ -1,7 +1,7 @@
-package com.lelebees.imperabot.discord.domain.command.notification.strategies.view.user;
+package com.lelebees.imperabot.discord.domain.command.slash.notification.strategies.view.user;
 
 import com.lelebees.imperabot.discord.application.NotificationService;
-import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
+import com.lelebees.imperabot.discord.domain.command.slash.notification.strategies.NotificationCommandStrategy;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import reactor.core.publisher.Mono;
 

@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.discord.domain.command.notification.strategies;
+package com.lelebees.imperabot.discord.domain.command.slash.notification.strategies;
 
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotInGameException;
