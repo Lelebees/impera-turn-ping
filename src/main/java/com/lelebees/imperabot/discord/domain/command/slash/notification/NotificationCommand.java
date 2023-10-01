@@ -1,5 +1,6 @@
 package com.lelebees.imperabot.discord.domain.command.slash.notification;
 
+import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
@@ -35,7 +36,7 @@ public class NotificationCommand implements SlashCommand {
     private final Map<Set<String>, NotificationCommandStrategy> strategyMap;
     private static final Logger logger = LoggerFactory.getLogger(NotificationCommand.class);
 
-    public NotificationCommand(GuildSettingsService guildSettingsService, UserService userService, NotificationService notificationService, DiscordService discordService) {
+    public NotificationCommand(GuildSettingsService guildSettingsService, UserService userService, NotificationService notificationService, DiscordService discordService, GameLinkService gameLinkService) {
         strategyMap = new HashMap<>();
         // Populate the strategy map with option combinations and corresponding strategies
 
@@ -44,6 +45,7 @@ public class NotificationCommand implements SlashCommand {
         strategyMap.put(Set.of("set", "guild", "channel"), new SetGuildChannel(guildSettingsService, notificationService, discordService));
         strategyMap.put(Set.of("set", "guild", "channel", "gameid"), new SetGuildChannelGame(notificationService, discordService));
         strategyMap.put(Set.of("set", "guild", "channel", "gameid", "setting"), new SetGuildChannelGameSetting(notificationService, discordService));
+        strategyMap.put(Set.of("set", "guild", "channel", "setting"), new SetGuildChannelSetting(discordService, gameLinkService, notificationService));
         strategyMap.put(Set.of("set", "guild", "gameid"), new SetGuildGame(notificationService, discordService));
         strategyMap.put(Set.of("set", "guild", "gameid", "setting"), new SetGuildGameSetting(notificationService, discordService));
         strategyMap.put(Set.of("set", "guild", "setting"), new SetGuildSetting(guildSettingsService, notificationService, discordService));
