@@ -63,8 +63,6 @@ public class SchedulerService {
                         imperaService.deleteMessage(linkMessage.id);
                     }
                 }
-                //TODO: Garbage collection because otherwise RAM is through the roof
-//                System.gc();
             } catch (Exception e) {
                 logger.error("Handled Error: " + e.getMessage());
             }

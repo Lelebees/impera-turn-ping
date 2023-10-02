@@ -4,4 +4,4 @@ COPY ./target/Impera-Bot-0.0.1-SNAPSHOT.jar app.jar
 
 # CMD ["docker-compose", "up"]
 CMD ["./mvnw", "compile"]
-ENTRYPOINT ["java", "-XX:G1PeriodicGCInterval=1", "-XX:G1PeriodicGCSystemLoadThreshold=1", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseShenandoahGC", "-jar", "app.jar"]
