@@ -1,12 +1,12 @@
-package com.lelebees.imperabot.discord.domain.command.notification.strategies.set.guild;
+package com.lelebees.imperabot.discord.domain.command.slash.notification.strategies.set.guild;
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.application.NotificationService;
-import com.lelebees.imperabot.discord.domain.command.notification.exception.IncorrectContextException;
-import com.lelebees.imperabot.discord.domain.command.notification.strategies.NotificationCommandStrategy;
+import com.lelebees.imperabot.discord.domain.command.slash.notification.exception.IncorrectContextException;
+import com.lelebees.imperabot.discord.domain.command.slash.notification.strategies.NotificationCommandStrategy;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.Member;

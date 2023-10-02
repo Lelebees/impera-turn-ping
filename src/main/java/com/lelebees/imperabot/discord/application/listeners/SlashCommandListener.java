@@ -1,7 +1,7 @@
 package com.lelebees.imperabot.discord.application.listeners;
 
 
-import com.lelebees.imperabot.discord.domain.command.SlashCommand;
+import com.lelebees.imperabot.discord.domain.command.slash.SlashCommand;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import org.springframework.stereotype.Component;
