@@ -64,7 +64,7 @@ public class SchedulerService {
                     }
                 }
                 //TODO: Garbage collection because otherwise RAM is through the roof
-                System.gc();
+//                System.gc();
             } catch (Exception e) {
                 logger.error("Handled Error: " + e.getMessage());
             }
