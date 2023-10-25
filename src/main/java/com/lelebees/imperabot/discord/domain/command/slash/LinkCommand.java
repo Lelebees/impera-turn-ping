@@ -28,10 +28,11 @@ public class LinkCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
-        Snowflake id = event.getInteraction().getMember().orElseThrow(() -> new NullPointerException("No user made this request?!")).getId();
+        Snowflake id = event.getInteraction().getUser().getId();
 
         BotUser user = userService.findOrCreateUser(id.asLong());
         if (user.isLinked()) {
+            // TODO: link the unlink command
             return event.reply().withEphemeral(true).withContent("You are already linked to an Impera account. If you wish to re-link, run \"/unlink\" first.");
         }
         Button button = Button.primary("mobileCode", "Send me a mobile friendly code!");

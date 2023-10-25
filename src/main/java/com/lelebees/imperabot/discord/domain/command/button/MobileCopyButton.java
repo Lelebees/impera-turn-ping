@@ -23,7 +23,7 @@ public class MobileCopyButton implements ButtonCommand {
 
     @Override
     public Mono<Void> handle(ButtonInteractionEvent event) {
-        Snowflake id = event.getInteraction().getMember().orElseThrow(() -> new NullPointerException("No user made this request?!")).getId();
+        Snowflake id = event.getInteraction().getUser().getId();
         BotUser user = userService.findOrCreateUser(id.asLong());
         return event.reply().withEphemeral(true).withContent(user.getVerificationCode());
     }
