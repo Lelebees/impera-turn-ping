@@ -68,7 +68,7 @@ public class TrackCommand implements SlashCommand {
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
 
-        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /track with gameid: " + gameId + " in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + "). Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
+        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /track with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
 
         if (channelOptional.isPresent()) {
             channel = channelOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no channel was entered")).asChannel().block();
@@ -86,7 +86,7 @@ public class TrackCommand implements SlashCommand {
             }
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             if (!callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS)) {
-                logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
+                logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
         }
