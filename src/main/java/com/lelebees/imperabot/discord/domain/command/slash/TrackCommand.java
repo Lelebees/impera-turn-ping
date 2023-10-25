@@ -109,6 +109,6 @@ public class TrackCommand implements SlashCommand {
         }
         GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
         logger.debug("Created new GameChannelLink with gameId: " + gameLink.getGameId() + " and channelId: " + gameLink.getChannelId());
-        return event.reply().withEphemeral(true).withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+        return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
     }
 }

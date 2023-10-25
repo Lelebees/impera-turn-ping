@@ -87,7 +87,7 @@ public class UntrackCommand implements SlashCommand {
         if (gameId == null) {
             // Stop tracking all games in channel
             gameLinkService.deleteLinksForChannel(channelId);
-            return event.reply().withContent("Stopped logging notifications for all games in <#%s>".formatted(channelId));
+            return event.reply().withContent("Stopped tracking notifications for all games in <#%s>".formatted(channelId));
         }
         // else, stop tracking specific game in channel
         gameLinkService.deleteLink(channelId, gameId);
