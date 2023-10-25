@@ -1,0 +1,26 @@
+{
+  "name": "track",
+  "description": "Track a game",
+  "type": 1,
+  "options": [
+    {
+      "name": "gameid",
+      "description": "The game's ID",
+      "type": 4,
+      "required": true
+    },
+    {
+      "name": "channel",
+      "description": "The channel to send the game's notifications to",
+      "type": 7,
+      "required": false,
+      "channel_types": [
+        0,
+        5,
+        10,
+        11,
+        12
+      ]
+    }
+  ]
+}
