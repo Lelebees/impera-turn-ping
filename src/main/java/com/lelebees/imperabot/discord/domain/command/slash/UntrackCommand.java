@@ -62,7 +62,7 @@ public class UntrackCommand implements SlashCommand {
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
 
-        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /untrack with gameid: " + gameId + " in channel: " + channel.getId().asLong() + "(" + channel.getData().name().get() + "). Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
+        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /untrack with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
 
         if (channelOptional.isPresent()) {
             channel = channelOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no channel was entered")).asChannel().block();
