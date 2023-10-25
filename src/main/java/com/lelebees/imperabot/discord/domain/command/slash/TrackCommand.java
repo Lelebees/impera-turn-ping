@@ -2,7 +2,9 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GameService;
+import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
@@ -20,13 +22,13 @@ import reactor.core.publisher.Mono;
 import java.util.Optional;
 
 /**
- * Track a game so users can get notifications. <p></p>
- * <p>
+ * Track a game so users can get notifications. <br>
+ * <br>
  * - If no channel is specified, and there is no default channel, the command will track in the channel it is used in (Guilds only).<br>
  * - If no channel is specified, but there is a default channel, the command will track in the default channel (Guilds only).<br>
  * - If a channel is specified, the command will track in that channel (Guilds only).<br>
- * - If a channel is specified, but the command isn't ran in a guild, Politely tell the user that we can't do that, and offer to track in DMs instead. <p></p>
- * <p>
+ * - If a channel is specified, but the command isn't ran in a guild, Politely tell the user that we can't do that, and offer to track in DMs instead. <br>
+ * <br>
  * A game must always be specified.
  */
 @Component
@@ -35,12 +37,14 @@ public class TrackCommand implements SlashCommand {
     private final GameService gameService;
     private final ImperaService imperaService;
     private final GameLinkService gameLinkService;
+    private final GuildSettingsService guildSettingsService;
     private final String imperaUrl = "https://imperaonline.de/game/play";
 
-    public TrackCommand(GameService gameService, ImperaService imperaService, GameLinkService gameLinkService) {
+    public TrackCommand(GameService gameService, ImperaService imperaService, GameLinkService gameLinkService, GuildSettingsService guildSettingsService) {
         this.gameService = gameService;
         this.imperaService = imperaService;
         this.gameLinkService = gameLinkService;
+        this.guildSettingsService = guildSettingsService;
     }
 
     @Override
@@ -60,25 +64,24 @@ public class TrackCommand implements SlashCommand {
         long gameId = gameOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no gameId was entered")).asLong();
 
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
-        Channel channel;
+        Channel channel = event.getInteraction().getChannel().block();
+
+        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /track with gameid: " + gameId + " in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + "). Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
+
         if (channelOptional.isPresent()) {
             channel = channelOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no channel was entered")).asChannel().block();
-        } else {
-            channel = event.getInteraction().getChannel().block();
+            logger.info("Channel was specified, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
         }
 
-        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /track with gameid: " + gameId + " in channel: " + channel.getId().asLong() + "(" + channel.getData().name().get() + "). Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
 
-        if (guildIdOptional.isEmpty()) {
-            // We're in a DM, so track for user
-            if (channelOptional.isPresent()) {
-                // Politely tell user that we cannot do that, and offer to track in DMs instead.
-                // NOTE: This code may never trigger. Discord4J cannot handle having a DM channel entered, and the DM doesn't have access to other channels, meaning the command will never get sent.
-                logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /track because they are in DMs, and specified a channel.");
-                return event.reply().withContent("You can't specify a channel when you are using this command outside of a guild.\nAlso, congratulations! You *really* _shouldn't_ get this error!").withEphemeral(true);
-            }
-        } else {
+        if (guildIdOptional.isPresent()) {
             // We're in a guild, so track for guild
+            Snowflake guildId = guildIdOptional.get();
+            GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
+            if (guildSettings.defaultChannelId != null) {
+                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId)).block();
+                logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
+            }
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             if (!callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS)) {
                 logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
