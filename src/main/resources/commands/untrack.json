@@ -4,7 +4,7 @@
   "type": 1,
   "options": [
     {
-      "name": "game",
+      "name": "gameid",
       "description": "The game to stop tracking",
       "type": 3,
       "required": false
