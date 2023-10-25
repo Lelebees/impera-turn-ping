@@ -16,6 +16,7 @@ import discord4j.core.object.entity.channel.Channel;
 import discord4j.rest.util.Permission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -38,13 +39,14 @@ public class TrackCommand implements SlashCommand {
     private final ImperaService imperaService;
     private final GameLinkService gameLinkService;
     private final GuildSettingsService guildSettingsService;
-    private final String imperaUrl = "https://imperaonline.de/game/play";
+    private final String imperaUrl;
 
-    public TrackCommand(GameService gameService, ImperaService imperaService, GameLinkService gameLinkService, GuildSettingsService guildSettingsService) {
+    public TrackCommand(GameService gameService, ImperaService imperaService, GameLinkService gameLinkService, GuildSettingsService guildSettingsService, @Value("${impera.web.url}") String imperaUrl) {
         this.gameService = gameService;
         this.imperaService = imperaService;
         this.gameLinkService = gameLinkService;
         this.guildSettingsService = guildSettingsService;
+        this.imperaUrl = imperaUrl + "/game/play";
     }
 
     @Override
@@ -103,7 +105,7 @@ public class TrackCommand implements SlashCommand {
         long channelId = channel.getId().asLong();
         // Add line to tracking table with gameid and channelid
         if (gameLinkService.linkExists(gameId, channelId)) {
-            return event.reply().withEphemeral(true).withContent("[%s](%s%s)  is already being tracked in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+            return event.reply().withEphemeral(true).withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
         }
         GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
         logger.debug("Created new GameChannelLink with gameId: " + gameLink.getGameId() + " and channelId: " + gameLink.getChannelId());
