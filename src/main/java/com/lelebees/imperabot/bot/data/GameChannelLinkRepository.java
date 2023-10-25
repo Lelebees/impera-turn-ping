@@ -15,4 +15,6 @@ public interface GameChannelLinkRepository extends JpaRepository<GameChannelLink
     List<GameChannelLink> findGameChannelLinkByGameId(long gameId);
 
     void deleteGameChannelLinksByGameId(long gameId);
+
+    void deleteGameChannelLinksByChannelId(long channelId);
 }

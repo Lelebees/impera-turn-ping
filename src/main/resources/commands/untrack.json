@@ -1,0 +1,26 @@
+{
+  "name": "untrack",
+  "description": "Stop tracking one or multiple games",
+  "type": 1,
+  "options": [
+    {
+      "name": "game",
+      "description": "The game to stop tracking",
+      "type": 3,
+      "required": false
+    },
+    {
+      "name": "channel",
+      "description": "The channel to stop tracking the game(s) in",
+      "type": 7,
+      "required": false,
+      "channel_types": [
+        0,
+        5,
+        10,
+        11,
+        12
+      ]
+    }
+  ]
+}

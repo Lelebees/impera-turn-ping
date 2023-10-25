@@ -8,12 +8,14 @@ import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLi
 import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.discord.application.DiscordService;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class GameLinkService {
     private final GameChannelLinkRepository repository;
     private final DiscordService discordService;
@@ -92,5 +94,9 @@ public class GameLinkService {
 
     public void deleteLinksForGame(long gameId) {
         repository.deleteGameChannelLinksByGameId(gameId);
+    }
+
+    public void deleteLinksForChannel(long channelId) {
+        repository.deleteGameChannelLinksByChannelId(channelId);
     }
 }
