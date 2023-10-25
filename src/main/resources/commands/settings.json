@@ -1,0 +1,47 @@
+{
+  "name": "settings",
+  "description": "Change or view personal settings",
+  "type": 1,
+  "options": [
+    {
+      "name": "view",
+      "description": "View your settings",
+      "type": 1
+    },
+    {
+      "name": "set",
+      "description": "Change your settings",
+      "type": 1,
+      "options": [
+        {
+          "name": "setting",
+          "description": "The setting you wish to use",
+          "type": 4,
+          "required": true,
+          "choices": [
+            {
+              "name": "No Notifications",
+              "value": 0
+            },
+            {
+              "name": "DMs Only",
+              "value": 1
+            },
+            {
+              "name": "Guild Only",
+              "value": 2
+            },
+            {
+              "name": "Guild > DMs",
+              "value": 3
+            },
+            {
+              "name": "DMs & Guild",
+              "value": 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
