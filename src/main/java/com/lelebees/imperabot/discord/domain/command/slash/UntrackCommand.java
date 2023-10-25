@@ -76,7 +76,7 @@ public class UntrackCommand implements SlashCommand {
                 channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId)).block();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so untracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
             }
-            Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
+            Member callingMember = callingUser.asMember(guildId).block();
             if (!callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS)) {
                 logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /untrack because they do not have the correct permissions.");
                 return event.reply().withContent("You are not allowed to stop tracking games in this guild.").withEphemeral(true);
