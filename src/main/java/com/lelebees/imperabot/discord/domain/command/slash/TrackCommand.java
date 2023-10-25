@@ -80,7 +80,7 @@ public class TrackCommand implements SlashCommand {
             // We're in a guild, so track for guild
             Snowflake guildId = guildIdOptional.get();
             GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
-            if (guildSettings.defaultChannelId != null) {
+            if (guildSettings.defaultChannelId != null && channelOptional.isEmpty()) {
                 channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId)).block();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
             }
