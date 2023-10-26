@@ -23,7 +23,14 @@
               "name": "channel",
               "type": 7,
               "description": "The channel to set as the default channel.",
-              "required": false
+              "required": false,
+              "channel_types": [
+                0,
+                5,
+                10,
+                11,
+                12
+              ]
             }
           ]
         },
