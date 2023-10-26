@@ -2,6 +2,7 @@ package com.lelebees.imperabot.discord.domain.command.button;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ public class MobileCopyButton implements ButtonCommand {
 
     @Override
     public Mono<Void> handle(ButtonInteractionEvent event) {
-        Snowflake id = event.getInteraction().getMember().orElseThrow(() -> new NullPointerException("No user made this request?!")).getId();
+        Snowflake id = event.getInteraction().getUser().getId();
         BotUser user = userService.findOrCreateUser(id.asLong());
         return event.reply().withEphemeral(true).withContent(user.getVerificationCode());
     }

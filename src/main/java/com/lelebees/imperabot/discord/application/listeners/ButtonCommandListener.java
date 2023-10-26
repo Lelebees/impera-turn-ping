@@ -1,6 +1,6 @@
 package com.lelebees.imperabot.discord.application.listeners;
 
-import com.lelebees.imperabot.discord.domain.command.button.ButtonCommand;
+import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import org.springframework.stereotype.Component;

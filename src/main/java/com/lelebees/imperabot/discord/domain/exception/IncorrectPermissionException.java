@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.discord.domain.command.slash.notification.exception;
+package com.lelebees.imperabot.discord.domain.exception;
 
 public class IncorrectPermissionException extends RuntimeException {
     public IncorrectPermissionException(String message) {
