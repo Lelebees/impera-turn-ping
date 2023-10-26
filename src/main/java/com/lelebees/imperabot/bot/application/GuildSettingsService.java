@@ -46,4 +46,10 @@ public class GuildSettingsService {
     public boolean guildSettingsExist(long guildId) {
         return repository.existsById(guildId);
     }
+
+    public void updateDefaultChannel(long guildId, long channelId) {
+        GuildSettings settings = getOrCreateGuildSettings(guildId);
+        settings.defaultChannelId = channelId;
+        repository.save(settings);
+    }
 }
