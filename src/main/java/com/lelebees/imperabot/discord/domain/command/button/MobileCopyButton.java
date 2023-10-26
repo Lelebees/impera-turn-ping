@@ -2,6 +2,7 @@ package com.lelebees.imperabot.discord.domain.command.button;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import org.springframework.stereotype.Component;
