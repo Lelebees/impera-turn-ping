@@ -1,29 +1,26 @@
 package com.lelebees.imperabot.discord.application;
 
 import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
-import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.object.entity.channel.GuildMessageChannel;
 import discord4j.core.object.entity.channel.PrivateChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class DiscordService {
     private final GatewayDiscordClient gatewayClient;
     private final UserService userService;
+    private final static Logger logger = LoggerFactory.getLogger(DiscordService.class);
 
     public DiscordService(GatewayDiscordClient gatewayClient, UserService userService) {
         this.gatewayClient = gatewayClient;
@@ -148,14 +145,6 @@ public class DiscordService {
         }
     }
 
-    private void sendMessage(long channelId, String message) {
-        Channel channel = getChannelById(channelId);
-
-        channel.getRestChannel()
-                .createMessage(message)
-                .block();
-    }
-
     public boolean channelIsDM(long channelId) {
         return getChannelById(channelId).getType() == Channel.Type.DM;
     }
@@ -193,56 +182,29 @@ public class DiscordService {
         return user.getPrivateChannel().block();
     }
 
-    public long getGameIdOption(ChatInputInteractionEvent event) {
-        return event.getOptions()
-                .get(0)
-                .getOptions()
-                .get(0)
-                .getOption("gameid")
-                .orElseThrow(() -> new NullPointerException("This is impossible, How could gameid not exist?!"))
-                .getValue()
-                .orElseThrow(() -> new NullPointerException("No gameid?!?!"))
-                .asLong();
+    public Channel getChannelById(long channelId) {
+        return gatewayClient.getChannelById(Snowflake.of(channelId)).block();
     }
 
-    public Channel getChannelOption(ChatInputInteractionEvent event) {
-        return event.getOptions()
-                .get(0)
-                .getOptions()
-                .get(0)
-                .getOption("channel")
-                .orElseThrow(() -> new NullPointerException("This is impossible, How could channel not exist?!"))
-                .getValue()
-                .orElseThrow(() -> new NullPointerException("No channel?!?!"))
-                .asChannel()
+    public Map<String, Long> getApplicationCommands() {
+        Map<String, Long> commands = new HashMap<>();
+        gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong())
+                .collectList()
+                .block()
+                .forEach(command -> commands.put(command.name(), command.id().asLong()));
+        logger.info("All application (slash) commands: " + commands);
+        return commands;
+    }
+
+    private void sendMessage(long channelId, String message) {
+        Channel channel = getChannelById(channelId);
+
+        channel.getRestChannel()
+                .createMessage(message)
                 .block();
-    }
-
-    public GuildNotificationSettings getGuildSettingOption(ChatInputInteractionEvent event) {
-        return GuildNotificationSettings.get(getSettingOption(event));
-    }
-
-    public UserNotificationSetting getUserSettingOption(ChatInputInteractionEvent event) {
-        return UserNotificationSetting.get(getSettingOption(event));
-    }
-
-    private int getSettingOption(ChatInputInteractionEvent event) {
-        return Math.toIntExact(event.getOptions()
-                .get(0)
-                .getOptions()
-                .get(0)
-                .getOption("setting")
-                .orElseThrow(() -> new NullPointerException("This is impossible, How could setting not exist?!"))
-                .getValue()
-                .orElseThrow(() -> new NullPointerException("No setting?!?!"))
-                .asLong());
     }
 
     private boolean isMe(long userId) {
         return gatewayClient.getSelfId().equals(Snowflake.of(userId));
-    }
-
-    public Channel getChannelById(long channelId) {
-        return gatewayClient.getChannelById(Snowflake.of(channelId)).block();
     }
 }

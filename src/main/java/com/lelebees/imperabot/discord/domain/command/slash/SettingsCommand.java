@@ -48,6 +48,7 @@ public class SettingsCommand implements SlashCommand {
         EmbedCreateSpec embed = EmbedCreateSpec.builder()
                 .title("Settings for %s".formatted(user.getUsername()))
                 .addField("Default notification setting: ", "`%s`".formatted(botUser.getNotificationSetting().toString()), false)
+                // TODO: Make this translation friendly
                 .footer(botUser.isLinked() ? "Linked to Impera account: %s".formatted(botUser.getImperaId()) : "You are not linked to an Impera account", null)
                 .color(Color.of(230, 200, 90)).build();
 
