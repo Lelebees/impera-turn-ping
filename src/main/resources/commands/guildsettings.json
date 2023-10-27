@@ -1,0 +1,66 @@
+{
+  "name": "guildsettings",
+  "description": "Change or view settings for your server.",
+  "dm_permission": false,
+  "type": 1,
+  "options": [
+    {
+      "name": "view",
+      "type": 1,
+      "description": "View server settings."
+    },
+    {
+      "name": "set",
+      "type": 2,
+      "description": "Set server settings.",
+      "options": [
+        {
+          "name": "defaultchannel",
+          "type": 1,
+          "description": "Set the default channel for the server. Leave empty to select current channel.",
+          "options": [
+            {
+              "name": "channel",
+              "type": 7,
+              "description": "The channel to set as the default channel.",
+              "required": false,
+              "channel_types": [
+                0,
+                5,
+                10,
+                11,
+                12
+              ]
+            }
+          ]
+        },
+        {
+          "name": "winnerrole",
+          "type": 1,
+          "description": "Set or unset the winner role for the server.",
+          "options": [
+            {
+              "name": "role",
+              "type": 8,
+              "description": "The role to set as the winner role.",
+              "required": false
+            }
+          ]
+        },
+        {
+          "name": "permissionrole",
+          "type": 1,
+          "description": "Set or unset the permission role for the server.",
+          "options": [
+            {
+              "name": "role",
+              "type": 8,
+              "description": "The role you would like to use as permission role.",
+              "required": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
