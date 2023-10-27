@@ -69,7 +69,6 @@ public class SchedulerService {
         };
     }
 
-    //TODO: Notify users when someone has lost or won
     public Runnable checkTurns() {
         return () -> {
             try {
@@ -100,6 +99,12 @@ public class SchedulerService {
                             .map(imperaGame::findPlayerByGameId)
                             .toList();
 
+                    List<ImperaGamePlayerDTO> timedOutPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter + 1)
+                            .mapToObj(turn -> imperaService.playersThatTimedOut(game.getId(), turn))
+                            .flatMap(Collection::stream)
+                            .map(imperaGame::findPlayerByGameId)
+                            .toList();
+
                     // Get all channels that want to receive updates for this game.
                     List<Channel> channels = new ArrayList<>(gameLinkService.findLinksByGame(game.getId())
                             .stream()
@@ -117,6 +122,10 @@ public class SchedulerService {
                         logger.info("Sending surrendered notice!");
                         discordService.sendSurrenderMessage(channels, gamePlayer, imperaGame);
                     });
+                    timedOutPlayers.forEach(gamePlayer -> {
+                        logger.info("Sending timed out notice!");
+                        discordService.sendTimedOutMessage(channels, gamePlayer, imperaGame);
+                    });
                     // There is probably a better way to do this, but I'm not sure what it is.
                     if (gameEnded) {
                         logger.info("Game " + game.getId() + " has ended!");
@@ -130,7 +139,6 @@ public class SchedulerService {
                                 .toList();
                         // Send a message to all channels that are tracking this game, who won
                         // TODO: Allow an entire team to win
-                        // TODO: Fix user being declared winner when they surrendered on their turn
                         winningPlayers.forEach(winner -> discordService.sendVictorMessage(channels, winner, imperaGame));
 //                        discordService.sendVictorMessage(channels, imperaGame.currentPlayer, imperaGame);
                         gameService.deleteGame(game.getId());
