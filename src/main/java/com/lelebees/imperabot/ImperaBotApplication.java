@@ -36,7 +36,7 @@ public class ImperaBotApplication {
     public GatewayDiscordClient gatewayDiscordClient(@Value("${discord.token}") String discordToken) {
         return DiscordClientBuilder.create(discordToken).build()
                 .gateway()
-                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.watching("you make poor decisions")))
+                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.watching("empires rise and fall")))
                 .login()
                 .block();
     }
