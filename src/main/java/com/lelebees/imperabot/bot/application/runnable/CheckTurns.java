@@ -83,6 +83,7 @@ public class CheckTurns implements Runnable {
                         .toList());
                 logger.debug("Found " + channels.size() + " channels to notify.");
 
+                // TODO: reduce the amount of API calls by sorting through the players in RAM
                 defeatedPlayers.forEach(player -> {
                     logger.info("Sending defeated notice for " + imperaGame.name + " (" + imperaGame.id + ")!");
                     discordService.sendDefeatedMessage(channels, player, imperaGame);
@@ -107,8 +108,8 @@ public class CheckTurns implements Runnable {
                             .flatMap(Collection::stream)
                             .toList();
                     // Send a message to all channels that are tracking this game, who won
-                    // TODO: make a proper winner message
-                    winningPlayers.forEach(winner -> discordService.sendVictorMessage(channels, winner, imperaGame));
+                    discordService.sendVictorsMessage(channels, winningPlayers, imperaGame);
+//                    winningPlayers.forEach(winner -> discordService.sendVictorMessage(channels, winner, imperaGame));
                     gameService.deleteGame(game.getId());
                 } else if (turnHasChanged) {
                     //Send notice
