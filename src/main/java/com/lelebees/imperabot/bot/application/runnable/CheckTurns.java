@@ -4,7 +4,6 @@ import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GameService;
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
@@ -76,8 +75,6 @@ public class CheckTurns implements Runnable {
                 // Get all channels that want to receive updates for this game.
                 List<Channel> channels = new ArrayList<>(gameLinkService.findLinksByGame(game.getId())
                         .stream()
-                        .filter(gameChannelLink ->
-                                gameLinkService.deepGetNotificationSetting(gameChannelLink.getGameLinkId()) != GuildNotificationSettings.NO_NOTIFICATIONS)
                         .map(GameChannelLink::getChannelId)
                         .map(discordService::getChannelById)
                         .toList());
@@ -109,6 +106,7 @@ public class CheckTurns implements Runnable {
                             .toList();
                     // Send a message to all channels that are tracking this game, who won
                     discordService.sendVictorsMessage(channels, winningPlayers, imperaGame);
+                    winningPlayers.forEach(winner -> discordService.giveWinnerRole(game, winner));
 //                    winningPlayers.forEach(winner -> discordService.sendVictorMessage(channels, winner, imperaGame));
                     gameService.deleteGame(game.getId());
                 } else if (turnHasChanged) {

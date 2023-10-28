@@ -10,6 +10,7 @@ import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.util.AllowedMentions;
 import discord4j.rest.util.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +57,30 @@ public class GuildSettingsCommand implements SlashCommand {
                 guildSettingsService.updateDefaultChannel(guildIdOptional.get().asLong(), channelId.asLong());
                 return event.reply().withContent("Updated default channel to <#%s>".formatted(channelId.asString()));
             }
+            if (subOption.getName().equals("permissionrole")) {
+                Optional<ApplicationCommandInteractionOption> roleOption = subOption.getOption("role");
+                Long roleId = null;
+                if (roleOption.isPresent()) {
+                    roleId = roleOption.get().getValue().get().asRole().block().getId().asLong();
+                }
+                logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /guildsettings set permissionrole with role: " + roleId);
 
+                guildSettingsService.updatePermissionRole(guildIdOptional.get().asLong(), roleId);
+                return event.reply().withContent("Updated permission role to <@&%s>".formatted(roleId)).withAllowedMentions(AllowedMentions.suppressAll());
+            }
+            if (subOption.getName().equals("winnerrole")) {
+                Optional<ApplicationCommandInteractionOption> roleOption = subOption.getOption("role");
+                Long roleId = null;
+                if (roleOption.isPresent()) {
+                    roleId = roleOption.get().getValue().get().asRole().block().getId().asLong();
+                }
+                logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /guildsettings set winnerrole with role: " + roleId);
+
+                guildSettingsService.updateWinnerRole(guildIdOptional.get().asLong(), roleId);
+                return event.reply().withContent("Updated winner role to <@&%s>".formatted(roleId)).withAllowedMentions(AllowedMentions.suppressAll());
+            }
             logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /guildsettings set");
-            return event.reply().withEphemeral(true).withContent("Still need to implement this, come back later!");
+            return event.reply().withEphemeral(true).withContent("This is not a valid option. Please select one!");
         }
 
         logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /guildsettings view");
@@ -66,13 +88,14 @@ public class GuildSettingsCommand implements SlashCommand {
         long guildId = guildIdOptional.get().asLong();
         String guildName = event.getInteraction().getGuild().block().getName();
 
-        // TODO: Role settings
         GuildSettings settings = guildSettingsService.getGuildSettingsById(guildId);
         EmbedCreateSpec embed = EmbedCreateSpec.builder()
                 .title("Settings for %s".formatted(guildName))
-                .addField("Default channel:", "<#%s>".formatted(settings.defaultChannelId), false)
+                .addField("Default channel:", (settings.defaultChannelId == null ? "`None`" : "<#%s>".formatted(settings.defaultChannelId)), false)
+                .addField("Permission role:", (settings.permissionRoleId == null ? "`None`" : "<@&%s>".formatted(settings.permissionRoleId)), false)
+                .addField("Winner role:", (settings.winnerRoleId == null ? "`None`" : "<@&%s>".formatted(settings.winnerRoleId)), false)
                 .color(Color.of(230, 200, 90))
                 .build();
-        return event.reply().withEmbeds(embed);
+        return event.reply().withEmbeds(embed).withAllowedMentions(AllowedMentions.suppressAll());
     }
 }

@@ -25,14 +25,20 @@ public class GuildSettings {
     @Nullable
     public Long permissionRoleId;
 
-    public GuildSettings(long id, @Nullable Long defaultChannelId, GuildNotificationSettings notificationSetting, @Nullable Long permissionRoleId) {
+    @Column(name = "winner_role_id")
+    @Nullable
+    public Long winnerRoleId;
+
+    public GuildSettings(long id, @Nullable Long defaultChannelId, GuildNotificationSettings notificationSetting, @Nullable Long permissionRoleId, @Nullable Long winnerRoleId) {
         this.id = id;
         this.defaultChannelId = defaultChannelId;
         this.notificationSetting = notificationSetting;
+        this.permissionRoleId = permissionRoleId;
+        this.winnerRoleId = winnerRoleId;
     }
 
     public GuildSettings(long id) {
-        this(id, null, NOTIFICATIONS_ON, null);
+        this(id, null, NOTIFICATIONS_ON, null, null);
     }
 
     protected GuildSettings() {

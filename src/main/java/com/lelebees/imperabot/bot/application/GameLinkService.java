@@ -5,9 +5,6 @@ import com.lelebees.imperabot.bot.domain.NotificationSettings;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameLinkId;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
-import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
-import com.lelebees.imperabot.discord.application.DiscordService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -18,15 +15,9 @@ import java.util.Optional;
 @Transactional
 public class GameLinkService {
     private final GameChannelLinkRepository repository;
-    private final DiscordService discordService;
-    private final GuildSettingsService guildSettingsService;
-    private final UserService userService;
 
-    public GameLinkService(GameChannelLinkRepository repository, DiscordService discordService, GuildSettingsService guildSettingsService, UserService userService) {
+    public GameLinkService(GameChannelLinkRepository repository) {
         this.repository = repository;
-        this.discordService = discordService;
-        this.guildSettingsService = guildSettingsService;
-        this.userService = userService;
     }
 
     public GameChannelLink saveLink(GameChannelLink gameChannelLink) {
@@ -63,25 +54,25 @@ public class GameLinkService {
         return repository.findGameChannelLinkByGameId(gameId);
     }
 
-    public NotificationSettings deepGetNotificationSetting(GameLinkId id) {
-        GameChannelLink gameChannelLink = findLink(id);
-        long channelId = gameChannelLink.getChannelId();
-        if (discordService.channelIsDM(channelId)) {
-            if (gameChannelLink.notificationSetting != null) {
-                return UserNotificationSetting.values()[gameChannelLink.notificationSetting];
-            }
-            long user = discordService.getChannelOwner(channelId);
-            return userService.findUser(user).getNotificationSetting();
-        }
-        if (discordService.channelIsGuildChannel(channelId)) {
-            if (gameChannelLink.notificationSetting != null) {
-                return GuildNotificationSettings.values()[gameChannelLink.notificationSetting];
-            }
-            long guildId = discordService.getGuildChannelGuild(channelId);
-            return guildSettingsService.getGuildSettingsById(guildId).notificationSetting;
-        }
-        throw new IllegalStateException("Incorrect channel type!");
-    }
+//    public NotificationSettings deepGetNotificationSetting(GameLinkId id) {
+//        GameChannelLink gameChannelLink = findLink(id);
+//        long channelId = gameChannelLink.getChannelId();
+//        if (discordService.channelIsDM(channelId)) {
+//            if (gameChannelLink.notificationSetting != null) {
+//                return UserNotificationSetting.values()[gameChannelLink.notificationSetting];
+//            }
+//            long user = discordService.getChannelOwner(channelId);
+//            return userService.findUser(user).getNotificationSetting();
+//        }
+//        if (discordService.channelIsGuildChannel(channelId)) {
+//            if (gameChannelLink.notificationSetting != null) {
+//                return GuildNotificationSettings.values()[gameChannelLink.notificationSetting];
+//            }
+//            long guildId = discordService.getGuildChannelGuild(channelId);
+//            return guildSettingsService.getGuildSettingsById(guildId).notificationSetting;
+//        }
+//        throw new IllegalStateException("Incorrect channel type!");
+//    }
 
     public boolean linkExists(long gameId, long channelId) {
         return repository.existsById(new GameLinkId(gameId, channelId));

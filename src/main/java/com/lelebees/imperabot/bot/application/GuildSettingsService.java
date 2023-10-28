@@ -1,9 +1,9 @@
 package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.data.GuildSettingsRepository;
-import com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsModificationDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -29,12 +29,11 @@ public class GuildSettingsService {
         return repository.save(new GuildSettings(guildId));
     }
 
-    public GuildSettings updateGuildSettings(long guildId, Long channelId, GuildNotificationSettings notificationSetting) {
+    public GuildSettings updateGuildSettings(long guildId, GuildSettingsModificationDTO guildSettingsModificationDTO) {
         GuildSettings guildSettings = getGuildSettingsById(guildId);
-        guildSettings.defaultChannelId = channelId;
-        if (notificationSetting != null) {
-            guildSettings.notificationSetting = notificationSetting;
-        }
+        guildSettings.defaultChannelId = guildSettingsModificationDTO.channelId;
+        guildSettings.permissionRoleId = guildSettingsModificationDTO.permissionRoleId;
+        guildSettings.winnerRoleId = guildSettingsModificationDTO.winnerRoleId;
         return repository.save(guildSettings);
     }
 
@@ -47,9 +46,24 @@ public class GuildSettingsService {
         return repository.existsById(guildId);
     }
 
-    public void updateDefaultChannel(long guildId, long channelId) {
+    public GuildSettings updateDefaultChannel(long guildId, Long channelId) {
         GuildSettings settings = getOrCreateGuildSettings(guildId);
-        settings.defaultChannelId = channelId;
-        repository.save(settings);
+        GuildSettingsModificationDTO guildSettingsModificationDTO = new GuildSettingsModificationDTO(settings);
+        guildSettingsModificationDTO.channelId = channelId;
+        return updateGuildSettings(guildId, guildSettingsModificationDTO);
+    }
+
+    public GuildSettings updatePermissionRole(long guildId, Long permissionRoleId) {
+        GuildSettings settings = getOrCreateGuildSettings(guildId);
+        GuildSettingsModificationDTO guildSettingsModificationDTO = new GuildSettingsModificationDTO(settings);
+        guildSettingsModificationDTO.permissionRoleId = permissionRoleId;
+        return updateGuildSettings(guildId, guildSettingsModificationDTO);
+    }
+
+    public GuildSettings updateWinnerRole(long guildId, Long winnerRoleId) {
+        GuildSettings settings = getOrCreateGuildSettings(guildId);
+        GuildSettingsModificationDTO guildSettingsModificationDTO = new GuildSettingsModificationDTO(settings);
+        guildSettingsModificationDTO.winnerRoleId = winnerRoleId;
+        return updateGuildSettings(guildId, guildSettingsModificationDTO);
     }
 }
