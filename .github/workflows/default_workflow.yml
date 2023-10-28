@@ -2,8 +2,6 @@ name: Java Deploy
 
 on:
   push:
-    branches:
-      - master
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,12 +22,3 @@ jobs:
           IMPERA_USER_PASSWORD: ${{ secrets.IMPERA_USER_PASSWORD }}
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: mvn --batch-mode --update-snapshots package -Dspring.profiles.active=test
-      - name: Push to deploy
-        run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git fetch
-          git checkout -b deploy || true
-          git add --force target/*.jar
-          git commit -am "Automated: prepare deployment" 
-          git push --force --set-upstream origin deploy
