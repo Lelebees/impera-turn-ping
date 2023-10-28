@@ -5,7 +5,6 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
 import discord4j.rest.RestClient;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,16 +26,11 @@ public class ImperaBotApplication {
 //        logger.trace("Trace log");
     }
 
-    @PostConstruct
-    public void runOrdinaryApp() {
-        logger.info("System up and running");
-    }
-
     @Bean
     public GatewayDiscordClient gatewayDiscordClient(@Value("${discord.token}") String discordToken) {
         return DiscordClientBuilder.create(discordToken).build()
                 .gateway()
-                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.watching("you make poor decisions")))
+                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.watching("empires rise and fall")))
                 .login()
                 .block();
     }

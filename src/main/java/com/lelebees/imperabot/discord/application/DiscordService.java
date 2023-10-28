@@ -30,120 +30,127 @@ public class DiscordService {
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
         Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
         String userString = gamePlayer.name;
+        String turnMessage = "your turn in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name, game.id);
+        String directTurnMessage = "It's %s".formatted(turnMessage);
         if (user.isPresent()) {
             BotUser player = user.get();
-            userString = player.getMention();
-            switch (player.getNotificationSetting()) {
-                case NO_NOTIFICATIONS -> userString = gamePlayer.name;
-                case GUILD_ONLY -> {
-                }
-                case DMS_ONLY -> {
-                    sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "It's your turn in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-                    return;
-                }
-                case PREFER_GUILD_OVER_DMS -> {
-                    if (channels.isEmpty()) {
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "It's your turn in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-                    }
-                }
-                case DMS_AND_GUILD ->
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "It's your turn in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-            }
+            userString = getUserStringWithSettings(player, directTurnMessage, gamePlayer, channels);
         }
+        String generalTurnMessage = "%s, it is %s".formatted(userString, turnMessage);
         for (Channel channel : channels) {
-            sendMessage(channel.getId().asLong(), userString + ", it is your turn in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
+            sendMessage(channel.getId().asLong(), generalTurnMessage);
         }
     }
 
     public void sendHalfTimeMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
         Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
         String userString = gamePlayer.name;
+        String halfTimeMessage = "have half time remaining in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name, game.id);
+        String directHalfTimeMessage = "You %s ".formatted(halfTimeMessage);
         if (user.isPresent()) {
             BotUser player = user.get();
-            userString = player.getMention();
-            switch (player.getNotificationSetting()) {
-                case NO_NOTIFICATIONS -> userString = gamePlayer.name;
-                case GUILD_ONLY -> {
-                }
-                case DMS_ONLY -> {
-                    sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "You have half time remaining in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-                    return;
-                }
-                case PREFER_GUILD_OVER_DMS -> {
-                    if (channels.isEmpty()) {
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "You have half time remaining in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-                    }
-                }
-                case DMS_AND_GUILD ->
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "You have half time remaining in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-            }
+            userString = getUserStringWithSettings(player, directHalfTimeMessage, gamePlayer, channels);
         }
+        String generalHalfTimeMessage = "%s %s".formatted(userString, halfTimeMessage);
         for (Channel channel : channels) {
-            sendMessage(channel.getId().asLong(), userString + ", you have half time remaining in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
+            sendMessage(channel.getId().asLong(), generalHalfTimeMessage);
         }
     }
 
     public void sendVictorMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
         Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
         String userString = gamePlayer.name;
+        String victoryMessage = "Game [%s](https://imperaonline.de/game/play/%s) has ended!".formatted(game.name, game.id);
+        String directVictoryMessage = "%s You have won!".formatted(victoryMessage);
         if (user.isPresent()) {
             BotUser player = user.get();
-            userString = player.getMention();
-            switch (player.getNotificationSetting()) {
-                case NO_NOTIFICATIONS -> userString = gamePlayer.name;
-                case GUILD_ONLY -> {
-                }
-                case DMS_ONLY -> {
-                    sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "Game [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ") has ended! You have won!");
-                    return;
-                }
-                case PREFER_GUILD_OVER_DMS -> {
-                    if (channels.isEmpty()) {
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "Game [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ") has ended! You have won!");
-                    }
-                }
-                case DMS_AND_GUILD ->
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "Game [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ") has ended! You have won!");
-            }
+            userString = getUserStringWithSettings(player, directVictoryMessage, gamePlayer, channels);
         }
+        String generalVictoryMessage = "%s %s has won!".formatted(victoryMessage, userString);
         for (Channel channel : channels) {
-            sendMessage(channel.getId().asLong(), "Game [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ") has ended! " + userString + " has won!");
+            sendMessage(channel.getId().asLong(), generalVictoryMessage);
+        }
+    }
+
+    public void sendVictorsMessage(List<Channel> channels, List<ImperaGamePlayerDTO> winningPlayers, ImperaGameViewDTO game) {
+        List<String> userStrings = new ArrayList<>();
+        String victoryMessage = "Game [%s](https://imperaonline.de/game/play/%s) has ended!".formatted(game.name, game.id);
+        for (ImperaGamePlayerDTO gamePlayer : winningPlayers) {
+            Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
+            String userString = gamePlayer.name;
+            String directVictoryMessage = "%s You have won!".formatted(victoryMessage);
+            if (user.isPresent()) {
+                BotUser player = user.get();
+                userString = getUserStringWithSettings(player, directVictoryMessage, gamePlayer, channels);
+            }
+            userStrings.add(userString);
+        }
+        String singledUser = userStrings.get(0);
+        userStrings.remove(0);
+        // TODO: test this
+        String generalVictoryMessage = "%s %s %s won!".formatted(victoryMessage, String.join(", ", userStrings), !userStrings.isEmpty() ? "and %s have".formatted(singledUser) : "%s has".formatted(singledUser));
+        for (Channel channel : channels) {
+            sendMessage(channel.getId().asLong(), generalVictoryMessage);
         }
     }
 
     public void sendSurrenderMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
+        String generalSurrenderMessage = "%s has surrendered in [%s](https://imperaonline.de/game/play/%s)!".formatted(gamePlayer.name, game.name, game.id);
         for (Channel channel : channels) {
-            sendMessage(channel.getId().asLong(), gamePlayer.name + " has surrendered in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
+            sendMessage(channel.getId().asLong(), generalSurrenderMessage);
         }
     }
 
     public void sendDefeatedMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
         Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
         String userString = gamePlayer.name;
+        String defeatedMessage = "been defeated in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name, game.id);
+        String directDefeatedMessage = "You have %s".formatted(defeatedMessage);
         if (user.isPresent()) {
             BotUser player = user.get();
-            userString = player.getMention();
-            switch (player.getNotificationSetting()) {
-                case NO_NOTIFICATIONS -> userString = gamePlayer.name;
-                case GUILD_ONLY -> {
-                }
-                case DMS_ONLY -> {
-                    sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "You have been defeated in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-                    return;
-                }
-                case PREFER_GUILD_OVER_DMS -> {
-                    if (channels.isEmpty()) {
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "You have been defeated in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-                    }
-                }
-                case DMS_AND_GUILD ->
-                        sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), "You have been defeated in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
-            }
+            userString = getUserStringWithSettings(player, directDefeatedMessage, gamePlayer, channels);
         }
+        String generalDefeatedMessage = "%s has %s".formatted(userString, defeatedMessage);
         for (Channel channel : channels) {
-            sendMessage(channel.getId().asLong(), userString + " has been defeated in [" + game.name + "](https://imperaonline.de/game/play/" + game.id + ")!");
+            sendMessage(channel.getId().asLong(), generalDefeatedMessage);
         }
     }
+
+    public void sendTimedOutMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO imperaGame) {
+        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
+        String userString = gamePlayer.name;
+        String timedOutMessage = "timed out in [%s](https://imperaonline.de/game/play/%s)!".formatted(imperaGame.name, imperaGame.id);
+        String directTimeOutMessage = "You have %s".formatted(timedOutMessage);
+        if (user.isPresent()) {
+            BotUser player = user.get();
+            userString = getUserStringWithSettings(player, directTimeOutMessage, gamePlayer, channels);
+        }
+        String generalTimeOutMessage = "%s has %s".formatted(userString, timedOutMessage);
+        for (Channel channel : channels) {
+            sendMessage(channel.getId().asLong(), generalTimeOutMessage);
+        }
+    }
+
+    private String getUserStringWithSettings(BotUser player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
+        String userString = player.getMention();
+        switch (player.getNotificationSetting()) {
+            case NO_NOTIFICATIONS -> userString = gamePlayer.name;
+            case GUILD_ONLY -> {
+            }
+            case DMS_ONLY -> {
+                sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), directMessage);
+                userString = gamePlayer.name;
+            }
+            case PREFER_GUILD_OVER_DMS -> {
+                if (channels.isEmpty()) {
+                    sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), directMessage);
+                }
+            }
+            case DMS_AND_GUILD -> sendMessage(getDMChannelByOwner(player.getUserId()).getId().asLong(), directMessage);
+        }
+        return userString;
+    }
+
 
     public boolean channelIsDM(long channelId) {
         return getChannelById(channelId).getType() == Channel.Type.DM;

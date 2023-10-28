@@ -143,7 +143,7 @@ public class ImperaService {
                 headers.setBearerAuth(bearerToken.access_token);
                 this.entity = new HttpEntity<>(headers);
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                logger.error("Handled Error: " + e.getMessage(), e);
             }
         };
     }
@@ -178,12 +178,12 @@ public class ImperaService {
         return turnState.actions.stream().filter(action -> action.action.equals("PlayerLost")).map(action -> action.actorId).toList();
     }
 
-    public boolean playerAlreadySurrendered(long gameId, String playerId, int turnId) {
+    public List<String> playersThatTimedOut(long gameId, int turnId) {
         ImperaGameHistoryDTO turnState = getTurnState(gameId, turnId);
         if (turnState == null) {
-            return false;
+            return null;
         }
-        return turnState.game.findPlayerByGameId(playerId).outcome.equals("Surrendered");
+        return turnState.actions.stream().filter(action -> action.action.equals("PlayerTimeout")).map(action -> action.actorId).toList();
     }
 
     private ImperaGameHistoryDTO getTurnState(long gameId, int turnId) {
