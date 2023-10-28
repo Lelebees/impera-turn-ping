@@ -5,7 +5,6 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
 import discord4j.rest.RestClient;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,11 +24,6 @@ public class ImperaBotApplication {
 //        logger.error("Oops! We have an Error. OK");
 //        logger.debug("Debugging log");
 //        logger.trace("Trace log");
-    }
-
-    @PostConstruct
-    public void runOrdinaryApp() {
-        logger.info("System up and running");
     }
 
     @Bean

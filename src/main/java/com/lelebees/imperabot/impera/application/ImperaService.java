@@ -143,7 +143,7 @@ public class ImperaService {
                 headers.setBearerAuth(bearerToken.access_token);
                 this.entity = new HttpEntity<>(headers);
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                logger.error("Handled Error: " + e.getMessage(), e);
             }
         };
     }
