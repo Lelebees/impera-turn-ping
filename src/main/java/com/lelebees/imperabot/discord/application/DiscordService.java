@@ -1,15 +1,22 @@
 package com.lelebees.imperabot.discord.application;
 
+import com.lelebees.imperabot.bot.application.GameLinkService;
+import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.game.Game;
+import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.object.entity.channel.GuildMessageChannel;
 import discord4j.core.object.entity.channel.PrivateChannel;
+import discord4j.rest.http.client.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,11 +27,15 @@ import java.util.*;
 public class DiscordService {
     private final GatewayDiscordClient gatewayClient;
     private final UserService userService;
+    private final GuildSettingsService guildSettingsService;
+    private final GameLinkService gameLinkService;
     private final static Logger logger = LoggerFactory.getLogger(DiscordService.class);
 
-    public DiscordService(GatewayDiscordClient gatewayClient, UserService userService) {
+    public DiscordService(GatewayDiscordClient gatewayClient, UserService userService, GuildSettingsService guildSettingsService, GameLinkService gameLinkService) {
         this.gatewayClient = gatewayClient;
         this.userService = userService;
+        this.guildSettingsService = guildSettingsService;
+        this.gameLinkService = gameLinkService;
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
@@ -213,5 +224,55 @@ public class DiscordService {
 
     private boolean isMe(long userId) {
         return gatewayClient.getSelfId().equals(Snowflake.of(userId));
+    }
+
+    public void giveWinnerRole(Game game, ImperaGamePlayerDTO winner) {
+        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(winner.userId));
+        if (user.isEmpty()) {
+            return;
+        }
+        BotUser winnerUser = user.get();
+
+        List<GameChannelLink> links = gameLinkService.findLinksByGame(game.getId());
+        logger.debug("Found " + links.size() + " links for game " + game.getId() + " when awarding winner role.");
+        if (links.isEmpty()) {
+            return;
+        }
+
+        // Find which channels belong to which guilds, and filter out the ones that are DMs
+        List<Guild> guilds = links.stream()
+                .map(GameChannelLink::getChannelId)
+                .filter(this::channelIsGuildChannel)
+                .map(this::getGuildChannelGuild)
+                .map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block())
+                .toList();
+
+        int numberOfGuilds = guilds.size();
+        logger.info("Found " + numberOfGuilds + " guilds to award winner role in.");
+        int skippedGuilds = 0;
+        // In each guild, find the winner role, and give it to the winner
+        for (Guild guild : guilds) {
+            Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId;
+            if (winnerRoleId == null) {
+                skippedGuilds++;
+                logger.debug("Skipping guild " + guild.getId().asLong() + " because it has no winner role.");
+                continue;
+            }
+            Member winnerMember = guild.getMemberById(Snowflake.of(winnerUser.getUserId())).block();
+            if (winnerMember == null) {
+                skippedGuilds++;
+                logger.debug("Skipping guild " + guild.getId().asLong() + " because the winner is not a member of the guild.");
+                continue;
+            }
+            try {
+                winnerMember.addRole(Snowflake.of(winnerRoleId)).block();
+            } catch (ClientException e) {
+                logger.error("Bot cannot give roles in guild " + guild.getId().asLong() + " (" + guild.getName() + ")!\n Most likely, the bot does not have the \"Manage Roles\" permission.");
+                skippedGuilds++;
+                continue;
+            }
+            logger.debug("Successfully awarded winner role to " + winnerMember.getId().asLong() + " (" + winnerMember.getUsername() + ") in guild " + guild.getId().asLong() + " (" + guild.getName() + ")");
+        }
+        logger.info("Skipped " + skippedGuilds + " guilds.");
     }
 }
