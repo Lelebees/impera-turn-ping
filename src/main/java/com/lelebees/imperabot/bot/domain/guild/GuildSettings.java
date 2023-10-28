@@ -15,18 +15,24 @@ public class GuildSettings {
     @Column(name = "default_channel_id")
     @Nullable
     public Long defaultChannelId;
+
+    //TODO: Determine if this needs to be saved.
     @Column(name = "notification_setting")
     @Convert(converter = GuildNotificationSettingsConverter.class)
     public GuildNotificationSettings notificationSetting;
 
-    public GuildSettings(long id, @Nullable Long defaultChannelId, GuildNotificationSettings notificationSetting) {
+    @Column(name = "permission_role_id")
+    @Nullable
+    public Long permissionRoleId;
+
+    public GuildSettings(long id, @Nullable Long defaultChannelId, GuildNotificationSettings notificationSetting, @Nullable Long permissionRoleId) {
         this.id = id;
         this.defaultChannelId = defaultChannelId;
         this.notificationSetting = notificationSetting;
     }
 
     public GuildSettings(long id) {
-        this(id, null, NOTIFICATIONS_ON);
+        this(id, null, NOTIFICATIONS_ON, null);
     }
 
     protected GuildSettings() {
