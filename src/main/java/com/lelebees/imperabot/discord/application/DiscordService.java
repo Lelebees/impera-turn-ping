@@ -25,6 +25,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import static discord4j.rest.util.Permission.VIEW_CHANNEL;
+
 @Service
 public class DiscordService {
     private final GatewayDiscordClient gatewayClient;
@@ -137,13 +139,15 @@ public class DiscordService {
             BotUser player = user.get();
             userString = player.getMention();
 
-            boolean noAccessToGuild = true;
+            boolean userCanSeeMessageInGuild = false;
             for (Channel channel : guildChannels) {
                 Snowflake guildId = Snowflake.of(channel.getData().guildId().get());
                 Guild guild = gatewayClient.getGuildById(guildId).block();
                 try {
-                    guild.getMemberById(Snowflake.of(player.getUserId())).block();
-                    noAccessToGuild = false;
+                    Member guildMember = guild.getMemberById(Snowflake.of(player.getUserId())).block();
+                    // Check if the guildmember has access to the specific channel
+                    userCanSeeMessageInGuild = !((GuildMessageChannel) channel).getEffectivePermissions(guildMember.getId())
+                            .block().contains(VIEW_CHANNEL);
                 } catch (ClientException e) {
                     logger.debug("User " + player.getUserId() + " does not have access to guild " + guildId.asLong() + " (" + guild.getName() + ")");
                 }
@@ -151,13 +155,14 @@ public class DiscordService {
 
             PrivateChannel usersChannel = getDMChannelByOwner(player.getUserId());
             if (dmChannels.contains(usersChannel)) {
-                sendDMAccordingToSettings(player, directMessage.formatted(userString), noAccessToGuild, usersChannel);
+                sendDMAccordingToSettings(player, directMessage.formatted(userString), userCanSeeMessageInGuild, usersChannel);
             }
             allowedMentions = getAllowedMentions(player);
         }
 
         AllowedMentions finalAllowedMentions = allowedMentions;
         String finalUserString = userString;
+        // TODO: Force swap userstring to playername if player is not in a guild
         guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString))
                 .withAllowedMentions(finalAllowedMentions)
                 .block());
