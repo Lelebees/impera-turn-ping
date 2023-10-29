@@ -6,7 +6,7 @@
     {
       "name": "gameid",
       "description": "The game to stop tracking",
-      "type": 3,
+      "type": 4,
       "required": false
     },
     {

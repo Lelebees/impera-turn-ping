@@ -39,6 +39,12 @@ public class CheckTurns implements Runnable {
             int skippedGames = 0;
             for (Game game : trackedGames) {
                 ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
+                if (gameLinkService.findLinksByGame(game.getId()).isEmpty()) {
+                    logger.debug("Skipping and removing game " + game.getId() + " (" + imperaGame.name + ") because it has no channels.");
+                    gameService.deleteGame(game.getId());
+                    skippedGames++;
+                    continue;
+                }
 
                 boolean gameEnded = imperaGame.state.equals("Ended");
                 boolean gameHasYetToStart = imperaGame.state.equals("Open");
