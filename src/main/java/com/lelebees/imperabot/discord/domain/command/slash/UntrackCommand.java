@@ -2,6 +2,7 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
+import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
@@ -63,7 +64,7 @@ public class UntrackCommand implements SlashCommand {
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
 
-        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /untrack with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
+        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /untrack with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? " (" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
 
         if (channelOptional.isPresent()) {
             channel = channelOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no channel was entered")).asChannel().block();
@@ -87,14 +88,18 @@ public class UntrackCommand implements SlashCommand {
             }
         }
 
-        long channelId = channel.getId().asLong();
+        Long channelId = channel.getId().asLong();
         if (gameId == null) {
             // Stop tracking all games in channel
             gameLinkService.deleteLinksForChannel(channelId);
             return event.reply().withContent("Stopped tracking notifications for all games in <#%s>".formatted(channelId));
         }
         // else, stop tracking specific game in channel
-        gameLinkService.deleteLink(channelId, gameId);
+        try {
+            gameLinkService.deleteLink(gameId, channelId);
+        } catch (GameChannelLinkNotFoundException e) {
+            return event.reply().withContent("Game [%s] is not being tracked in <#%s>!".formatted(gameId, channelId));
+        }
         try {
             ImperaGameViewDTO gameView = imperaService.getGame(gameId);
             return event.reply().withContent("Stopped logging notifications for [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
