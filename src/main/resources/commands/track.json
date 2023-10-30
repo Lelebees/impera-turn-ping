@@ -1,17 +1,35 @@
 {
   "name": "track",
+  "name_localizations": {
+    "de": "folgen"
+  },
   "description": "Track a game",
+  "description_localizations": {
+    "de": "Folge einem Spiel"
+  },
   "type": 1,
   "options": [
     {
       "name": "gameid",
+      "name_localizations": {
+        "de": "spielid"
+      },
       "description": "The game's ID",
+      "description_localizations": {
+        "de": "Die ID des Spiels"
+      },
       "type": 4,
       "required": true
     },
     {
       "name": "channel",
+      "name_localizations": {
+        "de": "kanal"
+      },
       "description": "The channel to send the game's notifications to",
+      "description_localizations": {
+        "de": "Der Kanal, an den die Benachrichtigungen des Spiels gesendet werden sollen"
+      },
       "type": 7,
       "required": false,
       "channel_types": [

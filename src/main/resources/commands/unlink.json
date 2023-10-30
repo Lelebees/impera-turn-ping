@@ -1,5 +1,11 @@
 {
   "name": "unlink",
+  "name_localizations": {
+    "de": "unlink"
+  },
   "description": "Unlink your Impera account from your Discord account",
+  "description_localizations": {
+    "de": "Entferne die Verknüpfung zwischen deinem Impera Account und deinem Discord Account"
+  },
   "type": 1
 }

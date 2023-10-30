@@ -1,17 +1,35 @@
 {
   "name": "untrack",
+  "name_localizations": {
+    "de": "unfolgen"
+  },
   "description": "Stop tracking one or multiple games",
+  "description_localizations": {
+    "de": "Stoppe das Verfolgen eines oder mehrerer Spiele"
+  },
   "type": 1,
   "options": [
     {
       "name": "gameid",
+      "name_localizations": {
+        "de": "spielid"
+      },
       "description": "The game to stop tracking",
+      "description_localizations": {
+        "de": "Das Spiel, das nicht mehr verfolgt werden soll"
+      },
       "type": 4,
       "required": false
     },
     {
       "name": "channel",
+      "name_localizations": {
+        "de": "kanal"
+      },
       "description": "The channel to stop tracking the game(s) in",
+      "description_localizations": {
+        "de": "Der Kanal, in dem das Spiel nicht mehr verfolgt werden soll"
+      },
       "type": 7,
       "required": false,
       "channel_types": [

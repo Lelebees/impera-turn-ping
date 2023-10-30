@@ -1,5 +1,11 @@
 {
   "name": "link",
+  "name_localizations": {
+    "de": "verknüpf"
+  },
   "description": "Links your Impera Account to your Discord account",
+  "description_localizations": {
+    "de": "Verknüpft deinen Impera Account mit deinem Discord Account"
+  },
   "type": 1
 }

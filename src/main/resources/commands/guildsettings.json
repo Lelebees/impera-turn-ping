@@ -6,23 +6,47 @@
   "options": [
     {
       "name": "view",
+      "name_localizations": {
+        "de": "sehen"
+      },
       "type": 1,
-      "description": "View server settings."
+      "description": "View server settings.",
+      "description_localizations": {
+        "de": "Sieh dir die Servereinstellungen an."
+      }
     },
     {
       "name": "set",
+      "name_localizations": {
+        "de": "stellen"
+      },
       "type": 2,
       "description": "Set server settings.",
+      "description_localizations": {
+        "de": "Stelle Servereinstellungen ein."
+      },
       "options": [
         {
           "name": "defaultchannel",
+          "name_localizations": {
+            "de": "standardkanal"
+          },
           "type": 1,
           "description": "Set the default channel for the server. Leave empty to select current channel.",
+          "description_localizations": {
+            "de": "Stelle den Standardkanal für den Server ein. Lasse es leer, um den aktuellen Kanal auszuwählen."
+          },
           "options": [
             {
               "name": "channel",
+              "name_localizations": {
+                "de": "kanal"
+              },
               "type": 7,
               "description": "The channel to set as the default channel.",
+              "description_localizations": {
+                "de": "Der Kanal, der als Standardkanal festgelegt werden soll."
+              },
               "required": false,
               "channel_types": [
                 0,
@@ -36,26 +60,50 @@
         },
         {
           "name": "winnerrole",
+          "name_localizations": {
+            "de": "gewinnerrolle"
+          },
           "type": 1,
           "description": "Set or unset the winner role for the server.",
+          "description_localizations": {
+            "de": "Setze oder entferne die Gewinnerrolle für den Server."
+          },
           "options": [
             {
               "name": "role",
+              "name_localizations": {
+                "de": "rolle"
+              },
               "type": 8,
               "description": "The role to set as the winner role.",
+              "description_localizations": {
+                "de": "Die Rolle, die als Gewinnerrolle festgelegt werden soll."
+              },
               "required": false
             }
           ]
         },
         {
           "name": "permissionrole",
+          "name_localizations": {
+            "de": "berechtigungsrolle"
+          },
           "type": 1,
           "description": "Set or unset the permission role for the server.",
+          "description_localizations": {
+            "de": "Setze oder entferne die Berechtigungsrolle für den Server."
+          },
           "options": [
             {
               "name": "role",
+              "name_localizations": {
+                "de": "rolle"
+              },
               "type": 8,
               "description": "The role you would like to use as permission role.",
+              "description_localizations": {
+                "de": "Die Rolle, die Sie als Berechtigungsrolle verwenden möchten."
+              },
               "required": false
             }
           ]

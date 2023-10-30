@@ -1,42 +1,81 @@
 {
   "name": "settings",
+  "name_localizations": {
+    "de": "einstellungen"
+  },
   "description": "Change or view personal settings",
+  "description_localizations": {
+    "de": "Ändere oder sieh dir persönliche Einstellungen an"
+  },
   "type": 1,
   "options": [
     {
       "name": "view",
+      "name_localizations": {
+        "de": "sehen"
+      },
       "description": "View your settings",
+      "description_localizations": {
+        "de": "Sieh dir deine Einstellungen an"
+      },
       "type": 1
     },
     {
       "name": "set",
+      "name_localizations": {
+        "de": "setzen"
+      },
       "description": "Change your settings",
+      "description_localizations": {
+        "de": "Ändere deine Einstellungen"
+      },
       "type": 1,
       "options": [
         {
           "name": "setting",
+          "name_localizations": {
+            "de": "einstellung"
+          },
           "description": "The setting you wish to use",
+          "description_localizations": {
+            "de": "Die Einstellung, die du verwenden möchtest"
+          },
           "type": 4,
           "required": true,
           "choices": [
             {
               "name": "No Notifications",
+              "name_localizations": {
+                "de": "Keine Benachrichtigungen"
+              },
               "value": 0
             },
             {
               "name": "DMs Only",
+              "name_localizations": {
+                "de": "Nur DMs"
+              },
               "value": 1
             },
             {
               "name": "Guild Only",
+              "name_localizations": {
+                "de": "Nur Server"
+              },
               "value": 2
             },
             {
               "name": "Guild > DMs",
+              "name_localizations": {
+                "de": "Server > DMs"
+              },
               "value": 3
             },
             {
               "name": "DMs & Guild",
+              "name_localizations": {
+                "de": "DMs & Server"
+              },
               "value": 4
             }
           ]
