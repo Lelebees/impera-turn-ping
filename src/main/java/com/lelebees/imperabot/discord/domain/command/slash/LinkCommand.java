@@ -48,7 +48,7 @@ public class LinkCommand implements SlashCommand {
         return event.reply()
                 .withEphemeral(true)
                 .withContent("""
-                        Impera Auto Ping has received your link request! Here's what we need you to do:
+                        Impera Turn Ping has received your link request! Here's what we need you to do:
                         > 1. Go to https://imperaonline.de and log in
                         > 2. Click on the messages icon and click Compose
                         > 3. Enter "%s" in the "User" field
