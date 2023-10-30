@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class CheckVerifyRequests implements Runnable {
@@ -31,12 +32,20 @@ public class CheckVerifyRequests implements Runnable {
             int skippedRequests = 0;
             for (ImperaMessageDTO linkMessage : linkMessages) {
                 try {
-                    BotUser user = userService.verifyUser(linkMessage.text.trim(), UUID.fromString(linkMessage.from.id));
+                    UUID imperaUserId = UUID.fromString(linkMessage.from.id);
+                    Optional<BotUser> userOptional = userService.findImperaUser(imperaUserId);
+                    if (userOptional.isPresent()) {
+                        skippedRequests++;
+                        logger.warn("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake) " + userOptional.get().getUserId() + " already exists! Skipping and destroying message...");
+                        imperaService.deleteMessage(linkMessage.id);
+                        continue;
+                    }
+                    BotUser user = userService.verifyUser(linkMessage.text.trim(), imperaUserId);
                     imperaService.deleteMessage(linkMessage.id);
-                    logger.info("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake)" + user.getUserId() + " has been verified!");
+                    logger.info("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake) " + user.getUserId() + " has been verified!");
                 } catch (UserNotFoundException e) {
-                    logger.warn("User matching code " + linkMessage.text + " Not found, skipping...");
                     skippedRequests++;
+                    logger.warn("User matching code " + linkMessage.text + " Not found, skipping...");
                 } catch (UserAlreadyVerfiedException e) {
                     BotUser user = userService.findImperaUser(UUID.fromString(linkMessage.from.id)).get();
                     logger.warn("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake) " + user.getUserId() + " already verified!");
