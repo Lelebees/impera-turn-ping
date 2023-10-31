@@ -9,4 +9,4 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/Impera-Bot-0.0.1-SNAPSHOT.jar app.jar
 
-CMD ["java", "-XX:+UseShenandoahGC", "-jar", "app.jar"]
+CMD ["java", "-XX:+UseShenandoahGC", "-Xmx512m","-jar", "app.jar"]
