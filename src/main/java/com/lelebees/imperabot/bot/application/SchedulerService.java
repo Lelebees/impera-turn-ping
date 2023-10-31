@@ -2,6 +2,7 @@ package com.lelebees.imperabot.bot.application;
 
 import com.lelebees.imperabot.bot.application.runnable.CheckTurns;
 import com.lelebees.imperabot.bot.application.runnable.CheckVerifyRequests;
+import com.lelebees.imperabot.bot.application.runnable.UpdateImperaToken;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import jakarta.annotation.PostConstruct;
@@ -36,7 +37,7 @@ public class SchedulerService {
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         executorService.scheduleAtFixedRate(new CheckVerifyRequests(imperaService, userService), 1, 5, TimeUnit.MINUTES);
         // Update the token a minute before it expires.
-        executorService.scheduleAtFixedRate(imperaService.updateAccessToken(), (ImperaService.bearerToken.expires_in - 60), (ImperaService.bearerToken.expires_in), TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(new UpdateImperaToken(imperaService), (imperaService.bearerToken.expires_in - 60), (imperaService.bearerToken.expires_in), TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new CheckTurns(imperaService, gameService, gameLinkService, discordService), 1, 1, TimeUnit.MINUTES);
     }
 

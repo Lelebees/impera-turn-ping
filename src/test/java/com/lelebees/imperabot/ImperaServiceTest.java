@@ -18,8 +18,8 @@ public class ImperaServiceTest {
     @Test
     @DisplayName("getBearerToken with refresh token will refresh bearer token")
     public void getBearerTokenRefresh() {
-        ImperaLoginDTO loginDTO1 = imperaService.getBearerToken(null);
-        ImperaLoginDTO loginDTO2 = imperaService.getBearerToken(loginDTO1.refresh_token);
+        ImperaLoginDTO loginDTO1 = imperaService.getBearerToken();
+        ImperaLoginDTO loginDTO2 = imperaService.getBearerToken();
         Assertions.assertNotEquals(loginDTO1.access_token, loginDTO2.access_token);
     }
 
