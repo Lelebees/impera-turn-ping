@@ -12,3 +12,14 @@ services:
       - DB_APP_PASS=impera-bot
     volumes:
       - "./data:/var/data/db"
+  webserver:
+    build: ./
+    ports:
+      - "9010:9010"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/impera-bot
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      IMPERA_USERNAME: ${IMPERA_USER_NAME}
+      IMPERA_PASSWORD: ${IMPERA_PASSWORD}
