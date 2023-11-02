@@ -9,7 +9,6 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/Impera-Bot-0.0.1-SNAPSHOT.jar app.jar
 
-EXPOSE 9010
 ENTRYPOINT ["java", "-Xmx256m", \
 "-Dcom.sun.management.jmxremote=true", \
 "-Dcom.sun.management.jmxremote.port=9010", \
