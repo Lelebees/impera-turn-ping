@@ -12,7 +12,6 @@ import discord4j.core.object.entity.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -35,8 +34,9 @@ public class CheckTurns implements Runnable {
     public void run() {
         try {
             List<Game> trackedGames = gameService.findAllGames();
-            logger.info("[CT] Checking turns for " + trackedGames.size() + " games.");
+            logger.info("Checking turns for " + trackedGames.size() + " games.");
             int skippedGames = 0;
+            int handledGames = 0;
             for (Game game : trackedGames) {
                 ImperaGameViewDTO imperaGame = imperaService.getGame(game.getId());
                 if (gameLinkService.findLinksByGame(game.getId()).isEmpty()) {
@@ -56,6 +56,8 @@ public class CheckTurns implements Runnable {
                     skippedGames++;
                     continue;
                 }
+
+                // TODO: reduce the amount of API calls by sorting through the players in RAM
                 // Get all players that have been defeated since the last turn change
                 List<ImperaGamePlayerDTO> defeatedPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter + 1)
                         .mapToObj(turn -> imperaService.playersThatWereDefeated(game.getId(), turn))
@@ -79,14 +81,13 @@ public class CheckTurns implements Runnable {
                 logger.debug("Found " + timedOutPlayers.size() + " timed out players.");
 
                 // Get all channels that want to receive updates for this game.
-                List<Channel> channels = new ArrayList<>(gameLinkService.findLinksByGame(game.getId())
+                List<Channel> channels = gameLinkService.findLinksByGame(game.getId())
                         .stream()
                         .map(GameChannelLink::getChannelId)
                         .map(discordService::getChannelById)
-                        .toList());
+                        .toList();
                 logger.debug("Found " + channels.size() + " channels to notify.");
 
-                // TODO: reduce the amount of API calls by sorting through the players in RAM
                 defeatedPlayers.forEach(player -> {
                     logger.info("Sending defeated notice for " + imperaGame.name + " (" + imperaGame.id + ")!");
                     discordService.sendDefeatedMessage(channels, player, imperaGame);
@@ -126,8 +127,9 @@ public class CheckTurns implements Runnable {
                     discordService.sendHalfTimeMessage(channels, imperaGame.currentPlayer, imperaGame);
                     gameService.setHalfTimeNoticeForGame(game.getId());
                 }
+                handledGames++;
             }
-            logger.info("Handled " + trackedGames.size() + " games, skipped " + skippedGames + " games.");
+            logger.info("Handled " + handledGames + " games, skipped " + skippedGames + " games.");
         } catch (Exception e) {
             logger.error("Handled Error: " + e.getMessage(), e);
         }
