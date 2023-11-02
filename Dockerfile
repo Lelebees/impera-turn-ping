@@ -1,8 +1,8 @@
 # Stage 1: Build the application with Maven
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM maven:3.9.5-eclipse-temurin-17-alpine AS builder
 WORKDIR /app
 COPY ./ /app
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Stage 2: Create a lightweight runtime image
 FROM eclipse-temurin:17-jre-alpine
