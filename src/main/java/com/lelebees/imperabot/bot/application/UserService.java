@@ -35,7 +35,7 @@ public class UserService {
         }
     }
 
-    public BotUser createNewUser(long id) {
+    public BotUser createUser(long id) {
         return repository.save(new BotUser(id));
     }
 
@@ -50,7 +50,7 @@ public class UserService {
         try {
             botUser = findUser(discordId);
         } catch (UserNotFoundException e) {
-            botUser = createNewUser(discordId);
+            botUser = createUser(discordId);
         }
         return botUser;
     }
