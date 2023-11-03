@@ -61,10 +61,11 @@ public class TrackCommand implements SlashCommand {
         User callingUser = event.getInteraction().getUser();
 
         Optional<ApplicationCommandInteractionOption> gameOptional = event.getOption("gameid");
-        if (gameOptional.isEmpty()) {
-            return event.reply().withContent("You must specify a game to track!").withEphemeral(true);
-        }
-        long gameId = gameOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no gameId was entered")).asLong();
+        long gameId = gameOptional
+                .orElseThrow(() -> new NullPointerException("You must specify a gameid."))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("Somehow, no gameId was entered"))
+                .asLong();
 
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
@@ -72,7 +73,11 @@ public class TrackCommand implements SlashCommand {
         logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /track with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
 
         if (channelOptional.isPresent()) {
-            channel = channelOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no channel was entered")).asChannel().block();
+            channel = channelOptional.get()
+                    .getValue()
+                    .orElseThrow(() -> new NullPointerException("Somehow, no channel was entered"))
+                    .asChannel()
+                    .block();
             logger.info("Channel was specified, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
         }
 
@@ -102,10 +107,8 @@ public class TrackCommand implements SlashCommand {
             return event.reply().withContent("An error occurred while trying to get game information from Impera. Please try again later.").withEphemeral(true);
         }
 
-        if (!gameService.gameExists(gameId)) {
-            // Add game to database
-            gameService.createGame(gameId);
-        }
+        gameService.findOrCreateGame(gameId);
+
         long channelId = channel.getId().asLong();
         // Add line to tracking table with gameid and channelid
         if (gameLinkService.linkExists(gameId, channelId)) {

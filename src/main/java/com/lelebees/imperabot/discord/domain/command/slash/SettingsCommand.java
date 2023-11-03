@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.entity.User;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.rest.util.Color;
@@ -12,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+
+import java.util.Optional;
 
 @Component
 public class SettingsCommand implements SlashCommand {
@@ -30,9 +33,14 @@ public class SettingsCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
-        if (event.getOption("set").isPresent()) {
-            User callingUser = event.getInteraction().getUser();
-            UserNotificationSetting setting = event.getOptions().get(0).getOption("setting").flatMap(option -> option.getValue().map(value -> UserNotificationSetting.get(Math.toIntExact(value.asLong())))).orElse(null);
+        User callingUser = event.getInteraction().getUser();
+        Optional<ApplicationCommandInteractionOption> setOption = event.getOption("set");
+        if (setOption.isPresent()) {
+            UserNotificationSetting setting = UserNotificationSetting.get(Math.toIntExact(setOption.get()
+                    .getOption("setting")
+                    .orElseThrow(() -> new NullPointerException("You must specify a setting."))
+                    .getValue().orElseThrow(() -> new NullPointerException("No setting entered"))
+                    .asLong()));
 
             logger.info("User " + callingUser.getId().asLong() + " used /settings with setting: " + setting.ordinal() + " (" + setting + ")");
 
@@ -40,13 +48,12 @@ public class SettingsCommand implements SlashCommand {
             return event.reply().withEphemeral(true).withContent("Updated notification setting to `" + user.getNotificationSetting().toString() + "`");
         }
 
-        User user = event.getInteraction().getUser();
-        BotUser botUser = userService.findOrCreateUser(user.getId().asLong());
+        BotUser botUser = userService.findOrCreateUser(callingUser.getId().asLong());
 
-        logger.info("User " + user.getId().asLong() + " used /settings view");
+        logger.info("User " + callingUser.getId().asLong() + " used /settings view");
 
         EmbedCreateSpec embed = EmbedCreateSpec.builder()
-                .title("Settings for %s".formatted(user.getUsername()))
+                .title("Settings for %s".formatted(callingUser.getUsername()))
                 .addField("Default notification setting: ", "`%s`".formatted(botUser.getNotificationSetting().toString()), false)
                 // TODO: Make this translation friendly
                 .footer(botUser.isLinked() ? "Linked to Impera account: %s".formatted(botUser.getImperaId()) : "You are not linked to an Impera account", null)
