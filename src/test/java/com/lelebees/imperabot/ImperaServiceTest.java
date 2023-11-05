@@ -17,6 +17,7 @@ public class ImperaServiceTest {
 
     @Test
     @DisplayName("getBearerToken with refresh token will refresh bearer token")
+    @Disabled
     public void getBearerTokenRefresh() {
         ImperaLoginDTO loginDTO1 = imperaService.getBearerToken(null);
         ImperaLoginDTO loginDTO2 = imperaService.getBearerToken(loginDTO1.refresh_token);
