@@ -1,14 +1,5 @@
 [
   {
-    "groupId": "test",
-    "id": "test",
-    "translations": {
-      "en-US": "test",
-      "de": "tezt"
-    }
-  },
-  {
-    "groupId": "link",
     "id": "userIsLinked",
     "translations": {
       "en-US": "You are already linked to an Impera account. If you wish to re-link, run </unlink:%s> first.",
@@ -16,7 +7,6 @@
     }
   },
   {
-    "groupId": "link",
     "id": "mobileCodeButton",
     "translations": {
       "en-US": "Send me a mobile friendly code!",
@@ -24,19 +14,10 @@
     }
   },
   {
-    "groupId": "link",
     "id": "instructions",
     "translations": {
       "en-US": "Impera Turn Ping has received your link request! Here's what we need you to do:\n> 1. Go to https://imperaonline.de and log in\n> 2. Click on the messages icon and click Compose\n> 3. Enter \"%s\" in the \"User\" field\n> 4. Enter \"link\" in the subject field.\n> 5. Enter the following code into the \"Text\" field: ||```%s```||\n> :warning: **IMPORTANT**: DO ***NOT*** SHARE THIS CODE WITH ANYONE!\n> 6. Press send!\nAfter completing these steps, we'll know it's you, and you will be linked! You can unlink at any time by using the </unlink:%s> command!",
       "de": "Impera Turn Ping hat Ihre Linkanfrage erhalten! Folgendes müssen Sie tun:\n> 1. Gehen Sie auf https://imperaonline.de und melden Sie sich an\n> 2. Klicken Sie auf das Nachrichtensymbol und dann auf „Verfassen“.\n> 3. Geben Sie „%s“ in das Feld „Benutzer“ ein\n> 4. Geben Sie „Link“ in das Betrefffeld ein.\n> 5. Geben Sie den folgenden Code in das Feld „Text“ ein: ||```%s```||\n> :warning: **WICHTIG**: TEILEN SIE DIESEN CODE ***NICHT*** MIT JEMANDEM!\n> 6. Drücken Sie Senden!\nNachdem Sie diese Schritte ausgeführt haben, wissen wir, dass Sie es sind und Sie werden verlinkt! Sie können die Verknüpfung jederzeit mit dem Befehl </unlink:%s> aufheben!"
-    }
-  },
-  {
-    "groupId": "unlink",
-    "id": "success",
-    "translations": {
-      "en-US": "Your discord account has been unlinked from your Impera account.",
-      "de": "Dein Discord-Account wurde von deinem Impera-Account getrennt."
     }
   }
 ]
