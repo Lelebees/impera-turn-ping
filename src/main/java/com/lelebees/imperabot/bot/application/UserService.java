@@ -68,4 +68,12 @@ public class UserService {
     public Optional<BotUser> findImperaUser(UUID imperaId) {
         return repository.getUserByImperaId(imperaId);
     }
+
+    public BotUser findImperaUserOrThrow(UUID imperaId) {
+        try {
+            return userFromOptional(repository.getUserByImperaId(imperaId));
+        } catch (UserNotFoundException e) {
+            throw new UserNotFoundException("Cannot find user with Impera ID: " + imperaId);
+        }
+    }
 }

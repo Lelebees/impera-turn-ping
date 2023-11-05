@@ -33,7 +33,7 @@ public class BotUser {
     }
 
     public BotUser(long id) {
-        this(id, null, PREFER_GUILD_OVER_DMS, "");
+        this(id, null, PREFER_GUILD_OVER_DMS, null);
         this.verificationCode = generateVerificationCode();
     }
 
