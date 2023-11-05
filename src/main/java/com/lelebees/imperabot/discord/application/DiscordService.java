@@ -236,7 +236,7 @@ public class DiscordService {
                 .collectList()
                 .block()
                 .forEach(command -> commands.put(command.name(), command.id().asLong()));
-        logger.info("All application (slash) commands: " + commands);
+//        logger.info("All application (slash) commands: " + commands);
         return commands;
     }
 
