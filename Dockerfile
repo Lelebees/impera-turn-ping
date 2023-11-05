@@ -10,7 +10,7 @@ WORKDIR /app
 COPY --from=builder /app/target/Impera-Bot-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 9010
-ENTRYPOINT ["java", "-Xmx256m", "-XX:UseShenandoahGC", \
+ENTRYPOINT ["java", "-Xmx256m", "-XX:-UseShenandoahGC", \
 "-Dcom.sun.management.jmxremote=true", \
 "-Dcom.sun.management.jmxremote.port=9010", \
 "-Dcom.sun.management.jmxremote.local.only=false", \
