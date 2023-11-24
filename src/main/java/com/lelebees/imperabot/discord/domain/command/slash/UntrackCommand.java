@@ -2,8 +2,10 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
+import com.lelebees.imperabot.bot.application.TranslationService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.bot.domain.translation.TranslationGroup;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
@@ -37,12 +39,14 @@ public class UntrackCommand implements SlashCommand {
     private final GameLinkService gameLinkService;
     private final ImperaService imperaService;
     private final String imperaUrl;
+    private final TranslationService translationService;
 
-    public UntrackCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, ImperaService imperaService, @Value("${impera.web.url}") String imperaUrl) {
+    public UntrackCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, ImperaService imperaService, @Value("${impera.web.url}") String imperaUrl, TranslationService translationService) {
         this.guildSettingsService = guildSettingsService;
         this.gameLinkService = gameLinkService;
         this.imperaService = imperaService;
         this.imperaUrl = imperaUrl + "/game/play";
+        this.translationService = translationService;
     }
 
     @Override
@@ -54,6 +58,8 @@ public class UntrackCommand implements SlashCommand {
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         Optional<Snowflake> guildIdOptional = event.getInteraction().getGuildId();
         User callingUser = event.getInteraction().getUser();
+        String locale = event.getInteraction().getUserLocale();
+        TranslationGroup translations = translationService.getTranslationsByGroup("untrack");
 
         Optional<ApplicationCommandInteractionOption> gameOptional = event.getOption("gameid");
         Long gameId = null;
@@ -79,7 +85,7 @@ public class UntrackCommand implements SlashCommand {
             boolean userHasPermissionRole = guildSettings.permissionRoleId != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
             if (!userHasManageChannelsPermission && !userHasPermissionRole) {
                 logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /untrack because they do not have the correct permissions.");
-                return event.reply().withContent("You are not allowed to stop tracking games in this guild.").withEphemeral(true);
+                return event.reply().withContent(translations.getTranslation("notAllowed", locale)).withEphemeral(true);
             }
 
             if (guildSettings.defaultChannelId != null && channelOptional.isEmpty()) {
@@ -92,19 +98,19 @@ public class UntrackCommand implements SlashCommand {
         if (gameId == null) {
             // Stop tracking all games in channel
             gameLinkService.deleteLinksForChannel(channelId);
-            return event.reply().withContent("Stopped tracking notifications for all games in <#%s>".formatted(channelId));
+            return event.reply().withContent(translations.getTranslation("stopAllGames", locale).formatted(channelId));
         }
         // else, stop tracking specific game in channel
         try {
             gameLinkService.deleteLink(gameId, channelId);
         } catch (GameChannelLinkNotFoundException e) {
-            return event.reply().withContent("Game [%s] is not being tracked in <#%s>!".formatted(gameId, channelId));
+            return event.reply().withContent(translations.getTranslation("notTracking", locale).formatted(gameId, channelId));
         }
         try {
             ImperaGameViewDTO gameView = imperaService.getGame(gameId);
-            return event.reply().withContent("Stopped logging notifications for [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+            return event.reply().withContent(translations.getTranslation("stoppedTracking", locale).formatted(gameView.name, imperaUrl, gameId, channelId));
         } catch (Exception e) {
-            return event.reply().withContent("Stopped logging notifications for [%s]".formatted(gameId));
+            return event.reply().withContent(translations.getTranslation("stoppedTrackingError", locale).formatted(gameId));
         }
     }
 }

@@ -1,0 +1,100 @@
+[
+  {
+    "id": "notAllowed",
+    "translations": {
+      "en": "You are not allowed to stop tracking games in this guild.",
+      "de": "Es ist Ihnen nicht gestattet, Spiele auf diesem Server zu verfolgen."
+    }
+  },
+  {
+    "id": "stopAllGames",
+    "translations": {
+      "en": "Stopped tracking notifications for all games in <#%s>",
+      "de": "Benachrichtigungen für alle Spiele in <#%s> wurden gestoppt."
+    }
+  },
+  {
+    "id": "notTracking",
+    "translations": {
+      "en": "Game [%s] is not being tracked in <#%s>!",
+      "de": "Spiel [%s] wird in <#%s> nicht verfolgt!"
+    }
+  },
+  {
+    "id": "stopGame",
+    "translations": {
+      "en": "Stopped tracking notifications for game [%s] in <#%s>",
+      "de": "Benachrichtigungen für Spiel [%s] in <#%s> wurden gestoppt."
+    }
+  },
+  {
+    "id": "stopGameUsage",
+    "translations": {
+      "en": "Usage: `%sstopgame <game>`",
+      "de": "Verwendung: `%sstopgame <game>`"
+    }
+  },
+  {
+    "id": "stopGameNotFound",
+    "translations": {
+      "en": "Game [%s] not found!",
+      "de": "Spiel [%s] nicht gefunden!"
+    }
+  },
+  {
+    "id": "stopGameMultipleFound",
+    "translations": {
+      "en": "Multiple games found for [%s]:\n%s",
+      "de": "Mehrere Spiele gefunden für [%s]:\n%s"
+    }
+  },
+  {
+    "id": "stopGameMultipleFoundUsage",
+    "translations": {
+      "en": "Usage: `%sstopgame <game>`",
+      "de": "Verwendung: `%sstopgame <game>`"
+    }
+  },
+  {
+    "id": "stopGameMultipleFoundList",
+    "translations": {
+      "en": "Multiple games found for [%s]:\n%s",
+      "de": "Mehrere Spiele gefunden für [%s]:\n%s"
+    }
+  },
+  {
+    "id": "stopGameMultipleFoundListUsage",
+    "translations": {
+      "en": "Usage: `%sstopgame <game>`",
+      "de": "Verwendung: `%sstopgame <game>`"
+    }
+  },
+  {
+    "id": "stopGameMultipleFoundListConfirm",
+    "translations": {
+      "en": "Please confirm by typing `%sstopgame <game>`",
+      "de": "Bitte bestätigen Sie durch Eingabe von `%sstopgame <game>`"
+    }
+  },
+  {
+    "id": "stopGameMultipleFoundListCancel",
+    "translations": {
+      "en": "Cancelled stopping tracking for game [%s]",
+      "de": "Abbrechen des Trackings für Spiel [%s]"
+    }
+  },
+  {
+    "id": "stoppedTracking",
+    "translations": {
+      "en": "Stopped logging notifications for [%s](%s/%s) in <#%s>",
+      "de": "Die Protokollierung von Benachrichtigungen für [%s](%s/%s) in <#%s> wurde gestoppt."
+    }
+  },
+  {
+    "id": "stoppedTrackingError",
+    "translations": {
+      "en": "Stopped logging notifications for [%s]",
+      "de": "Protokollierung von Benachrichtigungen für [%s] gestoppt"
+    }
+  }
+]

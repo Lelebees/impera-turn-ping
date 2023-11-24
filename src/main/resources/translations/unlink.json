@@ -1,6 +1,5 @@
 [
   {
-    "groupId": "unlink",
     "id": "success",
     "translations": {
       "en": "Your discord account has been unlinked from your Impera account.",
