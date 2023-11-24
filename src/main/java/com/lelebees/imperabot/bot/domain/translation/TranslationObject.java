@@ -21,7 +21,7 @@ public class TranslationObject {
 
     public String getTranslationByLocale(String locale) {
         if (!translations.containsKey(locale)) {
-            return translations.get("en-US");
+            return translations.get("en");
         }
         return translations.get(locale);
     }
