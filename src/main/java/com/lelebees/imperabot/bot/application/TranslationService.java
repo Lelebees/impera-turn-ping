@@ -17,7 +17,7 @@ public class TranslationService {
 
     public TranslationGroup getTranslationsByGroup(String groupId) {
         try {
-            return TranslationGroup.of(translationRepository.getTranslations(groupId));
+            return TranslationGroup.of(translationRepository.getTranslationsGroup(groupId));
         } catch (IOException e) {
             return TranslationGroup.of(new HashMap<>());
         }
