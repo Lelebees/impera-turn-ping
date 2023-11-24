@@ -28,9 +28,6 @@ public class TranslationObject {
 
     @Override
     public String toString() {
-        return "TranslationObject{" +
-               ", id='" + id + '\'' +
-               ", translations=" + translations +
-               '}';
+        return "TranslationObject{" + "id='" + id + '\'' + ", translations=" + translations + '}';
     }
 }
