@@ -28,59 +28,10 @@
     }
   },
   {
-    "id": "stopGameUsage",
-    "translations": {
-      "en": "Usage: `%sstopgame <game>`",
-      "de": "Verwendung: `%sstopgame <game>`"
-    }
-  },
-  {
     "id": "stopGameNotFound",
     "translations": {
       "en": "Game [%s] not found!",
       "de": "Spiel [%s] nicht gefunden!"
-    }
-  },
-  {
-    "id": "stopGameMultipleFound",
-    "translations": {
-      "en": "Multiple games found for [%s]:\n%s",
-      "de": "Mehrere Spiele gefunden für [%s]:\n%s"
-    }
-  },
-  {
-    "id": "stopGameMultipleFoundUsage",
-    "translations": {
-      "en": "Usage: `%sstopgame <game>`",
-      "de": "Verwendung: `%sstopgame <game>`"
-    }
-  },
-  {
-    "id": "stopGameMultipleFoundList",
-    "translations": {
-      "en": "Multiple games found for [%s]:\n%s",
-      "de": "Mehrere Spiele gefunden für [%s]:\n%s"
-    }
-  },
-  {
-    "id": "stopGameMultipleFoundListUsage",
-    "translations": {
-      "en": "Usage: `%sstopgame <game>`",
-      "de": "Verwendung: `%sstopgame <game>`"
-    }
-  },
-  {
-    "id": "stopGameMultipleFoundListConfirm",
-    "translations": {
-      "en": "Please confirm by typing `%sstopgame <game>`",
-      "de": "Bitte bestätigen Sie durch Eingabe von `%sstopgame <game>`"
-    }
-  },
-  {
-    "id": "stopGameMultipleFoundListCancel",
-    "translations": {
-      "en": "Cancelled stopping tracking for game [%s]",
-      "de": "Abbrechen des Trackings für Spiel [%s]"
     }
   },
   {
