@@ -1,5 +1,7 @@
 package com.lelebees.imperabot.bot.domain.translation;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Map;
 
 public class TranslationObject {
@@ -24,6 +26,11 @@ public class TranslationObject {
             return translations.get("en");
         }
         return translations.get(locale);
+    }
+
+    @JsonProperty("translations")
+    private void unpackTranslations(Map<String, String> translations) {
+        this.translations = translations;
     }
 
     @Override

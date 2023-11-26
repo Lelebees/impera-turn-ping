@@ -29,7 +29,8 @@ public class TranslationRepository {
             try {
                 String fileName = resource.getFilename();
                 String groupId = fileName.substring(0, fileName.lastIndexOf('.'));
-                translations.put(groupId, getTranslations(resource.getFile()));
+                translations.put(groupId, readTranslations(resource.getFile()));
+                logger.info("Loaded translations for file: " + fileName);
             } catch (IOException e) {
                 logger.error("Failed to load translations for file: " + resource.getFilename(), e);
             }
@@ -37,15 +38,16 @@ public class TranslationRepository {
 
     }
 
-    public Map<String, TranslationObject> getTranslationsGroup(String group) throws IOException {
+    public Map<String, TranslationObject> getTranslationsGroup(String group) {
         return translations.get(group);
     }
 
-    private Map<String, TranslationObject> getTranslations(File translationFile) throws IOException {
-        List<TranslationObject> translations = translationMapper.getObjectMapper().readValue(translationFile, new TypeReference<>() {
-        });
-        System.out.println(translations);
-        return translations.stream().collect(HashMap::new, (map, translation) -> map.put(translation.getId(), translation), Map::putAll);
+    private Map<String, TranslationObject> readTranslations(File translationFile) throws IOException {
+        List<TranslationObject> translations = translationMapper.getObjectMapper()
+                .readValue(translationFile, new TypeReference<>() {
+                });
+        return translations.stream()
+                .collect(HashMap::new, (map, translation) -> map.put(translation.getId(), translation), Map::putAll);
     }
 
 }
