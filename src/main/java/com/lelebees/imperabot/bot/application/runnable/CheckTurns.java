@@ -60,21 +60,21 @@ public class CheckTurns implements Runnable {
                 // TODO: reduce the amount of API calls by sorting through the players in RAM
                 // Get all players that have been defeated since the last turn change
                 List<ImperaGamePlayerDTO> defeatedPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter + 1)
-                        .mapToObj(turn -> imperaService.playersThatWereDefeated(game.getId(), turn))
+                        .mapToObj(turn -> imperaService.getPlayersThatWereDefeated(game.getId(), turn))
                         .flatMap(Collection::stream)
                         .map(imperaGame::findPlayerByGameId)
                         .toList();
                 logger.debug("Found " + defeatedPlayers.size() + " defeated players.");
                 // Get all players that surrendered in the last turn(s)
                 List<ImperaGamePlayerDTO> surrenderedPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter + 1)
-                        .mapToObj(turn -> imperaService.playersThatSurrendered(game.getId(), turn))
+                        .mapToObj(turn -> imperaService.getPlayersThatSurrendered(game.getId(), turn))
                         .flatMap(Collection::stream)
                         .map(imperaGame::findPlayerByGameId)
                         .toList();
                 logger.debug("Found " + surrenderedPlayers.size() + " surrendered players.");
 
                 List<ImperaGamePlayerDTO> timedOutPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter + 1)
-                        .mapToObj(turn -> imperaService.playersThatTimedOut(game.getId(), turn))
+                        .mapToObj(turn -> imperaService.getPlayersThatTimedOut(game.getId(), turn))
                         .flatMap(Collection::stream)
                         .map(imperaGame::findPlayerByGameId)
                         .toList();
