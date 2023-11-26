@@ -3,8 +3,10 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GameService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
+import com.lelebees.imperabot.bot.application.TranslationService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.bot.domain.translation.TranslationGroup;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
@@ -41,13 +43,15 @@ public class TrackCommand implements SlashCommand {
     private final GameLinkService gameLinkService;
     private final GuildSettingsService guildSettingsService;
     private final String imperaUrl;
+    private final TranslationService translationService;
 
-    public TrackCommand(GameService gameService, ImperaService imperaService, GameLinkService gameLinkService, GuildSettingsService guildSettingsService, @Value("${impera.web.url}") String imperaUrl) {
+    public TrackCommand(GameService gameService, ImperaService imperaService, GameLinkService gameLinkService, GuildSettingsService guildSettingsService, @Value("${impera.web.url}") String imperaUrl, TranslationService translationService) {
         this.gameService = gameService;
         this.imperaService = imperaService;
         this.gameLinkService = gameLinkService;
         this.guildSettingsService = guildSettingsService;
         this.imperaUrl = imperaUrl + "/game/play";
+        this.translationService = translationService;
     }
 
     @Override
@@ -57,12 +61,14 @@ public class TrackCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
+        TranslationGroup translations = translationService.getTranslationsByGroup("track");
         Optional<Snowflake> guildIdOptional = event.getInteraction().getGuildId();
         User callingUser = event.getInteraction().getUser();
+        String locale = event.getInteraction().getUserLocale();
 
         Optional<ApplicationCommandInteractionOption> gameOptional = event.getOption("gameid");
         if (gameOptional.isEmpty()) {
-            return event.reply().withContent("You must specify a game to track!").withEphemeral(true);
+            return event.reply().withContent(translations.getTranslation("mustSpecifyGame", locale)).withEphemeral(true);
         }
         long gameId = gameOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no gameId was entered")).asLong();
 
@@ -86,7 +92,7 @@ public class TrackCommand implements SlashCommand {
             boolean userHasPermissionRole = guildSettings.permissionRoleId != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
             if (!userHasManageChannelsPermission && !userHasPermissionRole) {
                 logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
-                return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
+                return event.reply().withContent(translations.getTranslation("notAllowed", locale)).withEphemeral(true);
             }
 
             if (guildSettings.defaultChannelId != null && channelOptional.isEmpty()) {
@@ -99,7 +105,7 @@ public class TrackCommand implements SlashCommand {
             gameView = imperaService.getGame(gameId);
         } catch (Exception e) {
             logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /track because Impera (or the fetch request) returned an error.");
-            return event.reply().withContent("An error occurred while trying to get game information from Impera. Please try again later.").withEphemeral(true);
+            return event.reply().withContent(translations.getTranslation("apiError", locale)).withEphemeral(true);
         }
 
         if (!gameService.gameExists(gameId)) {
@@ -109,10 +115,10 @@ public class TrackCommand implements SlashCommand {
         long channelId = channel.getId().asLong();
         // Add line to tracking table with gameid and channelid
         if (gameLinkService.linkExists(gameId, channelId)) {
-            return event.reply().withEphemeral(true).withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+            return event.reply().withEphemeral(true).withContent(translations.getTranslation("alreadyTracked", locale).formatted(gameView.name, imperaUrl, gameId, channelId));
         }
         GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
         logger.debug("Created new GameChannelLink with gameId: " + gameLink.getGameId() + " and channelId: " + gameLink.getChannelId());
-        return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+        return event.reply().withContent(translations.getTranslation("gameTracked", locale).formatted(gameView.name, imperaUrl, gameId, channelId));
     }
 }

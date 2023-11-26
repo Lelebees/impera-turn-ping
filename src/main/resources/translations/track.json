@@ -1,0 +1,37 @@
+[
+  {
+    "id": "mustSpecifyGame",
+    "translations": {
+      "en": "You must specify a game to track!",
+      "de": "Sie müssen ein Spiel angeben, um es zu verfolgen!"
+    }
+  },
+  {
+    "id": "notAllowed",
+    "translations": {
+      "en": "You are not allowed to track games in this guild.",
+      "de": "Es ist dir nicht gestattet, Spiele dieser Gilde zu verfolgen."
+    }
+  },
+  {
+    "id": "apiError",
+    "translations": {
+      "en": "An error occurred while trying to get game information from Impera. Please try again later.",
+      "de": "Beim Versuch, Spielinformationen von Impera abzurufen, ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal."
+    }
+  },
+  {
+    "id": "alreadyTracked",
+    "translations": {
+      "en": "[%s](%s/%s) is already being tracked in <#%s>",
+      "de": "[%s](%s/%s) wird bereits in <#%s> verfolgt"
+    }
+  },
+  {
+    "id": "gameTracked",
+    "translations": {
+      "en": "Started tracking [%s](%s/%s) in <#%s>",
+      "de": "Mit der Verfolgung von [%s](%s/%s) in <#%s> begonnen"
+    }
+  }
+]
