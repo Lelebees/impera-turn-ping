@@ -1,0 +1,44 @@
+[
+  {
+    "id": "setNotification",
+    "translations": {
+      "en": "Updated notification setting to `%s`",
+      "de": "Benachrichtigungseinstellung auf `%s` aktualisiert"
+    }
+  },
+  {
+    "id": "embedTitle",
+    "translations": {
+      "en": "Settings for %s",
+      "de": "Einstellungen für %s"
+    }
+  },
+  {
+    "id": "notificationSettingHeader",
+    "translations": {
+      "en": "Default notification setting: ",
+      "de": "Standard-Benachrichtigungseinstellung: "
+    }
+  },
+  {
+    "id": "notificationSettingDescription",
+    "translations": {
+      "en": "`%s`",
+      "de": "`%s`"
+    }
+  },
+  {
+    "id": "linkedAccountFooterLinked",
+    "translations": {
+      "en": "Linked to Impera account: %s",
+      "de": "Mit Impera-Konto verknüpft: %s"
+    }
+  },
+  {
+    "id": "linkedAccountFooterNotLinked",
+    "translations": {
+      "en": "You are not linked to an Impera account",
+      "de": "Sie sind nicht mit einem Impera-Konto verknüpft"
+    }
+  }
+]

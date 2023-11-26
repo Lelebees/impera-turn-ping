@@ -25,6 +25,7 @@ public class UnlinkCommand implements SlashCommand {
         return "unlink";
     }
 
+    //TODO: proper error handling
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         TranslationGroup translations = translationService.getTranslationsByGroup("unlink");
