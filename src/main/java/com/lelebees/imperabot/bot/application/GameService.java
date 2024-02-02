@@ -25,18 +25,8 @@ public class GameService {
         return gameOptional.orElseThrow(() -> new GameNotFoundException("Could not find game: " + ID));
     }
 
-    public Game createGame(long ID) {
-        return gameRepository.save(new Game(ID));
-    }
-
-    public Game findOrCreateGame(long ID) {
-        Game game;
-        try {
-            game = findGameByID(ID);
-        } catch (GameNotFoundException e) {
-            game = createGame(ID);
-        }
-        return game;
+    public Game createGame(long ID, int turn) {
+        return gameRepository.save(new Game(ID, turn, false));
     }
 
     public List<Game> findAllGames() {
