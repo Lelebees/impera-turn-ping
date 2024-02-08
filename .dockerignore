@@ -1,0 +1,6 @@
+#Exclude everything
+*
+#Do include the src folder, aswell as the pom.xml file
+!src
+!pom.xml
+

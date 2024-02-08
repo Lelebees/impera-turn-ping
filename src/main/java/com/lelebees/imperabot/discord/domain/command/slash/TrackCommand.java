@@ -89,7 +89,8 @@ public class TrackCommand implements SlashCommand {
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
             boolean userHasPermissionRole = guildSettings.permissionRoleId != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
-            if (!userHasManageChannelsPermission && !userHasPermissionRole) {
+            boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
+            if (!userHasManageChannelsPermission && !userHasPermissionRole && !userIsLelebees) {
                 logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
@@ -107,8 +108,14 @@ public class TrackCommand implements SlashCommand {
             return event.reply().withContent("An error occurred while trying to get game information from Impera. Please try again later.").withEphemeral(true);
         }
 
-        gameService.findOrCreateGame(gameId);
-
+        if (!gameService.gameExists(gameId)) {
+            // Add game to database
+            /* We pass the current turn,
+            because this would otherwise allow someone to start a DDoS attack on the Impera service by playing a game for a while,
+            tracking the game (which will cause 3 * turns passed requests to be made) and then untracking it.
+            Rinse and repeat, and that's a big problem. */
+            gameService.createGame(gameId, gameView.turnCounter);
+        }
         long channelId = channel.getId().asLong();
         // Add line to tracking table with gameid and channelid
         if (gameLinkService.linkExists(gameId, channelId)) {
