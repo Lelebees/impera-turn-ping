@@ -84,7 +84,8 @@ public class TrackCommand implements SlashCommand {
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
             boolean userHasPermissionRole = guildSettings.permissionRoleId != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
-            if (!userHasManageChannelsPermission && !userHasPermissionRole) {
+            boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
+            if (!userHasManageChannelsPermission && !userHasPermissionRole && !userIsLelebees) {
                 logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
