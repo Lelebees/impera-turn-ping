@@ -12,8 +12,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -40,7 +42,7 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
 
         //Get our commands json from resources as command data
         List<ApplicationCommandRequest> commands = new ArrayList<>();
-        for (Resource resource : matcher.getResources("commands/*.json")) {
+        for (Resource resource : matcher.getResources("commands/global/*.json")) {
             ApplicationCommandRequest request = d4jMapper.getObjectMapper()
                     .readValue(resource.getInputStream(), ApplicationCommandRequest.class);
 
@@ -54,5 +56,27 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
                 .doOnNext(ignore -> LOGGER.debug("Successfully registered Global Commands"))
                 .doOnError(e -> LOGGER.error("Failed to register global commands", e))
                 .subscribe();
+
+        //Do the same for each GuildCommand
+        File file = new File("src/main/resources/commands/guild/");
+        String[] strArr = file.list((current, name) -> new File(current, name).isDirectory());
+        if (strArr == null) {
+            LOGGER.debug("No guilds found!");
+            return;
+        }
+        List<String> guilds = Arrays.stream(strArr).toList();
+        for (String guildId : guilds) {
+            List<ApplicationCommandRequest> guildCommands = new ArrayList<>();
+            for (Resource resource : matcher.getResources("commands/guild/" + guildId + "/*.json")) {
+                ApplicationCommandRequest request = d4jMapper.getObjectMapper()
+                        .readValue(resource.getInputStream(), ApplicationCommandRequest.class);
+
+                guildCommands.add(request);
+            }
+            applicationService.bulkOverwriteGuildApplicationCommand(applicationId, Long.parseLong(guildId), guildCommands)
+                    .doOnNext(ignore -> LOGGER.debug("Successfully registered commands for " + guildId))
+                    .doOnError(e -> LOGGER.error("Failed to register commands for " + guildId, e))
+                    .subscribe();
+        }
     }
 }
