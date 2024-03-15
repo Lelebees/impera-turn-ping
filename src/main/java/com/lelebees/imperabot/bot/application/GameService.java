@@ -26,7 +26,7 @@ public class GameService {
     }
 
     public Game createGame(long ID, int turn) {
-        return gameRepository.save(new Game(ID, turn, false));
+        return gameRepository.save(new Game(ID, turn - 1, false));
     }
 
     public List<Game> findAllGames() {
