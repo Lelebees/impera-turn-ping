@@ -2,7 +2,6 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.object.entity.User;
 import discord4j.core.spec.InteractionCallbackSpecDeferReplyMono;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
-import static com.lelebees.imperabot.discord.application.DiscordService.convertSnowflakeToTimeStamp;
+import static com.lelebees.imperabot.discord.application.DiscordService.convertSnowflakeToInstant;
 
 @Component
 public class PingCommand implements SlashCommand {
@@ -32,7 +31,7 @@ public class PingCommand implements SlashCommand {
         Instant now = Instant.now();
         InteractionCallbackSpecDeferReplyMono spec = event.deferReply();
 
-        Instant eventInstant = convertSnowflakeToTimeStamp(event.getInteraction().getId());
+        Instant eventInstant = convertSnowflakeToInstant(event.getInteraction().getId());
         long difference = now.toEpochMilli() - eventInstant.toEpochMilli();
 
         return spec.event().reply()

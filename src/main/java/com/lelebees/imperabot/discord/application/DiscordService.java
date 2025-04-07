@@ -44,12 +44,12 @@ public class DiscordService {
         this.gameLinkService = gameLinkService;
     }
 
-    public static Instant convertSnowflakeToTimeStamp(Snowflake snowflake) {
+    public static Instant convertSnowflakeToInstant(Snowflake snowflake) {
         long snowflakeLong = snowflake.asLong();
         StringBuilder binarySnowflake = new StringBuilder(Long.toBinaryString(snowflakeLong));
-        // The binary representation has missing bits - a snowflake always has 64, and the last 42 bits are the timestamp,
-        // which has leading zeroes so there's room to grown
-        // We pad the number with the missing zeroes here so the calculation doesn't mess up.
+        /* The binary representation has missing bits, a snowflake always has 64.
+        The last 42 bits of the snowflake is the timestamp, which has leading zeroes so there's room to grow.
+        We pad the number with the missing zeroes here so the calculation doesn't mess up. */
         int numOfMissingBits = 63 - binarySnowflake.length();
         for (int i = 0; i < numOfMissingBits; i++) {
             binarySnowflake.insert(0, "0");
@@ -57,6 +57,12 @@ public class DiscordService {
         String binaryTimestamp = binarySnowflake.substring(0, 41);
         long discordTimestamp = Long.parseUnsignedLong(binaryTimestamp, 2);
         return Instant.ofEpochMilli(discordTimestamp + Snowflake.DISCORD_EPOCH);
+    }
+
+    public void sendVerificationDM(long userId) {
+        gatewayClient.getUserById(Snowflake.of(userId)).block()
+                .getPrivateChannel().block()
+                .createMessage("Successfully linked your discord account with Impera");
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {

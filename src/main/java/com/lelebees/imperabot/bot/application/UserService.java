@@ -3,8 +3,10 @@ package com.lelebees.imperabot.bot.application;
 import com.lelebees.imperabot.bot.data.UserRepository;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
+import com.lelebees.imperabot.bot.domain.user.exception.IncorrecVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -13,18 +15,21 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserRepository repository;
+    private final DiscordService discordService;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, DiscordService discordService) {
         this.repository = repository;
+        this.discordService = discordService;
     }
 
-    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException {
+    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrecVerificationCodeException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
-            botUser.setImperaId(imperaId);
+            botUser.verifyUser(imperaId, verificationCode);
+            discordService.sendVerificationDM(botUser.getUserId());
             return repository.save(botUser);
         } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("Cannot find user with this secret code!");
+            throw new UserNotFoundException("Cannot find user with this verification code (" + verificationCode + ")");
         }
     }
 
@@ -32,7 +37,7 @@ public class UserService {
         try {
             return userFromOptional(repository.findById(id));
         } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("Cannot find user [" + id + "]");
+            throw new UserNotFoundException("Cannot find user with this id (" + id + ")");
         }
     }
 
@@ -74,7 +79,7 @@ public class UserService {
         try {
             return userFromOptional(repository.getUserByImperaId(imperaId));
         } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("Cannot find user with Impera ID: " + imperaId);
+            throw new UserNotFoundException("Cannot find user with this Impera Id (" + imperaId + ")");
         }
     }
 }

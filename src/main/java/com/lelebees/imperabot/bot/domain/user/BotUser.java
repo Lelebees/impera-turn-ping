@@ -1,6 +1,7 @@
 package com.lelebees.imperabot.bot.domain.user;
 
 import com.lelebees.imperabot.bot.data.converter.UserNotificationSettingsConverter;
+import com.lelebees.imperabot.bot.domain.user.exception.IncorrecVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -13,6 +14,9 @@ import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.PRE
 @Entity
 @Table(name = "bot_user")
 public class BotUser {
+    @Column(name = "notification_setting")
+    @Convert(converter = UserNotificationSettingsConverter.class)
+    public UserNotificationSetting notificationSetting;
     @Id
     @Column(name = "discord_user_id")
     // This value is gained through discord, and is thus not generated.
@@ -21,9 +25,6 @@ public class BotUser {
     @Unique
     @Nullable
     private UUID imperaId;
-    @Column(name = "notification_setting")
-    @Convert(converter = UserNotificationSettingsConverter.class)
-    public UserNotificationSetting notificationSetting;
     @Column(name = "super_secret_code")
     @Unique
     private String verificationCode;
@@ -57,9 +58,12 @@ public class BotUser {
         return this.imperaId != null;
     }
 
-    public void setImperaId(UUID imperaId) throws UserAlreadyVerfiedException {
-        if (this.imperaId != null) {
-            throw new UserAlreadyVerfiedException("This user [" + this.userId + "] is already linked to an Impera account [" + this.imperaId + "] !");
+    public void verifyUser(UUID imperaId, String verificationCode) throws UserAlreadyVerfiedException, IncorrecVerificationCodeException {
+        if (!this.verificationCode.equals(verificationCode)) {
+            throw new IncorrecVerificationCodeException("Supplied verification code " + verificationCode + " does not match this user's (" + this.userId + ") verification code.");
+        }
+        if (isLinked()) {
+            throw new UserAlreadyVerfiedException("This user (" + this.userId + ") is already linked to an Impera account (" + this.imperaId + ").");
         }
         this.imperaId = imperaId;
     }
