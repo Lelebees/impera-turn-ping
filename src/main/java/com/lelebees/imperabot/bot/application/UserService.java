@@ -6,7 +6,6 @@ import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.bot.domain.user.exception.IncorrecVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
-import com.lelebees.imperabot.discord.application.DiscordService;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,18 +14,15 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserRepository repository;
-    private final DiscordService discordService;
 
-    public UserService(UserRepository repository, DiscordService discordService) {
+    public UserService(UserRepository repository) {
         this.repository = repository;
-        this.discordService = discordService;
     }
 
     public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrecVerificationCodeException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
             botUser.verifyUser(imperaId, verificationCode);
-            discordService.sendVerificationDM(botUser.getUserId());
             return repository.save(botUser);
         } catch (UserNotFoundException e) {
             throw new UserNotFoundException("Cannot find user with this verification code (" + verificationCode + ")");

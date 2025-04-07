@@ -60,9 +60,11 @@ public class DiscordService {
     }
 
     public void sendVerificationDM(long userId) {
-        gatewayClient.getUserById(Snowflake.of(userId)).block()
-                .getPrivateChannel().block()
-                .createMessage("Successfully linked your discord account with Impera");
+        sendDM(userId, "Successfully linked your Impera account with Discord");
+    }
+
+    public void sendDM(long recipientId, String message) {
+        getDMChannelByOwner(recipientId).createMessage(message).block();
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
@@ -132,14 +134,14 @@ public class DiscordService {
         };
     }
 
-    private void sendDMAccordingToSettings(BotUser player, String directMessage, boolean noGuildChannels, PrivateChannel usersChannel) {
+    private void sendDMAccordingToSettings(BotUser player, String directMessage, boolean noGuildChannels) {
         switch (player.getNotificationSetting()) {
             case NO_NOTIFICATIONS, GUILD_ONLY -> {
             }
-            case DMS_ONLY, DMS_AND_GUILD -> usersChannel.createMessage(directMessage).block();
+            case DMS_ONLY, DMS_AND_GUILD -> sendDM(player.getUserId(), directMessage);
             case PREFER_GUILD_OVER_DMS -> {
                 if (noGuildChannels) {
-                    usersChannel.createMessage(directMessage).block();
+                    sendDM(player.getUserId(), directMessage);
                 }
             }
         }
@@ -170,7 +172,7 @@ public class DiscordService {
 
             PrivateChannel usersChannel = getDMChannelByOwner(player.getUserId());
             if (dmChannels.contains(usersChannel)) {
-                sendDMAccordingToSettings(player, directMessage.formatted(userString), userCanSeeMessageInGuild, usersChannel);
+                sendDMAccordingToSettings(player, directMessage.formatted(userString), userCanSeeMessageInGuild);
             }
             allowedMentions = getAllowedMentions(player);
         }
@@ -235,6 +237,10 @@ public class DiscordService {
 
     public PrivateChannel getDMChannelByOwner(long userId) {
         User user = gatewayClient.getUserById(Snowflake.of(userId)).block();
+        if (user == null){
+//            Doing some dangerous shit here :3
+            return null;
+        }
         return user.getPrivateChannel().block();
     }
 

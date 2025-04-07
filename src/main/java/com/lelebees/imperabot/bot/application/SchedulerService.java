@@ -38,7 +38,7 @@ public class SchedulerService {
     public void schedule() {
         logger.info("Scheduling tasks...");
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(new CheckVerifyRequests(imperaService, userService), 1, 5, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(new CheckVerifyRequests(imperaService, userService, discordService), 1, 5, TimeUnit.MINUTES);
         // Update the token a minute before it expires.
         executorService.scheduleAtFixedRate(new UpdateImperaToken(imperaAPIRepository), (imperaAPIRepository.getTokenExpiryTime() - 60), (imperaAPIRepository.getTokenExpiryTime()), TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new CheckTurns(imperaService, gameService, gameLinkService, discordService), 1, 1, TimeUnit.MINUTES);
