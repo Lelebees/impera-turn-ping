@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
@@ -29,11 +30,11 @@ import static discord4j.rest.util.Permission.VIEW_CHANNEL;
 
 @Service
 public class DiscordService {
+    private final static Logger logger = LoggerFactory.getLogger(DiscordService.class);
     private final GatewayDiscordClient gatewayClient;
     private final UserService userService;
     private final GuildSettingsService guildSettingsService;
     private final GameLinkService gameLinkService;
-    private final static Logger logger = LoggerFactory.getLogger(DiscordService.class);
 
     public DiscordService(GatewayDiscordClient gatewayClient, UserService userService, GuildSettingsService guildSettingsService, GameLinkService gameLinkService) {
         this.gatewayClient = gatewayClient;
@@ -267,30 +268,39 @@ public class DiscordService {
 
         int numberOfGuilds = guilds.size();
         logger.info("Found " + numberOfGuilds + " guilds to award winner role in.");
-        int skippedGuilds = 0;
+        int numberOfSkippedGuilds = 0;
         // In each guild, find the winner role, and give it to the winner
         for (Guild guild : guilds) {
-            Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId;
-            if (winnerRoleId == null) {
-                skippedGuilds++;
-                logger.debug("Skipping guild " + guild.getId().asLong() + " because it has no winner role.");
-                continue;
-            }
-            Member winnerMember = guild.getMemberById(Snowflake.of(winnerUser.getUserId())).block();
-            if (winnerMember == null) {
-                skippedGuilds++;
-                logger.debug("Skipping guild " + guild.getId().asLong() + " because the winner is not a member of the guild.");
-                continue;
-            }
+            long guildId = guild.getId().asLong();
+            String guildDebugId = guildId + " (" + guild.getName() + ")";
             try {
-                winnerMember.addRole(Snowflake.of(winnerRoleId)).block();
-            } catch (ClientException e) {
-                logger.error("Bot cannot give roles in guild " + guild.getId().asLong() + " (" + guild.getName() + ")!\n Most likely, the bot does not have the \"Manage Roles\" permission.");
-                skippedGuilds++;
-                continue;
+                Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId;
+                if (winnerRoleId == null) {
+                    numberOfSkippedGuilds++;
+                    logger.debug("Skipping guild " + guildDebugId + " because it has no winner role.");
+                    continue;
+                }
+                Member winningMember = guild.getMemberById(Snowflake.of(winnerUser.getUserId())).block();
+                if (winningMember == null) {
+                    numberOfSkippedGuilds++;
+                    logger.debug("Skipping guild " + guildDebugId + " because the winner is not a member of the guild.");
+                    continue;
+                }
+                String winningMemberDebugId = winningMember.getId().asLong() + " (" + winningMember.getUsername() + ")";
+                try {
+                    winningMember.addRole(Snowflake.of(winnerRoleId)).block();
+                } catch (ClientException e) {
+                    logger.error("Bot cannot give roles to " + winningMemberDebugId + " in guild " + guildDebugId + "!\n Most likely, the bot does not have the \"Manage Roles\" permission.");
+                    numberOfSkippedGuilds++;
+                    continue;
+                }
+                logger.debug("Successfully awarded winner role to " + winningMemberDebugId + " in guild " + guildDebugId);
+            } catch (GuildSettingsNotFoundException e) {
+                // With the way the system is set up, this shouldn't ever trigger, but if it does, we'll know :)
+                numberOfSkippedGuilds++;
+                logger.error("Settings for guild: " + guildDebugId + " could not be found. Skipping...");
             }
-            logger.debug("Successfully awarded winner role to " + winnerMember.getId().asLong() + " (" + winnerMember.getUsername() + ") in guild " + guild.getId().asLong() + " (" + guild.getName() + ")");
         }
-        logger.info("Skipped " + skippedGuilds + " guilds.");
+        logger.info("Skipped " + numberOfSkippedGuilds + " guilds.");
     }
 }
