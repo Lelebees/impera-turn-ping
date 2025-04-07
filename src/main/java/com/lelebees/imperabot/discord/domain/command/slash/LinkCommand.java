@@ -36,12 +36,13 @@ public class LinkCommand implements SlashCommand {
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         Snowflake id = event.getInteraction().getUser().getId();
+        String username = event.getInteraction().getUser().getUsername();
 
-        logger.info("User " + id.asLong() + " (" + event.getInteraction().getUser().getUsername() + ") used /link");
+        logger.info("User " + id.asLong() + " (" + username + ") used /link");
         Long unlinkCommandId = discordService.getApplicationCommands().get("unlink");
         BotUser user = userService.findOrCreateUser(id.asLong());
         if (user.isLinked()) {
-            logger.info("User " + id.asLong() + " (" + event.getInteraction().getUser().getUsername() + ") was denied access to /link because they are already linked");
+            logger.info("User " + id.asLong() + " (" + username + ") was denied access to /link because they are already linked");
             return event.reply().withEphemeral(true).withContent("You are already linked to an Impera account. If you wish to re-link, run </unlink:%s> first.".formatted(unlinkCommandId));
         }
         Button button = Button.primary("mobileCode", "Send me a mobile friendly code!");
