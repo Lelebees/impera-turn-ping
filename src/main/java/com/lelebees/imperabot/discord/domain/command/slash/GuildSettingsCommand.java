@@ -4,7 +4,6 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
-import com.lelebees.imperabot.discord.domain.exception.IncorrectContextException;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
@@ -39,7 +38,8 @@ public class GuildSettingsCommand implements SlashCommand {
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         Optional<Snowflake> guildIdOptional = event.getInteraction().getGuildId();
         if (guildIdOptional.isEmpty()) {
-            throw new IncorrectContextException("No guildId on guild command");
+            logger.error("A guild command was called, but no guild Id was supplied with the interaction.");
+            return event.reply().withContent("Could not run command because a critical error has occurred, please file a bug report and include the timestamp of the interaction").withEphemeral(true);
         }
         Member guildMember = event.getInteraction().getMember().get();
 

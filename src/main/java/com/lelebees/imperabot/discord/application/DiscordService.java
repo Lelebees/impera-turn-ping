@@ -56,7 +56,7 @@ public class DiscordService {
         }
         String binaryTimestamp = binarySnowflake.substring(0, 41);
         long discordTimestamp = Long.parseUnsignedLong(binaryTimestamp, 2);
-        return Instant.ofEpochMilli(discordTimestamp+Snowflake.DISCORD_EPOCH);
+        return Instant.ofEpochMilli(discordTimestamp + Snowflake.DISCORD_EPOCH);
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {

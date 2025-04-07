@@ -42,7 +42,7 @@ public class ImperaService {
         return imperaRepository.getMessagesBySubject("Link");
     }
 
-    public ImperaGameViewDTO getGame(long gameId) {
+    public ImperaGameViewDTO getGame(long gameId) throws ImperaGameNotFoundException {
         return imperaRepository.findGameByGameId(gameId).orElseThrow(() -> new ImperaGameNotFoundException("Could not find game: " + gameId));
     }
 }
