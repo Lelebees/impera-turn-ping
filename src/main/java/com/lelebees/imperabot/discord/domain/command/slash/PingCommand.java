@@ -35,8 +35,6 @@ public class PingCommand implements SlashCommand {
         Instant eventInstant = convertSnowflakeToTimeStamp(event.getInteraction().getId());
         long difference = now.toEpochMilli() - eventInstant.toEpochMilli();
 
-        User user = event.getInteraction().getUser();
-        logger.info(user.getUsername() + " (" + user.getId().asLong() + ") used /ping!");
         return spec.event().reply()
                 .withContent("Pong in " + difference + "ms");
     }

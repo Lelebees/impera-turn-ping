@@ -29,7 +29,6 @@ public class UnlinkCommand implements SlashCommand {
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         User user = event.getInteraction().getUser();
-        logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /unlink");
         try {
             linkService.unlinkUser(user.getId());
             return event.reply("Your discord account has been unlinked from your Impera account").withEphemeral(true);

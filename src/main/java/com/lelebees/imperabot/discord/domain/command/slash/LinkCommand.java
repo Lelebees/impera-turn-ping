@@ -39,7 +39,6 @@ public class LinkCommand implements SlashCommand {
         User user = event.getInteraction().getUser();
         Snowflake id = user.getId();
         String username = user.getUsername();
-        logger.info("User " + id.asLong() + " (" + username + ") used /link");
         Long unlinkCommandId = discordService.getApplicationCommands().get("unlink");
         try {
             String verificationCode = linkService.getVerificationCode(id);
