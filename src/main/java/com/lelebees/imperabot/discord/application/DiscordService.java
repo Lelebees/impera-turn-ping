@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
@@ -23,23 +24,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 
 import static discord4j.rest.util.Permission.VIEW_CHANNEL;
 
 @Service
 public class DiscordService {
+    private final static Logger logger = LoggerFactory.getLogger(DiscordService.class);
     private final GatewayDiscordClient gatewayClient;
     private final UserService userService;
     private final GuildSettingsService guildSettingsService;
     private final GameLinkService gameLinkService;
-    private final static Logger logger = LoggerFactory.getLogger(DiscordService.class);
 
     public DiscordService(GatewayDiscordClient gatewayClient, UserService userService, GuildSettingsService guildSettingsService, GameLinkService gameLinkService) {
         this.gatewayClient = gatewayClient;
         this.userService = userService;
         this.guildSettingsService = guildSettingsService;
         this.gameLinkService = gameLinkService;
+    }
+
+    public static Instant convertSnowflakeToTimeStamp(Snowflake snowflake) {
+        long snowflakeLong = snowflake.asLong();
+        StringBuilder binarySnowflake = new StringBuilder(Long.toBinaryString(snowflakeLong));
+        // The binary representation has missing bits - a snowflake always has 64, and the last 42 bits are the timestamp,
+        // which has leading zeroes so there's room to grown
+        // We pad the number with the missing zeroes here so the calculation doesn't mess up.
+        int numOfMissingBits = 63 - binarySnowflake.length();
+        for (int i = 0; i < numOfMissingBits; i++) {
+            binarySnowflake.insert(0, "0");
+        }
+        String binaryTimestamp = binarySnowflake.substring(0, 41);
+        long discordTimestamp = Long.parseUnsignedLong(binaryTimestamp, 2);
+        return Instant.ofEpochMilli(discordTimestamp+Snowflake.DISCORD_EPOCH);
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
@@ -92,7 +109,6 @@ public class DiscordService {
         }
         String singledUser = userStrings.get(0);
         userStrings.remove(0);
-        // TODO: test this
         String generalVictoryMessage = victoryMessage + " %s and %s have won!".formatted(String.join(", ", userStrings), singledUser);
         if (userStrings.isEmpty()) {
             generalVictoryMessage = victoryMessage + " %s has won!".formatted(singledUser);
@@ -124,14 +140,8 @@ public class DiscordService {
     }
 
     private void ordinaryNotify(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, String generalMessage, String directMessage) {
-        List<MessageChannel> guildChannels = channels.stream()
-                .filter(channel -> channel.getType() != Channel.Type.DM)
-                .map(channel -> (MessageChannel) channel)
-                .toList();
-        List<MessageChannel> dmChannels = channels.stream()
-                .filter(channel -> channel.getType() == Channel.Type.DM)
-                .map(channel -> (MessageChannel) channel)
-                .toList();
+        List<MessageChannel> guildChannels = channels.stream().filter(channel -> channel.getType() != Channel.Type.DM).map(channel -> (MessageChannel) channel).toList();
+        List<MessageChannel> dmChannels = channels.stream().filter(channel -> channel.getType() == Channel.Type.DM).map(channel -> (MessageChannel) channel).toList();
         AllowedMentions allowedMentions = AllowedMentions.suppressAll();
         String userString = gamePlayer.name;
         Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
@@ -146,8 +156,7 @@ public class DiscordService {
                 try {
                     Member guildMember = guild.getMemberById(Snowflake.of(player.getUserId())).block();
                     // Check if the guildmember has access to the specific channel
-                    userCanSeeMessageInGuild = !((GuildMessageChannel) channel).getEffectivePermissions(guildMember.getId())
-                            .block().contains(VIEW_CHANNEL);
+                    userCanSeeMessageInGuild = !((GuildMessageChannel) channel).getEffectivePermissions(guildMember.getId()).block().contains(VIEW_CHANNEL);
                 } catch (ClientException e) {
                     logger.debug("User " + player.getUserId() + " does not have access to guild " + guildId.asLong() + " (" + guild.getName() + ")");
                 }
@@ -163,9 +172,7 @@ public class DiscordService {
         AllowedMentions finalAllowedMentions = allowedMentions;
         String finalUserString = userString;
         // TODO: Force swap userstring to playername if player is not in a guild
-        guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString))
-                .withAllowedMentions(finalAllowedMentions)
-                .block());
+        guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString)).withAllowedMentions(finalAllowedMentions).block());
     }
 
     private String getUserStringWithSettings(BotUser player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
@@ -187,7 +194,6 @@ public class DiscordService {
         }
         return userString;
     }
-
 
     public boolean channelIsDM(long channelId) {
         return getChannelById(channelId).getType() == Channel.Type.DM;
@@ -232,10 +238,7 @@ public class DiscordService {
 
     public Map<String, Long> getApplicationCommands() {
         Map<String, Long> commands = new HashMap<>();
-        gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong())
-                .collectList()
-                .block()
-                .forEach(command -> commands.put(command.name(), command.id().asLong()));
+        gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong()).collectList().block().forEach(command -> commands.put(command.name(), command.id().asLong()));
 //        logger.info("All application (slash) commands: " + commands);
         return commands;
     }
@@ -258,39 +261,43 @@ public class DiscordService {
         }
 
         // Find which channels belong to which guilds, and filter out the ones that are DMs
-        List<Guild> guilds = links.stream()
-                .map(GameChannelLink::getChannelId)
-                .filter(this::channelIsGuildChannel)
-                .map(this::getGuildChannelGuild)
-                .map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block())
-                .toList();
+        List<Guild> guilds = links.stream().map(GameChannelLink::getChannelId).filter(this::channelIsGuildChannel).map(this::getGuildChannelGuild).map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block()).toList();
 
         int numberOfGuilds = guilds.size();
         logger.info("Found " + numberOfGuilds + " guilds to award winner role in.");
-        int skippedGuilds = 0;
+        int numberOfSkippedGuilds = 0;
         // In each guild, find the winner role, and give it to the winner
         for (Guild guild : guilds) {
-            Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId;
-            if (winnerRoleId == null) {
-                skippedGuilds++;
-                logger.debug("Skipping guild " + guild.getId().asLong() + " because it has no winner role.");
-                continue;
-            }
-            Member winnerMember = guild.getMemberById(Snowflake.of(winnerUser.getUserId())).block();
-            if (winnerMember == null) {
-                skippedGuilds++;
-                logger.debug("Skipping guild " + guild.getId().asLong() + " because the winner is not a member of the guild.");
-                continue;
-            }
+            long guildId = guild.getId().asLong();
+            String guildDebugId = guildId + " (" + guild.getName() + ")";
             try {
-                winnerMember.addRole(Snowflake.of(winnerRoleId)).block();
-            } catch (ClientException e) {
-                logger.error("Bot cannot give roles in guild " + guild.getId().asLong() + " (" + guild.getName() + ")!\n Most likely, the bot does not have the \"Manage Roles\" permission.");
-                skippedGuilds++;
-                continue;
+                Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId;
+                if (winnerRoleId == null) {
+                    numberOfSkippedGuilds++;
+                    logger.debug("Skipping guild " + guildDebugId + " because it has no winner role.");
+                    continue;
+                }
+                Member winningMember = guild.getMemberById(Snowflake.of(winnerUser.getUserId())).block();
+                if (winningMember == null) {
+                    numberOfSkippedGuilds++;
+                    logger.debug("Skipping guild " + guildDebugId + " because the winner is not a member of the guild.");
+                    continue;
+                }
+                String winningMemberDebugId = winningMember.getId().asLong() + " (" + winningMember.getUsername() + ")";
+                try {
+                    winningMember.addRole(Snowflake.of(winnerRoleId)).block();
+                } catch (ClientException e) {
+                    logger.error("Bot cannot give roles to " + winningMemberDebugId + " in guild " + guildDebugId + "!\n Most likely, the bot does not have the \"Manage Roles\" permission.");
+                    numberOfSkippedGuilds++;
+                    continue;
+                }
+                logger.debug("Successfully awarded winner role to " + winningMemberDebugId + " in guild " + guildDebugId);
+            } catch (GuildSettingsNotFoundException e) {
+                // With the way the system is set up, this shouldn't ever trigger, but if it does, we'll know :)
+                numberOfSkippedGuilds++;
+                logger.error("Settings for guild: " + guildDebugId + " could not be found. Skipping...");
             }
-            logger.debug("Successfully awarded winner role to " + winnerMember.getId().asLong() + " (" + winnerMember.getUsername() + ") in guild " + guild.getId().asLong() + " (" + guild.getName() + ")");
         }
-        logger.info("Skipped " + skippedGuilds + " guilds.");
+        logger.info("Skipped " + numberOfSkippedGuilds + " guilds.");
     }
 }

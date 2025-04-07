@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.Lelebees</groupId>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.1</version> <!-- replace with your desired version -->
+            <version>42.7.3</version> <!-- replace with your desired version -->
         </dependency>
 
 

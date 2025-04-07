@@ -4,6 +4,7 @@ import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedExcept
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.application.LinkService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
+import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.component.ActionRow;
 import discord4j.core.object.component.Button;
@@ -18,10 +19,10 @@ import reactor.core.publisher.Mono;
 public class LinkCommand implements SlashCommand {
 
     private final static Logger logger = LoggerFactory.getLogger(LinkCommand.class);
-    @Value("${impera.username}")
-    private String imperaUsername;
     private final LinkService linkService;
     private final DiscordService discordService;
+    @Value("${impera.username}")
+    private String imperaUsername;
 
     public LinkCommand(LinkService linkService, DiscordService discordService) {
         this.linkService = linkService;
@@ -35,12 +36,13 @@ public class LinkCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
+        User user = event.getInteraction().getUser();
+        Snowflake id = user.getId();
+        String username = user.getUsername();
+        logger.info("User " + id.asLong() + " (" + username + ") used /link");
+        Long unlinkCommandId = discordService.getApplicationCommands().get("unlink");
         try {
-            User user = event.getInteraction().getUser();
-            logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /link");
-
-            Long unlinkCommandId = discordService.getApplicationCommands().get("unlink");
-            String verificationCode = linkService.getVerificationCode(user.getId());
+            String verificationCode = linkService.getVerificationCode(id);
             Button button = Button.primary("mobileCode", "Send me a mobile friendly code!");
             return event.reply()
                     .withEphemeral(true)
@@ -57,11 +59,11 @@ public class LinkCommand implements SlashCommand {
                             .formatted(imperaUsername, verificationCode, unlinkCommandId))
                     .withComponents(ActionRow.of(button));
         } catch (UserAlreadyVerfiedException e) {
-            logger.info("User " + event.getInteraction().getUser().getId().asLong() + " (" + event.getInteraction().getUser().getUsername() + ") was denied access to /link because they are already verified");
-            return event.reply("You are already verified! If you wish to re-link, run </unlink> first.").withEphemeral(true);
+            logger.info("User " + id.asLong() + " (" + username + ") was denied access to /link because they are already verified");
+            return event.reply("You are already verified! If you wish to re-link, run </unlink:"+unlinkCommandId+"> first.").withEphemeral(true);
         } catch (Exception e) {
             logger.error("An unknown error occured: ", e);
-            return event.reply("An unknown error occured. Please try again later.").withEphemeral(true);
+            return event.reply("An unknown error occured. Please try again later, or file a bug report.").withEphemeral(true);
         }
     }
 }
