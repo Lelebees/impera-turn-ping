@@ -1,6 +1,6 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
-import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.discord.application.LinkService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
@@ -15,11 +15,9 @@ import reactor.core.publisher.Mono;
 public class UnlinkCommand implements SlashCommand {
     private static final Logger logger = LoggerFactory.getLogger(UnlinkCommand.class);
 
-    private final UserService userService;
     private final LinkService linkService;
 
-    public UnlinkCommand(UserService userService, LinkService linkService) {
-        this.userService = userService;
+    public UnlinkCommand(LinkService linkService) {
         this.linkService = linkService;
     }
 

@@ -57,7 +57,7 @@ public class BotUser {
         return this.imperaId != null;
     }
 
-    public void setImperaId(UUID imperaId) {
+    public void setImperaId(UUID imperaId) throws UserAlreadyVerfiedException {
         if (this.imperaId != null) {
             throw new UserAlreadyVerfiedException("This user [" + this.userId + "] is already linked to an Impera account [" + this.imperaId + "] !");
         }

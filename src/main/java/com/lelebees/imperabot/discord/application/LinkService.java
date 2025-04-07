@@ -3,6 +3,7 @@ package com.lelebees.imperabot.discord.application;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
+import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import discord4j.common.util.Snowflake;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ public class LinkService {
         this.userService = userService;
     }
 
-    public String getVerificationCode(Snowflake id) {
+    public String getVerificationCode(Snowflake id) throws UserAlreadyVerfiedException {
         BotUser user = userService.findOrCreateUser(id.asLong());
         if (user.isLinked()) {
             throw new UserAlreadyVerfiedException("User " + id.asLong() + " is already verified!");
@@ -22,7 +23,7 @@ public class LinkService {
         return user.getVerificationCode();
     }
 
-    public BotUser unlinkUser(Snowflake id) {
+    public BotUser unlinkUser(Snowflake id) throws UserNotFoundException {
         return userService.unlinkUser(id.asLong());
     }
 }

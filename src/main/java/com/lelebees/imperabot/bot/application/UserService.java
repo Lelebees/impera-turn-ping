@@ -3,6 +3,7 @@ package com.lelebees.imperabot.bot.application;
 import com.lelebees.imperabot.bot.data.UserRepository;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
+import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ public class UserService {
         this.repository = repository;
     }
 
-    public BotUser verifyUser(String verificationCode, UUID imperaId) {
+    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
             botUser.setImperaId(imperaId);
@@ -27,7 +28,7 @@ public class UserService {
         }
     }
 
-    public BotUser findUser(long id) {
+    public BotUser findUser(long id) throws UserNotFoundException {
         try {
             return userFromOptional(repository.findById(id));
         } catch (UserNotFoundException e) {
@@ -39,7 +40,7 @@ public class UserService {
         return repository.save(new BotUser(id));
     }
 
-    public BotUser unlinkUser(long id) {
+    public BotUser unlinkUser(long id) throws UserNotFoundException {
         BotUser botUser = findUser(id);
         botUser.unlink();
         return repository.save(botUser);
@@ -55,7 +56,7 @@ public class UserService {
         return botUser;
     }
 
-    private BotUser userFromOptional(Optional<BotUser> userOptional) {
+    private BotUser userFromOptional(Optional<BotUser> userOptional) throws UserNotFoundException {
         return userOptional.orElseThrow(() -> new UserNotFoundException("Could not find user!"));
     }
 
@@ -69,7 +70,7 @@ public class UserService {
         return repository.getUserByImperaId(imperaId);
     }
 
-    public BotUser findImperaUserOrThrow(UUID imperaId) {
+    public BotUser findImperaUserOrThrow(UUID imperaId) throws UserNotFoundException {
         try {
             return userFromOptional(repository.getUserByImperaId(imperaId));
         } catch (UserNotFoundException e) {

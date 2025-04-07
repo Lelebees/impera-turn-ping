@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class LinkServiceTest {
     @Test
     @DisplayName("Verification code is returned if user is not linked")
-    public void verificationCodeReturns() {
+    public void verificationCodeReturns() throws UserAlreadyVerfiedException {
         UserService userService = Mockito.mock(UserService.class);
         LinkService linkService = new LinkService(userService);
         Mockito.when(userService.findOrCreateUser(1L)).thenReturn(new BotUser(1L, null, null, "code"));
