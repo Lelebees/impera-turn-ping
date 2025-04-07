@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 
 import static discord4j.rest.util.Permission.VIEW_CHANNEL;
@@ -41,6 +42,21 @@ public class DiscordService {
         this.userService = userService;
         this.guildSettingsService = guildSettingsService;
         this.gameLinkService = gameLinkService;
+    }
+
+    public static Instant convertSnowflakeToTimeStamp(Snowflake snowflake) {
+        long snowflakeLong = snowflake.asLong();
+        StringBuilder binarySnowflake = new StringBuilder(Long.toBinaryString(snowflakeLong));
+        // The binary representation has missing bits - a snowflake always has 64, and the last 42 bits are the timestamp,
+        // which has leading zeroes so there's room to grown
+        // We pad the number with the missing zeroes here so the calculation doesn't mess up.
+        int numOfMissingBits = 63 - binarySnowflake.length();
+        for (int i = 0; i < numOfMissingBits; i++) {
+            binarySnowflake.insert(0, "0");
+        }
+        String binaryTimestamp = binarySnowflake.substring(0, 41);
+        long discordTimestamp = Long.parseUnsignedLong(binaryTimestamp, 2);
+        return Instant.ofEpochMilli(discordTimestamp+Snowflake.DISCORD_EPOCH);
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
@@ -125,14 +141,8 @@ public class DiscordService {
     }
 
     private void ordinaryNotify(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, String generalMessage, String directMessage) {
-        List<MessageChannel> guildChannels = channels.stream()
-                .filter(channel -> channel.getType() != Channel.Type.DM)
-                .map(channel -> (MessageChannel) channel)
-                .toList();
-        List<MessageChannel> dmChannels = channels.stream()
-                .filter(channel -> channel.getType() == Channel.Type.DM)
-                .map(channel -> (MessageChannel) channel)
-                .toList();
+        List<MessageChannel> guildChannels = channels.stream().filter(channel -> channel.getType() != Channel.Type.DM).map(channel -> (MessageChannel) channel).toList();
+        List<MessageChannel> dmChannels = channels.stream().filter(channel -> channel.getType() == Channel.Type.DM).map(channel -> (MessageChannel) channel).toList();
         AllowedMentions allowedMentions = AllowedMentions.suppressAll();
         String userString = gamePlayer.name;
         Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
@@ -147,8 +157,7 @@ public class DiscordService {
                 try {
                     Member guildMember = guild.getMemberById(Snowflake.of(player.getUserId())).block();
                     // Check if the guildmember has access to the specific channel
-                    userCanSeeMessageInGuild = !((GuildMessageChannel) channel).getEffectivePermissions(guildMember.getId())
-                            .block().contains(VIEW_CHANNEL);
+                    userCanSeeMessageInGuild = !((GuildMessageChannel) channel).getEffectivePermissions(guildMember.getId()).block().contains(VIEW_CHANNEL);
                 } catch (ClientException e) {
                     logger.debug("User " + player.getUserId() + " does not have access to guild " + guildId.asLong() + " (" + guild.getName() + ")");
                 }
@@ -164,9 +173,7 @@ public class DiscordService {
         AllowedMentions finalAllowedMentions = allowedMentions;
         String finalUserString = userString;
         // TODO: Force swap userstring to playername if player is not in a guild
-        guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString))
-                .withAllowedMentions(finalAllowedMentions)
-                .block());
+        guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString)).withAllowedMentions(finalAllowedMentions).block());
     }
 
     private String getUserStringWithSettings(BotUser player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
@@ -188,7 +195,6 @@ public class DiscordService {
         }
         return userString;
     }
-
 
     public boolean channelIsDM(long channelId) {
         return getChannelById(channelId).getType() == Channel.Type.DM;
@@ -233,10 +239,7 @@ public class DiscordService {
 
     public Map<String, Long> getApplicationCommands() {
         Map<String, Long> commands = new HashMap<>();
-        gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong())
-                .collectList()
-                .block()
-                .forEach(command -> commands.put(command.name(), command.id().asLong()));
+        gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong()).collectList().block().forEach(command -> commands.put(command.name(), command.id().asLong()));
 //        logger.info("All application (slash) commands: " + commands);
         return commands;
     }
@@ -259,12 +262,7 @@ public class DiscordService {
         }
 
         // Find which channels belong to which guilds, and filter out the ones that are DMs
-        List<Guild> guilds = links.stream()
-                .map(GameChannelLink::getChannelId)
-                .filter(this::channelIsGuildChannel)
-                .map(this::getGuildChannelGuild)
-                .map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block())
-                .toList();
+        List<Guild> guilds = links.stream().map(GameChannelLink::getChannelId).filter(this::channelIsGuildChannel).map(this::getGuildChannelGuild).map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block()).toList();
 
         int numberOfGuilds = guilds.size();
         logger.info("Found " + numberOfGuilds + " guilds to award winner role in.");

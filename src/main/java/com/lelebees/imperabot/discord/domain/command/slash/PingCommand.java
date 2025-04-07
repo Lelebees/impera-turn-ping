@@ -11,10 +11,13 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
+import static com.lelebees.imperabot.discord.application.DiscordService.convertSnowflakeToTimeStamp;
+
 @Component
 public class PingCommand implements SlashCommand {
 
     private final static Logger logger = LoggerFactory.getLogger(PingCommand.class);
+
 
     public PingCommand() {
     }
@@ -26,13 +29,17 @@ public class PingCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
+        Instant now = Instant.now();
         InteractionCallbackSpecDeferReplyMono spec = event.deferReply();
-        Instant requestFired = event.getCommandId().getTimestamp();
-        long difference = Instant.now().toEpochMilli() - requestFired.toEpochMilli();
-        float differenceInMilis = (float) difference / 10000;
+
+        Instant eventInstant = convertSnowflakeToTimeStamp(event.getInteraction().getId());
+        long difference = now.toEpochMilli() - eventInstant.toEpochMilli();
+
         User user = event.getInteraction().getUser();
         logger.info(user.getUsername() + " (" + user.getId().asLong() + ") used /ping!");
         return spec.event().reply()
-                .withContent("Pong in " + differenceInMilis + "ms");
+                .withContent("Pong in " + difference + "ms");
     }
+
+
 }
