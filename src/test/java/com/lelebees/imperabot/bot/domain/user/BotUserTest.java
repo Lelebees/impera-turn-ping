@@ -1,0 +1,41 @@
+package com.lelebees.imperabot.bot.domain.user;
+
+import com.lelebees.imperabot.bot.domain.user.exception.IncorrecVerificationCodeException;
+import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class BotUserTest {
+
+    @Test
+    @DisplayName("Verifying user that is already verified throws exception")
+    void verifyUserThrowsIfVerified() {
+        UUID imperaId = UUID.randomUUID();
+        String verificationCode = UUID.randomUUID().toString();
+        BotUser user = new BotUser(1L, imperaId, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
+        assertThrows(UserAlreadyVerfiedException.class, () -> user.verifyUser(imperaId, verificationCode));
+    }
+
+    @Test
+    @DisplayName("Verifying user with incorrect code throws exception")
+    void verifyUserThrowsIfCodeIncorrect() {
+        UUID imperaId = UUID.randomUUID();
+        String verificationCode = UUID.randomUUID().toString();
+        BotUser user = new BotUser(1L, imperaId, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
+        assertThrows(IncorrecVerificationCodeException.class, () -> user.verifyUser(imperaId, ""));
+    }
+
+    @Test
+    @DisplayName("Can verify User")
+    void verifyUserWorks() throws UserAlreadyVerfiedException, IncorrecVerificationCodeException {
+        UUID imperaId = UUID.randomUUID();
+        String verificationCode = UUID.randomUUID().toString();
+        BotUser user = new BotUser(1L, null, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
+        assertDoesNotThrow(() -> user.verifyUser(imperaId, verificationCode));
+    }
+}

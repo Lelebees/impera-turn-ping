@@ -15,6 +15,7 @@ public class LinkService {
         this.userService = userService;
     }
 
+    //TODO: put this in BotUser (they own this data, after all!)
     public String getVerificationCode(Snowflake id) throws UserAlreadyVerfiedException {
         BotUser user = userService.findOrCreateUser(id.asLong());
         if (user.isLinked()) {
