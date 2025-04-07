@@ -109,7 +109,6 @@ public class DiscordService {
         }
         String singledUser = userStrings.get(0);
         userStrings.remove(0);
-        // TODO: test this
         String generalVictoryMessage = victoryMessage + " %s and %s have won!".formatted(String.join(", ", userStrings), singledUser);
         if (userStrings.isEmpty()) {
             generalVictoryMessage = victoryMessage + " %s has won!".formatted(singledUser);
