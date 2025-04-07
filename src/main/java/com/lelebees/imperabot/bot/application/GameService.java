@@ -20,7 +20,7 @@ public class GameService {
         this.gameLinkService = gameLinkService;
     }
 
-    public Game findGameByID(long ID) {
+    public Game findGameByID(long ID) throws GameNotFoundException {
         Optional<Game> gameOptional = gameRepository.findById(ID);
         return gameOptional.orElseThrow(() -> new GameNotFoundException("Could not find game: " + ID));
     }
@@ -33,13 +33,13 @@ public class GameService {
         return gameRepository.findAll();
     }
 
-    public Game setHalfTimeNoticeForGame(long gameId) {
+    public Game setHalfTimeNoticeForGame(long gameId) throws GameNotFoundException {
         Game game = findGameByID(gameId);
         game.halfTimeNotice = true;
         return gameRepository.save(game);
     }
 
-    public Game turnChanged(long gameId, int newTurn) {
+    public Game turnChanged(long gameId, int newTurn) throws GameNotFoundException {
         Game game = findGameByID(gameId);
         game.currentTurn = newTurn;
         game.halfTimeNotice = false;
