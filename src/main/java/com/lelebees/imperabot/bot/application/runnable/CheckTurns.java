@@ -8,13 +8,17 @@ import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
+import com.lelebees.imperabot.impera.domain.history.HistoryActionName;
 import discord4j.core.object.entity.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import static com.lelebees.imperabot.impera.domain.history.HistoryActionName.*;
 
 public class CheckTurns implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(CheckTurns.class);
@@ -57,26 +61,20 @@ public class CheckTurns implements Runnable {
                     continue;
                 }
 
-                // TODO: reduce the amount of API calls by sorting through the players in RAM
+                HashMap<HistoryActionName, List<String>> playersThatAreNoLongerPlaying = imperaService.getPlayersThatAreNoLongerPlaying(game.getId(), game.currentTurn, imperaGame.turnCounter() + 1);
                 // Get all players that have been defeated since the last turn change
-                List<ImperaGamePlayerDTO> defeatedPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter() + 1)
-                        .mapToObj(turn -> imperaService.getPlayersThatWereDefeated(game.getId(), turn))
-                        .flatMap(Collection::stream)
-                        .map(imperaGame::findPlayerByGameId)
+                List<ImperaGamePlayerDTO> defeatedPlayers = playersThatAreNoLongerPlaying.get(LOST)
+                        .stream().map(imperaGame::findPlayerByGameId)
                         .toList();
                 logger.debug("Found " + defeatedPlayers.size() + " defeated players.");
                 // Get all players that surrendered in the last turn(s)
-                List<ImperaGamePlayerDTO> surrenderedPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter() + 1)
-                        .mapToObj(turn -> imperaService.getPlayersThatSurrendered(game.getId(), turn))
-                        .flatMap(Collection::stream)
-                        .map(imperaGame::findPlayerByGameId)
+                List<ImperaGamePlayerDTO> surrenderedPlayers = playersThatAreNoLongerPlaying.get(SURRENDERED)
+                        .stream().map(imperaGame::findPlayerByGameId)
                         .toList();
                 logger.debug("Found " + surrenderedPlayers.size() + " surrendered players.");
 
-                List<ImperaGamePlayerDTO> timedOutPlayers = IntStream.range(game.currentTurn, imperaGame.turnCounter() + 1)
-                        .mapToObj(turn -> imperaService.getPlayersThatTimedOut(game.getId(), turn))
-                        .flatMap(Collection::stream)
-                        .map(imperaGame::findPlayerByGameId)
+                List<ImperaGamePlayerDTO> timedOutPlayers = playersThatAreNoLongerPlaying.get(TIMED_OUT)
+                        .stream().map(imperaGame::findPlayerByGameId)
                         .toList();
                 logger.debug("Found " + timedOutPlayers.size() + " timed out players.");
 

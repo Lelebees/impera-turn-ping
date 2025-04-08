@@ -4,9 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lelebees.imperabot.impera.domain.ExceptionModel;
 import com.lelebees.imperabot.impera.domain.ImperaGameActionDTO;
-import com.lelebees.imperabot.impera.domain.ImperaGameHistoryDTO;
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
+import com.lelebees.imperabot.impera.domain.history.ImperaGameHistoryDTO;
+import com.lelebees.imperabot.impera.domain.history.exception.TurnNotFoundException;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 import com.lelebees.imperabot.impera.domain.message.exception.ImperaMessageNotFoundException;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +151,19 @@ public class ImperaAPIRepository implements ImperaRepository {
                 .orElse(null);
     }
 
+    @Override
+    public List<ImperaGameHistoryDTO> getTurnHistoryInRange(long gameId, int startTurnId, int endTurnId) throws TurnNotFoundException {
+        List<ImperaGameHistoryDTO> turnStates = new ArrayList<>();
+        for (int turnId = startTurnId; turnId < endTurnId; turnId++) {
+            Optional<ImperaGameHistoryDTO> turnState = getTurnState(gameId, turnId);
+            if (turnState.isEmpty()) {
+                throw new TurnNotFoundException("Could not find turn " + turnId + " in game " + gameId + ".");
+            }
+            turnStates.add(turnState.get());
+        }
+        return turnStates;
+    }
+
     private Optional<ImperaGameHistoryDTO> getTurnState(long gameId, int turnId) {
         try {
             String url = imperaURL + "/games/" + gameId + "/history/" + turnId;
@@ -158,17 +173,17 @@ public class ImperaAPIRepository implements ImperaRepository {
             try {
                 ExceptionModel exceptionModel = new ObjectMapper().readValue(e.getResponseBodyAsString(), ExceptionModel.class);
                 if (exceptionModel.error().equals("CannotFindGame")) {
-                    logger.info("Game " + gameId + " not found. It most likely does not exist.");
+                    logger.warn("Game " + gameId + " not found. It most likely does not exist.");
                     return Optional.empty();
                 }
                 if (exceptionModel.error().equals("CannotFindTurn")) {
-                    logger.info("Turn " + turnId + " not found for game " + gameId + ". It most likely does not exist.");
+                    logger.warn("Turn " + turnId + " not found for game " + gameId + ". It most likely does not exist.");
                     return Optional.empty();
                 }
             } catch (JsonProcessingException jsonProcessingException) {
                 logger.error("Error parsing JSON: " + jsonProcessingException.getMessage(), jsonProcessingException);
             }
-            logger.info("Couldn't get turn state for game " + gameId + " and turn " + turnId + ".");
+            logger.warn("Couldn't get turn state for game " + gameId + " and turn " + turnId + ".");
             return Optional.empty();
         }
     }

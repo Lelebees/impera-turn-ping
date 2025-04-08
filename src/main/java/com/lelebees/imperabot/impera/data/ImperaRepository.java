@@ -1,6 +1,8 @@
 package com.lelebees.imperabot.impera.data;
 
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
+import com.lelebees.imperabot.impera.domain.history.ImperaGameHistoryDTO;
+import com.lelebees.imperabot.impera.domain.history.exception.TurnNotFoundException;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 
 import java.util.List;
@@ -17,4 +19,6 @@ public interface ImperaRepository {
     void deleteMessage(String id);
 
     List<String> getActorIdByActionAndTurn(long gameId, int turnId, String actionString);
+
+    List<ImperaGameHistoryDTO> getTurnHistoryInRange(long gameId, int startTurnId, int endTurnId) throws TurnNotFoundException;
 }
