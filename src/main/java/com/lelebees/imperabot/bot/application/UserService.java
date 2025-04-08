@@ -19,7 +19,7 @@ public class UserService {
         this.repository = repository;
     }
 
-    public BotUser startVerification(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrecVerificationCodeException {
+    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrecVerificationCodeException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
             botUser.verifyUser(imperaId, verificationCode);
@@ -79,8 +79,18 @@ public class UserService {
         }
     }
 
+    public boolean isImperaUserAlreadyVerified(UUID imperaId) {
+        try {
+            return findImperaUserOrThrow(imperaId).isLinked();
+        } catch (UserNotFoundException e) {
+            return false;
+        }
+    }
+
     public String startVerification(long userId) throws UserAlreadyVerfiedException {
         BotUser user = findOrCreateUser(userId);
-        return user.startVerification();
+        String verificationCode = user.startVerification();
+        repository.save(user);
+        return verificationCode;
     }
 }

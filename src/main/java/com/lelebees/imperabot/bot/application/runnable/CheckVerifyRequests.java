@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public class CheckVerifyRequests implements Runnable {
@@ -40,32 +39,42 @@ public class CheckVerifyRequests implements Runnable {
 
     private void checkRequests() {
         List<ImperaMessageDTO> linkMessages = imperaService.getLinkMessages();
-        logger.info("[CLR] Found " + linkMessages.size() + " link requests.");
+        logger.info("Found " + linkMessages.size() + " link requests.");
         int skippedRequests = 0;
         for (ImperaMessageDTO linkMessage : linkMessages) {
-            UUID imperaUserId = UUID.fromString(linkMessage.from.id);
-            Optional<BotUser> userOptional = userService.findImperaUser(imperaUserId);
-            if (userOptional.isPresent()) {
+            UUID imperaUserId = linkMessage.from.id;
+            if (userService.isImperaUserAlreadyVerified(imperaUserId)) {
                 skippedRequests++;
-                logger.warn("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake) " + userOptional.get().getUserId() + " already exists! Skipping and destroying message...");
+                logger.warn("User with Impera account " + linkMessage.from.name + " (" + linkMessage.from.id + ") already exists. Skipping and destroying message...");
                 imperaService.deleteMessage(linkMessage.id);
                 continue;
             }
             try {
-                BotUser user = userService.startVerification(linkMessage.text.trim(), imperaUserId);
+                BotUser user = userService.verifyUser(linkMessage.text.trim(), imperaUserId);
                 imperaService.deleteMessage(linkMessage.id);
                 logger.info("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake) " + user.getUserId() + " has been verified!");
                 discordService.sendVerificationDM(user.getUserId());
             } catch (UserNotFoundException e) {
-                skippedRequests++;
+                //TODO: Notify user of failed verification
                 logger.warn("User matching code " + linkMessage.text + " Not found, skipping...");
+                skippedRequests++;
             } catch (UserAlreadyVerfiedException e) {
-                BotUser user = userService.findImperaUser(UUID.fromString(linkMessage.from.id)).get();
-                logger.warn("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake) " + user.getUserId() + " already verified!");
+                try {
+                    BotUser user = userService.findImperaUserOrThrow(linkMessage.from.id);
+                    logger.warn("User " + linkMessage.from.name + " (" + linkMessage.from.id.toString() + ") aka (snowflake) " + user.getUserId() + " already verified!");
+                } catch (UserNotFoundException er) {
+                    logger.error("User " + linkMessage.from.name + " (" + linkMessage.from.id.toString() + ") was already verified, yet user could not be found in database.", er, e);
+                    logger.warn("To prevent future errors, the offending link request (" + linkMessage.id + ") will be deleted. A copy of the message data follows now.\n" + linkMessage);
+                }
                 imperaService.deleteMessage(linkMessage.id);
             } catch (IncorrecVerificationCodeException e) {
-                BotUser user = userService.findImperaUser(UUID.fromString(linkMessage.from.id)).get();
-                logger.warn("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") could not be verified as " + user.getUserId() + " because the supplied verification code was incorrect.");
+                try {
+                    BotUser user = userService.findImperaUserOrThrow(linkMessage.from.id);
+                    logger.warn("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") could not be verified as (snowflake) " + user.getUserId() + " because the supplied verification code was incorrect.");
+                } catch (UserNotFoundException er) {
+                    logger.error("User " + linkMessage.from.name + " (" + linkMessage.from.id.toString() + ") supplied incorrect verification code, yet user could not be found in database.", er, e);
+                    logger.warn("To prevent future errors, the offending link request (" + linkMessage.id + ") will be deleted. A copy of the message data follows now.\n" + linkMessage);
+                }
                 imperaService.deleteMessage(linkMessage.id);
             }
         }

@@ -11,7 +11,7 @@ public class GameChannelLink {
     private long gameId;
     @Id
     private long channelId;
-    @Column(nullable = true, name = "notification_setting")
+    @Column(name = "notification_setting")
     public Integer notificationSetting;
 
     public GameChannelLink(long gameId, long channelId, NotificationSettings notificationSetting) {

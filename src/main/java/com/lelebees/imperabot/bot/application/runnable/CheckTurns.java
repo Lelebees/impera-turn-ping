@@ -46,8 +46,8 @@ public class CheckTurns implements Runnable {
                     continue;
                 }
 
-                boolean gameEnded = imperaGame.state.equals("Ended");
-                boolean gameHasYetToStart = imperaGame.state.equals("Open");
+                boolean gameEnded = imperaGame.hasEnded();
+                boolean gameHasYetToStart = imperaGame.hasYetToStart();
                 boolean turnHasChanged = game.currentTurn != imperaGame.turnCounter;
                 boolean halfOfTurnTimeHasPassed = imperaGame.timeoutSecondsLeft <= (imperaGame.options.timeoutInSeconds / 2);
                 // If the turn hasn't changed, and it has not been half-time OR the notice has already been sent, and the game hasn't ended, or the game is open

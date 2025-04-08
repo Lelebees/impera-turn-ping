@@ -36,4 +36,12 @@ public class ImperaGameViewDTO {
                 .findFirst()
                 .orElse(null);
     }
+
+    public boolean hasEnded() {
+        return state.equals("Ended");
+    }
+
+    public boolean hasYetToStart() {
+        return state.equals("Open");
+    }
 }

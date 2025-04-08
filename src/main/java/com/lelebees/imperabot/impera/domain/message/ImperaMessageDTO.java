@@ -11,4 +11,18 @@ public class ImperaMessageDTO {
     public String folder;
     public LocalDateTime sentAt;
     public boolean isRead;
+
+    @Override
+    public String toString() {
+        return "ImperaMessageDTO{" +
+                "to=" + to +
+                ", subject='" + subject + '\'' +
+                ", text='" + text + '\'' +
+                ", id='" + id + '\'' +
+                ", from=" + from +
+                ", folder='" + folder + '\'' +
+                ", sentAt=" + sentAt +
+                ", isRead=" + isRead +
+                '}';
+    }
 }

@@ -35,7 +35,6 @@ public class BotUser {
 
     public BotUser(long id) {
         this(id, null, PREFER_GUILD_OVER_DMS, null);
-        this.verificationCode = generateVerificationCode();
     }
 
     public BotUser(long userId, @Nullable @Unique UUID imperaId, UserNotificationSetting notificationSetting, @Unique String verificationCode) {
