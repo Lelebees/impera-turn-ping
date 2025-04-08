@@ -52,7 +52,7 @@ public class CheckVerifyRequests implements Runnable {
                 continue;
             }
             try {
-                BotUser user = userService.verifyUser(linkMessage.text.trim(), imperaUserId);
+                BotUser user = userService.startVerification(linkMessage.text.trim(), imperaUserId);
                 imperaService.deleteMessage(linkMessage.id);
                 logger.info("User " + linkMessage.from.name + " (" + linkMessage.from.id + ") aka (snowflake) " + user.getUserId() + " has been verified!");
                 discordService.sendVerificationDM(user.getUserId());

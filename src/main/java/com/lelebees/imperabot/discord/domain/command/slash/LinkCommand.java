@@ -1,8 +1,8 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
+import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.discord.application.DiscordService;
-import com.lelebees.imperabot.discord.application.LinkService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -19,13 +19,13 @@ import reactor.core.publisher.Mono;
 public class LinkCommand implements SlashCommand {
 
     private final static Logger logger = LoggerFactory.getLogger(LinkCommand.class);
-    private final LinkService linkService;
+    private final UserService userService;
     private final DiscordService discordService;
     @Value("${impera.username}")
     private String imperaUsername;
 
-    public LinkCommand(LinkService linkService, DiscordService discordService) {
-        this.linkService = linkService;
+    public LinkCommand(UserService userService, DiscordService discordService) {
+        this.userService = userService;
         this.discordService = discordService;
     }
 
@@ -41,7 +41,7 @@ public class LinkCommand implements SlashCommand {
         String username = user.getUsername();
         Long unlinkCommandId = discordService.getApplicationCommands().get("unlink");
         try {
-            String verificationCode = linkService.getVerificationCode(id);
+            String verificationCode = userService.startVerification(id.asLong());
             Button button = Button.primary("mobileCode", "Send me a mobile friendly code!");
             return event.reply()
                     .withEphemeral(true)
@@ -59,8 +59,8 @@ public class LinkCommand implements SlashCommand {
                     .withComponents(ActionRow.of(button));
         } catch (UserAlreadyVerfiedException e) {
             logger.info("User " + id.asLong() + " (" + username + ") was denied access to /link because they are already verified");
-            return event.reply("You are already verified! If you wish to re-link, run </unlink:"+unlinkCommandId+"> first.").withEphemeral(true);
-        } catch (Exception e) {
+            return event.reply("You are already verified! If you wish to re-link, run </unlink:" + unlinkCommandId + "> first.").withEphemeral(true);
+        } catch (RuntimeException e) {
             logger.error("An unknown error occured: ", e);
             return event.reply("An unknown error occured. Please try again later, or file a bug report.").withEphemeral(true);
         }

@@ -82,6 +82,22 @@ public class BotUser {
         return verificationCode;
     }
 
+    /**
+     * This method generates a new verification code when the verification process is started.
+     * Multiple calls to this method will generate new codes, and invalidate the old ones.
+     *
+     * @return Verification code, call{@link BotUser#verifyUser(UUID, String)}with this code and an Impera account id to verify the user
+     * @throws UserAlreadyVerfiedException User is already linked to an Impera account and they must be unlinked before verification can start again
+     * @see BotUser#verifyUser(UUID, String)
+     */
+    public String startVerification() throws UserAlreadyVerfiedException {
+        if (isLinked()) {
+            throw new UserAlreadyVerfiedException("User " + userId + " is already verified!");
+        }
+        this.verificationCode = generateVerificationCode();
+        return verificationCode;
+    }
+
     public void unlink() {
         this.imperaId = null;
         this.verificationCode = generateVerificationCode();

@@ -19,7 +19,7 @@ public class UserService {
         this.repository = repository;
     }
 
-    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrecVerificationCodeException {
+    public BotUser startVerification(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrecVerificationCodeException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
             botUser.verifyUser(imperaId, verificationCode);
@@ -77,5 +77,10 @@ public class UserService {
         } catch (UserNotFoundException e) {
             throw new UserNotFoundException("Cannot find user with this Impera Id (" + imperaId + ")");
         }
+    }
+
+    public String startVerification(long userId) throws UserAlreadyVerfiedException {
+        BotUser user = findOrCreateUser(userId);
+        return user.startVerification();
     }
 }

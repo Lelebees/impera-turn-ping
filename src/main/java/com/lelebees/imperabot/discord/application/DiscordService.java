@@ -182,7 +182,7 @@ public class DiscordService {
         // TODO: Force swap userstring to playername if player is not in a guild
         guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString)).withAllowedMentions(finalAllowedMentions).block());
     }
-
+    //TODO: This method produces side effects, replace with better method :)
     private String getUserStringWithSettings(BotUser player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
         String userString = player.getMention();
         switch (player.getNotificationSetting()) {

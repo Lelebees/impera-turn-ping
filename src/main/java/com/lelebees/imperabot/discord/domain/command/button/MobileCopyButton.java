@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono;
 public class MobileCopyButton implements ButtonCommand {
 
     private final UserService userService;
-    private final static Logger logger = LoggerFactory.getLogger(MobileCopyButton.class);
 
     public MobileCopyButton(UserService userService) {
         this.userService = userService;
@@ -26,13 +25,9 @@ public class MobileCopyButton implements ButtonCommand {
         return "mobileCode";
     }
 
-    //TODO: Refactor this properly
     @Override
     public Mono<Void> handle(ButtonInteractionEvent event) {
-        User callingUser = event.getInteraction().getUser();
-        Snowflake id = callingUser.getId();
-        logger.info("User " + id.asLong() + " (" + callingUser.getUsername() + ") clicked mobileCode button");
-        BotUser user = userService.findOrCreateUser(id.asLong());
+        BotUser user = userService.findOrCreateUser(event.getInteraction().getUser().getId().asLong());
         return event.reply().withEphemeral(true).withContent(user.getVerificationCode());
     }
 }

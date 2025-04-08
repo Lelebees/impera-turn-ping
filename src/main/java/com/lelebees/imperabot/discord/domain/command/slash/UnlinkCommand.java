@@ -1,8 +1,7 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
-import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
-import com.lelebees.imperabot.discord.application.LinkService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
@@ -15,10 +14,10 @@ import reactor.core.publisher.Mono;
 public class UnlinkCommand implements SlashCommand {
     private static final Logger logger = LoggerFactory.getLogger(UnlinkCommand.class);
 
-    private final LinkService linkService;
+    private final UserService userService;
 
-    public UnlinkCommand(LinkService linkService) {
-        this.linkService = linkService;
+    public UnlinkCommand(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
@@ -30,7 +29,7 @@ public class UnlinkCommand implements SlashCommand {
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         User user = event.getInteraction().getUser();
         try {
-            linkService.unlinkUser(user.getId());
+            userService.unlinkUser(user.getId().asLong());
             return event.reply("Your discord account has been unlinked from your Impera account").withEphemeral(true);
         } catch (UserNotFoundException e) {
             return event.reply("We were unable to find your account").withEphemeral(true);

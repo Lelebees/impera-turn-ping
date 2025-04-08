@@ -32,7 +32,7 @@ class BotUserTest {
 
     @Test
     @DisplayName("Can verify User")
-    void verifyUserWorks() throws UserAlreadyVerfiedException, IncorrecVerificationCodeException {
+    void verifyUserWorks() {
         UUID imperaId = UUID.randomUUID();
         String verificationCode = UUID.randomUUID().toString();
         BotUser user = new BotUser(1L, null, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
