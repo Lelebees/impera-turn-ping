@@ -6,6 +6,7 @@ import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLi
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
+import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -98,13 +99,17 @@ public class UntrackCommand implements SlashCommand {
         try {
             gameLinkService.deleteLink(gameId, channelId);
         } catch (GameChannelLinkNotFoundException e) {
-            return event.reply().withContent("Game [%s] is not being tracked in <#%s>!".formatted(gameId, channelId));
+            logger.info("User " + callingUser.getId().asLong() + " ("+callingUser.getUsername()+") attempted to stop tracking a game ("+gameId+") in channel <#"+channelId+"> but the corresponding GameChannelLink could not be found.");
+            return event.reply().withContent("Game [%s] is not being tracked in <#%s>.".formatted(gameId, channelId));
         }
         try {
             ImperaGameViewDTO gameView = imperaService.getGame(gameId);
             return event.reply().withContent("Stopped logging notifications for [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
-        } catch (Exception e) {
+        } catch (ImperaGameNotFoundException e) {
             return event.reply().withContent("Stopped logging notifications for [%s]".formatted(gameId));
+        } catch (RuntimeException e) {
+            logger.error("Unknown error occurred while attempting to fetch game from Impera. It has probably been deleted", e);
+            return event.reply("An error occurred, but we still managed to stop logging notifications for [%s]. Please do file a bug report.".formatted(gameId));
         }
     }
 }

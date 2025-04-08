@@ -33,7 +33,7 @@ public class UnlinkCommand implements SlashCommand {
             return event.reply("Your discord account has been unlinked from your Impera account").withEphemeral(true);
         } catch (UserNotFoundException e) {
             return event.reply("We were unable to find your account").withEphemeral(true);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             logger.error("An unknown error occurred unlinking user ", e);
             return event.reply("An unknown error occurred while unlinking your account. Please try again later, or file a bug report.").withEphemeral(true);
         }
