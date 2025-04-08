@@ -3,7 +3,7 @@ package com.lelebees.imperabot.bot.application;
 import com.lelebees.imperabot.bot.data.UserRepository;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
-import com.lelebees.imperabot.bot.domain.user.exception.IncorrecVerificationCodeException;
+import com.lelebees.imperabot.bot.domain.user.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class UserService {
         this.repository = repository;
     }
 
-    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrecVerificationCodeException {
+    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrectVerificationCodeException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
             botUser.verifyUser(imperaId, verificationCode);
@@ -79,7 +79,7 @@ public class UserService {
         }
     }
 
-    public boolean isImperaUserAlreadyVerified(UUID imperaId) {
+    public boolean isImperaUserVerified(UUID imperaId) {
         try {
             return findImperaUserOrThrow(imperaId).isLinked();
         } catch (UserNotFoundException e) {

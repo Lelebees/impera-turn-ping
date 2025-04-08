@@ -5,24 +5,11 @@ import com.lelebees.imperabot.impera.domain.game.ImperaGameTeamDTO;
 
 import java.util.List;
 
-public class ImperaGameViewDTO {
-    public long id;
-    public String type;
-    public String name;
-    public boolean hasPassword;
-    public String mapTemplate;
-    public List<ImperaGameTeamDTO> teams;
-    public String state;
-    public String playState;
-    public ImperaGamePlayerDTO currentPlayer;
-    public ImperaGameMapDTO map;
-    public ImperaGameOptionsDTO options;
-    public String lastModifiedAt;
-    public int timeoutSecondsLeft;
-    public int turnCounter;
-    public int unitsToPlace;
-    public int attacksInCurrentTurn;
-    public int movesInCurrentTurn;
+public record ImperaGameViewDTO(long id, String type, String name, boolean hasPassword, String mapTemplate,
+                                List<ImperaGameTeamDTO> teams, String state, String playState,
+                                ImperaGamePlayerDTO currentPlayer, ImperaGameMapDTO map, ImperaGameOptionsDTO options,
+                                String lastModifiedAt, int timeoutSecondsLeft, int turnCounter, int unitsToPlace,
+                                int attacksInCurrentTurn, int movesInCurrentTurn) {
 
     @Override
     public String toString() {
@@ -32,7 +19,7 @@ public class ImperaGameViewDTO {
     public ImperaGamePlayerDTO findPlayerByGameId(String playerId) {
         return this.teams.stream()
                 .flatMap(team -> team.players.stream())
-                .filter(player -> player.id.equals(playerId))
+                .filter(player -> player.id().equals(playerId))
                 .findFirst()
                 .orElse(null);
     }

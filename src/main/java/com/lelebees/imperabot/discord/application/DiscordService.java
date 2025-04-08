@@ -68,35 +68,35 @@ public class DiscordService {
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String turnMessage = "your turn in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name, game.id);
+        String turnMessage = "your turn in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name(), game.id());
         String directTurnMessage = "It's " + turnMessage;
         String generalTurnMessage = "%s, it is " + turnMessage;
         ordinaryNotify(channels, gamePlayer, generalTurnMessage, directTurnMessage);
     }
 
     public void sendHalfTimeMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String halfTimeMessage = "have half time remaining in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name, game.id);
+        String halfTimeMessage = "have half time remaining in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name(), game.id());
         String directHalfTimeMessage = "You " + halfTimeMessage;
         String generalHalfTimeMessage = "%s, you " + halfTimeMessage;
         ordinaryNotify(channels, gamePlayer, generalHalfTimeMessage, directHalfTimeMessage);
     }
 
     public void sendDefeatedMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String defeatedMessage = "been defeated in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name, game.id);
+        String defeatedMessage = "been defeated in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name(), game.id());
         String directDefeatedMessage = "You have " + defeatedMessage;
         String generalDefeatedMessage = "%s has " + defeatedMessage;
         ordinaryNotify(channels, gamePlayer, generalDefeatedMessage, directDefeatedMessage);
     }
 
     public void sendTimedOutMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO imperaGame) {
-        String timedOutMessage = "timed out in [%s](https://imperaonline.de/game/play/%s)!".formatted(imperaGame.name, imperaGame.id);
+        String timedOutMessage = "timed out in [%s](https://imperaonline.de/game/play/%s)!".formatted(imperaGame.name(), imperaGame.id());
         String directTimeOutMessage = "You have " + timedOutMessage;
         String generalTimeOutMessage = "%s has " + timedOutMessage;
         ordinaryNotify(channels, gamePlayer, generalTimeOutMessage, directTimeOutMessage);
     }
 
     public void sendSurrenderMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String generalSurrenderMessage = "%s has surrendered in [%s](https://imperaonline.de/game/play/%s)!".formatted(gamePlayer.name, game.name, game.id);
+        String generalSurrenderMessage = "%s has surrendered in [%s](https://imperaonline.de/game/play/%s)!".formatted(gamePlayer.name(), game.name(), game.id());
         for (Channel channel : channels) {
             ((MessageChannel) channel).createMessage(generalSurrenderMessage).block();
         }
@@ -104,10 +104,10 @@ public class DiscordService {
 
     public void sendVictorsMessage(List<Channel> channels, List<ImperaGamePlayerDTO> winningPlayers, ImperaGameViewDTO game) {
         List<String> userStrings = new ArrayList<>();
-        String victoryMessage = "Game [%s](https://imperaonline.de/game/play/%s) has ended!".formatted(game.name, game.id);
+        String victoryMessage = "Game [%s](https://imperaonline.de/game/play/%s) has ended!".formatted(game.name(), game.id());
         for (ImperaGamePlayerDTO gamePlayer : winningPlayers) {
-            Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
-            String userString = gamePlayer.name;
+            Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));
+            String userString = gamePlayer.name();
             String directVictoryMessage = victoryMessage + " You have won!";
             if (user.isPresent()) {
                 BotUser player = user.get();
@@ -151,8 +151,8 @@ public class DiscordService {
         List<MessageChannel> guildChannels = channels.stream().filter(channel -> channel.getType() != Channel.Type.DM).map(channel -> (MessageChannel) channel).toList();
         List<MessageChannel> dmChannels = channels.stream().filter(channel -> channel.getType() == Channel.Type.DM).map(channel -> (MessageChannel) channel).toList();
         AllowedMentions allowedMentions = AllowedMentions.suppressAll();
-        String userString = gamePlayer.name;
-        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId));
+        String userString = gamePlayer.name();
+        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));
         if (user.isPresent()) {
             BotUser player = user.get();
             userString = player.getMention();
@@ -186,12 +186,12 @@ public class DiscordService {
     private String getUserStringWithSettings(BotUser player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
         String userString = player.getMention();
         switch (player.getNotificationSetting()) {
-            case NO_NOTIFICATIONS -> userString = gamePlayer.name;
+            case NO_NOTIFICATIONS -> userString = gamePlayer.name();
             case GUILD_ONLY -> {
             }
             case DMS_ONLY -> {
                 getDMChannelByOwner(player.getUserId()).createMessage(directMessage);
-                userString = gamePlayer.name;
+                userString = gamePlayer.name();
             }
             case PREFER_GUILD_OVER_DMS -> {
                 if (channels.isEmpty()) {
@@ -260,7 +260,7 @@ public class DiscordService {
     }
 
     public void giveWinnerRole(Game game, ImperaGamePlayerDTO winner) {
-        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(winner.userId));
+        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(winner.userId()));
         if (user.isEmpty()) {
             return;
         }

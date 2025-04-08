@@ -11,7 +11,7 @@ public class ImperaGameTeamDTO {
 
     public ImperaGamePlayerDTO getPlayer(String playerId) {
         return this.players.stream()
-                .filter(p -> p.userId.equals(playerId))
+                .filter(p -> p.userId().equals(playerId))
                 .findFirst()
                 .orElse(null);
     }

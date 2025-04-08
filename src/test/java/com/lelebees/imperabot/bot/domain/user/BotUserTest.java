@@ -1,6 +1,6 @@
 package com.lelebees.imperabot.bot.domain.user;
 
-import com.lelebees.imperabot.bot.domain.user.exception.IncorrecVerificationCodeException;
+import com.lelebees.imperabot.bot.domain.user.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ class BotUserTest {
         UUID imperaId = UUID.randomUUID();
         String verificationCode = UUID.randomUUID().toString();
         BotUser user = new BotUser(1L, imperaId, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
-        assertThrows(IncorrecVerificationCodeException.class, () -> user.verifyUser(imperaId, ""));
+        assertThrows(IncorrectVerificationCodeException.class, () -> user.verifyUser(imperaId, ""));
     }
 
     @Test

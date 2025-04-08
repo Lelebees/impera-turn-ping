@@ -104,7 +104,7 @@ public class UntrackCommand implements SlashCommand {
         }
         try {
             ImperaGameViewDTO gameView = imperaService.getGame(gameId);
-            return event.reply().withContent("Stopped logging notifications for [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+            return event.reply().withContent("Stopped logging notifications for [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
         } catch (ImperaGameNotFoundException e) {
             return event.reply().withContent("Stopped logging notifications for [%s]".formatted(gameId));
         } catch (RuntimeException e) {

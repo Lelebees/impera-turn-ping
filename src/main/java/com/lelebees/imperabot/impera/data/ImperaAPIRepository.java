@@ -3,6 +3,7 @@ package com.lelebees.imperabot.impera.data;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lelebees.imperabot.impera.domain.ExceptionModel;
+import com.lelebees.imperabot.impera.domain.ImperaGameActionDTO;
 import com.lelebees.imperabot.impera.domain.ImperaGameHistoryDTO;
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
@@ -53,12 +54,12 @@ public class ImperaAPIRepository implements ImperaRepository {
     }
 
     public int getTokenExpiryTime() {
-        return bearerToken.expires_in;
+        return bearerToken.expires_in();
     }
 
     private void updateEntity(ImperaLoginDTO bearerToken) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(bearerToken.access_token);
+        headers.setBearerAuth(bearerToken.access_token());
         entity = new HttpEntity<>(headers);
     }
 
@@ -90,7 +91,7 @@ public class ImperaAPIRepository implements ImperaRepository {
         } catch (HttpClientErrorException.BadRequest e) {
             try {
                 ExceptionModel exceptionModel = new ObjectMapper().readValue(e.getResponseBodyAsString(), ExceptionModel.class);
-                if (!exceptionModel.error.equals("CannotFindGame")) {
+                if (!exceptionModel.error().equals("CannotFindGame")) {
                     throw new RuntimeException("Impera API returned unknown error.");
                 }
                 logger.warn("Impera API could not find game (" + gameId + ")");
@@ -114,7 +115,7 @@ public class ImperaAPIRepository implements ImperaRepository {
     @Override
     public List<ImperaMessageDTO> getMessagesBySubject(String subject) {
         return getMessages().stream()
-                .filter(message -> message.subject.trim().equalsIgnoreCase(subject))
+                .filter(message -> message.subject().trim().equalsIgnoreCase(subject))
                 .collect(Collectors.toList());
     }
 
@@ -127,7 +128,7 @@ public class ImperaAPIRepository implements ImperaRepository {
         } catch (HttpClientErrorException.BadRequest e) {
             try {
                 ExceptionModel exceptionModel = new ObjectMapper().readValue(e.getResponseBodyAsString(), ExceptionModel.class);
-                if (exceptionModel.error.equals("CannotFindMessage")) {
+                if (exceptionModel.error().equals("CannotFindMessage")) {
                     logger.info("Message " + id + " not found. It most likely does not exist.");
                     throw new ImperaMessageNotFoundException(e.getMessage());
                 }
@@ -141,9 +142,9 @@ public class ImperaAPIRepository implements ImperaRepository {
     @Override
     public List<String> getActorIdByActionAndTurn(long gameId, int turnId, String actionString) {
         Optional<ImperaGameHistoryDTO> turnState = getTurnState(gameId, turnId);
-        return turnState.map(imperaGameHistoryDTO -> imperaGameHistoryDTO.actions.stream()
-                        .filter(action -> action.action.equals(actionString))
-                        .map(action -> action.actorId)
+        return turnState.map(imperaGameHistoryDTO -> imperaGameHistoryDTO.actions().stream()
+                        .filter(action -> action.action().equals(actionString))
+                        .map(ImperaGameActionDTO::actorId)
                         .toList())
                 .orElse(null);
     }
@@ -156,11 +157,11 @@ public class ImperaAPIRepository implements ImperaRepository {
         } catch (HttpClientErrorException.BadRequest e) {
             try {
                 ExceptionModel exceptionModel = new ObjectMapper().readValue(e.getResponseBodyAsString(), ExceptionModel.class);
-                if (exceptionModel.error.equals("CannotFindGame")) {
+                if (exceptionModel.error().equals("CannotFindGame")) {
                     logger.info("Game " + gameId + " not found. It most likely does not exist.");
                     return Optional.empty();
                 }
-                if (exceptionModel.error.equals("CannotFindTurn")) {
+                if (exceptionModel.error().equals("CannotFindTurn")) {
                     logger.info("Turn " + turnId + " not found for game " + gameId + ". It most likely does not exist.");
                     return Optional.empty();
                 }

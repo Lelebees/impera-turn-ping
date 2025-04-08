@@ -34,8 +34,12 @@ public class ImperaService {
         return imperaRepository.getActorIdByActionAndTurn(gameId, turnId, "PlayerTimeout");
     }
 
-    public void deleteMessage(String id) {
+    public void deleteMessageById(String id) {
         imperaRepository.deleteMessage(id);
+    }
+
+    public void deleteMessage(ImperaMessageDTO message) {
+        deleteMessageById(message.id());
     }
 
     public List<ImperaMessageDTO> getLinkMessages() {

@@ -1,7 +1,7 @@
 package com.lelebees.imperabot.bot.domain.user;
 
 import com.lelebees.imperabot.bot.data.converter.UserNotificationSettingsConverter;
-import com.lelebees.imperabot.bot.domain.user.exception.IncorrecVerificationCodeException;
+import com.lelebees.imperabot.bot.domain.user.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -57,9 +57,9 @@ public class BotUser {
         return this.imperaId != null;
     }
 
-    public void verifyUser(UUID imperaId, String verificationCode) throws UserAlreadyVerfiedException, IncorrecVerificationCodeException {
+    public void verifyUser(UUID imperaId, String verificationCode) throws UserAlreadyVerfiedException, IncorrectVerificationCodeException {
         if (!this.verificationCode.equals(verificationCode)) {
-            throw new IncorrecVerificationCodeException("Supplied verification code " + verificationCode + " does not match this user's (" + this.userId + ") verification code.");
+            throw new IncorrectVerificationCodeException("Supplied verification code " + verificationCode + " does not match this user's (" + this.userId + ") verification code.");
         }
         if (isLinked()) {
             throw new UserAlreadyVerfiedException("This user (" + this.userId + ") is already linked to an Impera account (" + this.imperaId + ").");
