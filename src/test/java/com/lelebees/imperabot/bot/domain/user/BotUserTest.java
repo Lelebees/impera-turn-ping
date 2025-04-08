@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class BotUserTest {
 
@@ -37,5 +36,22 @@ class BotUserTest {
         String verificationCode = UUID.randomUUID().toString();
         BotUser user = new BotUser(1L, null, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
         assertDoesNotThrow(() -> user.verifyUser(imperaId, verificationCode));
+    }
+
+    @Test
+    @DisplayName("Cannot start verification if user is already verified")
+    void noVerifyWhenVerified() {
+        UUID imperaId = UUID.randomUUID();
+        String verificationCode = UUID.randomUUID().toString();
+        BotUser user = new BotUser(1L, imperaId, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
+        assertThrows(UserAlreadyVerfiedException.class, user::startVerification);
+    }
+
+    @Test
+    @DisplayName("Restarting verification process regenerates verification code")
+    void restartVerifyRegeneratesCode() throws UserAlreadyVerfiedException {
+        BotUser user = new BotUser(1L);
+        String verificationCode = user.startVerification();
+        assertNotEquals(verificationCode, user.startVerification());
     }
 }
