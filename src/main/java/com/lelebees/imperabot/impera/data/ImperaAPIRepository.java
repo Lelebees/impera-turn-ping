@@ -83,21 +83,22 @@ public class ImperaAPIRepository implements ImperaRepository {
 
     @Override
     public Optional<ImperaGameViewDTO> findGameByGameId(long gameId) {
+        String url = imperaURL + "/games/" + gameId;
         try {
-            String url = imperaURL + "/games/" + gameId;
             ResponseEntity<ImperaGameViewDTO> response = restTemplate.exchange(url, GET, entity, ImperaGameViewDTO.class);
             return Optional.ofNullable(response.getBody());
         } catch (HttpClientErrorException.BadRequest e) {
             try {
                 ExceptionModel exceptionModel = new ObjectMapper().readValue(e.getResponseBodyAsString(), ExceptionModel.class);
-                if (exceptionModel.error.equals("CannotFindGame")) {
-                    logger.info("Game " + gameId + " not found. It most likely does not exist.");
-                    return Optional.empty();
+                if (!exceptionModel.error.equals("CannotFindGame")) {
+                    throw new RuntimeException("Impera API returned unknown error.");
                 }
+                logger.warn("Impera API could not find game (" + gameId + ")");
+                return Optional.empty();
             } catch (JsonProcessingException jsonProcessingException) {
                 logger.error("Error parsing JSON: " + jsonProcessingException.getMessage(), jsonProcessingException);
             }
-            logger.info("Game " + gameId + " not found or inaccessible.");
+            logger.error("Unknown error attempting to access game (" + gameId + ")");
             return Optional.empty();
         }
     }

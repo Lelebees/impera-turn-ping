@@ -7,6 +7,7 @@ import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
+import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -103,9 +104,12 @@ public class TrackCommand implements SlashCommand {
         ImperaGameViewDTO gameView;
         try {
             gameView = imperaService.getGame(gameId);
-        } catch (Exception e) {
-            logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /track because Impera (or the fetch request) returned an error.");
+        } catch (RuntimeException e) {
+            logger.error("Impera server returned an unknown error while trying to track game (" + gameId + ") for " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ").");
             return event.reply().withContent("An error occurred while trying to get game information from Impera. Please try again later.").withEphemeral(true);
+        } catch (ImperaGameNotFoundException e) {
+            logger.warn("Impera game could not be found " + gameId);
+            return event.reply().withContent("Impera could not find the game (" + gameId + ") you are looking for.").withEphemeral(true);
         }
 
         if (!gameService.gameExists(gameId)) {
