@@ -28,20 +28,6 @@ public class ImperaService {
         this.imperaRepository = imperaRepository;
     }
 
-    public List<String> getPlayersThatSurrendered(long gameId, int turnId) {
-        return imperaRepository.getActorIdByActionAndTurn(gameId, turnId, "PlayerSurrendered");
-    }
-
-
-    public List<String> getPlayersThatWereDefeated(long gameId, int turnId) {
-        return imperaRepository.getActorIdByActionAndTurn(gameId, turnId, "PlayerLost");
-    }
-
-
-    public List<String> getPlayersThatTimedOut(long gameId, int turnId) {
-        return imperaRepository.getActorIdByActionAndTurn(gameId, turnId, "PlayerTimeout");
-    }
-
     public HashMap<HistoryActionName, List<String>> getPlayersThatAreNoLongerPlaying(long gameId, int startTurnId, int endTurnId) {
         HashMap<HistoryActionName, List<String>> playersLists = new HashMap<>();
         playersLists.put(SURRENDERED, new ArrayList<>());

@@ -3,7 +3,6 @@ package com.lelebees.imperabot.impera.data;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lelebees.imperabot.impera.domain.ExceptionModel;
-import com.lelebees.imperabot.impera.domain.ImperaGameActionDTO;
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.ImperaGameHistoryDTO;
@@ -139,16 +138,6 @@ public class ImperaAPIRepository implements ImperaRepository {
             }
             logger.info("Message " + id + " not found or inaccessible.");
         }
-    }
-
-    @Override
-    public List<String> getActorIdByActionAndTurn(long gameId, int turnId, String actionString) {
-        Optional<ImperaGameHistoryDTO> turnState = getTurnState(gameId, turnId);
-        return turnState.map(imperaGameHistoryDTO -> imperaGameHistoryDTO.actions().stream()
-                        .filter(action -> action.action().equals(actionString))
-                        .map(ImperaGameActionDTO::actorId)
-                        .toList())
-                .orElse(null);
     }
 
     @Override

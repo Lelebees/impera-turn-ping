@@ -18,7 +18,5 @@ public interface ImperaRepository {
 
     void deleteMessage(String id);
 
-    List<String> getActorIdByActionAndTurn(long gameId, int turnId, String actionString);
-
     List<ImperaGameHistoryDTO> getTurnHistoryInRange(long gameId, int startTurnId, int endTurnId) throws TurnNotFoundException;
 }
