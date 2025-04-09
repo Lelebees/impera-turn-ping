@@ -3,12 +3,13 @@ package com.lelebees.imperabot.discord.application;
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
+import com.lelebees.imperabot.bot.presentation.game.GameDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
+import com.lelebees.imperabot.impera.domain.history.HistoryActionName;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.Guild;
@@ -22,6 +23,7 @@ import discord4j.rest.http.client.ClientException;
 import discord4j.rest.util.AllowedMentions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -36,12 +38,15 @@ public class DiscordService {
     private final UserService userService;
     private final GuildSettingsService guildSettingsService;
     private final GameLinkService gameLinkService;
+    private final String imperaURL;
 
-    public DiscordService(GatewayDiscordClient gatewayClient, UserService userService, GuildSettingsService guildSettingsService, GameLinkService gameLinkService) {
+
+    public DiscordService(GatewayDiscordClient gatewayClient, UserService userService, GuildSettingsService guildSettingsService, GameLinkService gameLinkService, @Value("${impera.web.url}") String imperaURL) {
         this.gatewayClient = gatewayClient;
         this.userService = userService;
         this.guildSettingsService = guildSettingsService;
         this.gameLinkService = gameLinkService;
+        this.imperaURL = imperaURL;
     }
 
     public static Instant convertSnowflakeToInstant(Snowflake snowflake) {
@@ -68,55 +73,69 @@ public class DiscordService {
     }
 
     public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String turnMessage = "your turn in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name(), game.id());
+        String turnMessage = "your turn in %s!".formatted(getGameURI(game.name(), game.id()));
         String directTurnMessage = "It's " + turnMessage;
         String generalTurnMessage = "%s, it is " + turnMessage;
         ordinaryNotify(channels, gamePlayer, generalTurnMessage, directTurnMessage);
     }
 
     public void sendHalfTimeMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String halfTimeMessage = "have half time remaining in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name(), game.id());
+        String halfTimeMessage = "have half time remaining in %s!".formatted(getGameURI(game.name(), game.id()));
         String directHalfTimeMessage = "You " + halfTimeMessage;
         String generalHalfTimeMessage = "%s, you " + halfTimeMessage;
         ordinaryNotify(channels, gamePlayer, generalHalfTimeMessage, directHalfTimeMessage);
     }
 
+    public void sendLoserMessage(List<Channel> channels, ImperaGamePlayerDTO player, ImperaGameViewDTO game, HistoryActionName outcome) {
+        switch (outcome) {
+            case LOST -> sendDefeatedMessage(channels, player, game);
+            case SURRENDERED -> sendSurrenderMessage(channels, player, game);
+            case TIMED_OUT -> sendTimedOutMessage(channels, player, game);
+        }
+    }
+
     public void sendDefeatedMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String defeatedMessage = "been defeated in [%s](https://imperaonline.de/game/play/%s)!".formatted(game.name(), game.id());
+        logger.info("Sending defeated notice for " + game.name() + " (" + game.id() + ")!");
+        String defeatedMessage = "been defeated in %s!".formatted(getGameURI(game.name(), game.id()));
         String directDefeatedMessage = "You have " + defeatedMessage;
         String generalDefeatedMessage = "%s has " + defeatedMessage;
         ordinaryNotify(channels, gamePlayer, generalDefeatedMessage, directDefeatedMessage);
     }
 
-    public void sendTimedOutMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO imperaGame) {
-        String timedOutMessage = "timed out in [%s](https://imperaonline.de/game/play/%s)!".formatted(imperaGame.name(), imperaGame.id());
+    public void sendTimedOutMessage(List<Channel> channels, ImperaGamePlayerDTO player, ImperaGameViewDTO game) {
+        logger.info("Sending timed out notice for " + game.name() + " (" + game.id() + ")!");
+        String timedOutMessage = "timed out in %s!".formatted(getGameURI(game.name(), game.id()));
         String directTimeOutMessage = "You have " + timedOutMessage;
         String generalTimeOutMessage = "%s has " + timedOutMessage;
-        ordinaryNotify(channels, gamePlayer, generalTimeOutMessage, directTimeOutMessage);
+        ordinaryNotify(channels, player, generalTimeOutMessage, directTimeOutMessage);
     }
 
     public void sendSurrenderMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String generalSurrenderMessage = "%s has surrendered in [%s](https://imperaonline.de/game/play/%s)!".formatted(gamePlayer.name(), game.name(), game.id());
+        logger.info("Sending surrendered notice for " + game.name() + " (" + game.id() + ")!");
+        String generalSurrenderMessage = "%s has surrendered in %s!".formatted(gamePlayer.name(), getGameURI(game.name(), game.id()));
         for (Channel channel : channels) {
             ((MessageChannel) channel).createMessage(generalSurrenderMessage).block();
         }
     }
 
+    public String getGameURI(String gameName, long gameId) {
+        return "[%s](%s/game/play/%s)".formatted(gameName, imperaURL, gameId);
+    }
+
     public void sendVictorsMessage(List<Channel> channels, List<ImperaGamePlayerDTO> winningPlayers, ImperaGameViewDTO game) {
         List<String> userStrings = new ArrayList<>();
-        String victoryMessage = "Game [%s](https://imperaonline.de/game/play/%s) has ended!".formatted(game.name(), game.id());
+        String victoryMessage = "Game %s has ended!".formatted(getGameURI(game.name(), game.id()));
+        String directVictoryMessage = victoryMessage + " You have won!";
         for (ImperaGamePlayerDTO gamePlayer : winningPlayers) {
             Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));
             String userString = gamePlayer.name();
-            String directVictoryMessage = victoryMessage + " You have won!";
             if (user.isPresent()) {
                 BotUser player = user.get();
                 userString = getUserStringWithSettings(player, directVictoryMessage, gamePlayer, channels);
             }
             userStrings.add(userString);
         }
-        String singledUser = userStrings.get(0);
-        userStrings.remove(0);
+        String singledUser = userStrings.remove(0);
         String generalVictoryMessage = victoryMessage + " %s and %s have won!".formatted(String.join(", ", userStrings), singledUser);
         if (userStrings.isEmpty()) {
             generalVictoryMessage = victoryMessage + " %s has won!".formatted(singledUser);
@@ -182,6 +201,7 @@ public class DiscordService {
         // TODO: Force swap userstring to playername if player is not in a guild
         guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString)).withAllowedMentions(finalAllowedMentions).block());
     }
+
     //TODO: This method produces side effects, replace with better method :)
     private String getUserStringWithSettings(BotUser player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
         String userString = player.getMention();
@@ -237,7 +257,7 @@ public class DiscordService {
 
     public PrivateChannel getDMChannelByOwner(long userId) {
         User user = gatewayClient.getUserById(Snowflake.of(userId)).block();
-        if (user == null){
+        if (user == null) {
 //            Doing some dangerous shit here :3
             return null;
         }
@@ -259,15 +279,15 @@ public class DiscordService {
         return gatewayClient.getSelfId().equals(Snowflake.of(userId));
     }
 
-    public void giveWinnerRole(Game game, ImperaGamePlayerDTO winner) {
+    public void giveWinnerRole(GameDTO game, ImperaGamePlayerDTO winner) {
         Optional<BotUser> user = userService.findImperaUser(UUID.fromString(winner.userId()));
         if (user.isEmpty()) {
             return;
         }
         BotUser winnerUser = user.get();
 
-        List<GameChannelLink> links = gameLinkService.findLinksByGame(game.getId());
-        logger.debug("Found " + links.size() + " links for game " + game.getId() + " when awarding winner role.");
+        List<GameChannelLink> links = gameLinkService.findLinksByGame(game.id());
+        logger.debug("Found " + links.size() + " links for game " + game.id() + " when awarding winner role.");
         if (links.isEmpty()) {
             return;
         }

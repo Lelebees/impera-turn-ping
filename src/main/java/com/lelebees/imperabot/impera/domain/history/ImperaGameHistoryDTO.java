@@ -24,4 +24,8 @@ public record ImperaGameHistoryDTO(int gameId, int turnId, List<ImperaGameAction
                 .filter(actionDTO -> actionDTO.action().equals(action))
                 .toList();
     }
+
+    public List<ImperaGameActionDTO> filterAction(HistoryActionName action) {
+        return filterAction(action.toString());
+    }
 }

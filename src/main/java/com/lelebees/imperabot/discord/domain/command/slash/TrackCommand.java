@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.application.GameService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.bot.presentation.game.GameDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
@@ -88,10 +89,8 @@ public class TrackCommand implements SlashCommand {
             Snowflake guildId = guildIdOptional.get();
             GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
-            boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-            boolean userHasPermissionRole = guildSettings.permissionRoleId != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
             boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
-            if (!userHasManageChannelsPermission && !userHasPermissionRole && !userIsLelebees) {
+            if (!hasPermissions(guildSettings, callingMember) && !userIsLelebees) {
                 logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
@@ -112,21 +111,27 @@ public class TrackCommand implements SlashCommand {
             return event.reply().withContent("Impera could not find the game (" + gameId + ") you are looking for.").withEphemeral(true);
         }
 
-        if (!gameService.gameExists(gameId)) {
+        if (!gameService.gameExists(gameView.id())) {
             // Add game to database
             /* We pass the current turn,
             because this would otherwise allow someone to start a DDoS attack on the Impera service by playing a game for a while,
-            tracking the game (which will cause 3 * turns passed requests to be made) and then untracking it.
+            tracking the game (which will cause up to the number of turns passed requests to be made, at once.) and then untracking it.
             Rinse and repeat, and that's a big problem. */
-            gameService.createGame(gameId, gameView.turnCounter());
+            GameDTO gameDTO = gameService.createGame(gameView);
         }
         long channelId = channel.getId().asLong();
         // Add line to tracking table with gameid and channelid
-        if (gameLinkService.linkExists(gameId, channelId)) {
+        if (gameLinkService.linkExists(gameView.id(), channelId)) {
             return event.reply().withEphemeral(true).withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
         }
         GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
         logger.debug("Created new GameChannelLink with gameId: " + gameLink.getGameId() + " and channelId: " + gameLink.getChannelId());
         return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
+    }
+
+    public boolean hasPermissions(GuildSettings guildSettings, Member guildMember) {
+        boolean userHasManageChannelsPermission = guildMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
+        boolean userHasPermissionRole = guildSettings.permissionRoleId != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
+        return userHasManageChannelsPermission || userHasPermissionRole;
     }
 }

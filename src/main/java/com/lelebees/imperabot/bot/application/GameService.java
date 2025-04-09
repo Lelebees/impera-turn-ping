@@ -3,6 +3,8 @@ package com.lelebees.imperabot.bot.application;
 import com.lelebees.imperabot.bot.data.GameRepository;
 import com.lelebees.imperabot.bot.domain.game.Game;
 import com.lelebees.imperabot.bot.domain.game.exception.GameNotFoundException;
+import com.lelebees.imperabot.bot.presentation.game.GameDTO;
+import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -20,30 +22,33 @@ public class GameService {
         this.gameLinkService = gameLinkService;
     }
 
-    public Game findGameByID(long ID) throws GameNotFoundException {
+    private Game findGameByID(long ID) throws GameNotFoundException {
         Optional<Game> gameOptional = gameRepository.findById(ID);
         return gameOptional.orElseThrow(() -> new GameNotFoundException("Could not find game: " + ID));
     }
 
-    public Game createGame(long ID, int turn) {
-        return gameRepository.save(new Game(ID, turn - 1, false));
+    public GameDTO createGame(long ID, int turn) {
+        return GameDTO.from(gameRepository.save(new Game(ID, turn - 1)));
     }
 
-    public List<Game> findAllGames() {
-        return gameRepository.findAll();
+    public GameDTO createGame(ImperaGameViewDTO game) {
+        return createGame(game.id(), game.turnCounter());
     }
 
-    public Game setHalfTimeNoticeForGame(long gameId) throws GameNotFoundException {
+    public List<GameDTO> getAllGames() {
+        return GameDTO.from(gameRepository.findAll());
+    }
+
+    public GameDTO setHalfTimeNoticeForGame(long gameId) throws GameNotFoundException {
         Game game = findGameByID(gameId);
-        game.halfTimeNotice = true;
-        return gameRepository.save(game);
+        game.setHalfTimeNoticeTrue();
+        return GameDTO.from(gameRepository.save(game));
     }
 
-    public Game turnChanged(long gameId, int newTurn) throws GameNotFoundException {
+    public GameDTO changeTurn(long gameId, int newTurn) throws GameNotFoundException {
         Game game = findGameByID(gameId);
-        game.currentTurn = newTurn;
-        game.halfTimeNotice = false;
-        return gameRepository.save(game);
+        game.setCurrentTurn(newTurn);
+        return GameDTO.from(gameRepository.save(game));
     }
 
     public boolean gameExists(long gameId) {
