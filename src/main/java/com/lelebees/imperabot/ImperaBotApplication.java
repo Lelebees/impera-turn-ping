@@ -18,19 +18,13 @@ public class ImperaBotApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(ImperaBotApplication.class, args);
-
-//        logger.info("Info log");
-//        logger.warn("Hey, This is a warning!");
-//        logger.error("Oops! We have an Error. OK");
-//        logger.debug("Debugging log");
-//        logger.trace("Trace log");
     }
 
     @Bean
     public GatewayDiscordClient gatewayDiscordClient(@Value("${discord.token}") String discordToken) {
         return DiscordClientBuilder.create(discordToken).build()
                 .gateway()
-                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.listening("the marching of armies")))
+                .setInitialPresence(ignore -> ClientPresence.online(ClientActivity.watching("banners burn")))
                 .login()
                 .block();
     }

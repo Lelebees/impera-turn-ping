@@ -2,7 +2,6 @@ package com.lelebees.imperabot.discord.application.listeners;
 
 
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
-import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
@@ -28,9 +27,7 @@ public class SlashCommandListener {
     }
 
     public static void logCommandUse(User user, String commandName) {
-        Snowflake id = user.getId();
-        String username = user.getUsername();
-        logger.info("User " + id.asLong() + " (" + username + ") used /" + commandName);
+        logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /" + commandName);
     }
 
     public Mono<Void> handle(ChatInputInteractionEvent event) {
