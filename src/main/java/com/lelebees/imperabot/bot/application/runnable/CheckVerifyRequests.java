@@ -16,7 +16,7 @@ import java.util.List;
 
 public class CheckVerifyRequests implements Runnable {
 
-    private final static Logger logger = LoggerFactory.getLogger(CheckVerifyRequests.class);
+    private final Logger logger = LoggerFactory.getLogger(CheckVerifyRequests.class);
     private final ImperaService imperaService;
     private final UserService userService;
     private final DiscordService discordService;
@@ -50,7 +50,7 @@ public class CheckVerifyRequests implements Runnable {
                 continue;
             }
             try {
-                BotUser user = userService.verifyUser(linkMessage.text().trim(), sender.id());
+                BotUser user = userService.verifyUser(linkMessage.text().trim(), sender.id(), sender.name());
                 imperaService.deleteMessage(linkMessage);
                 logger.info("User " + sender.name() + " (" + sender.id() + ") aka (snowflake) " + user.getUserId() + " has been verified!");
                 discordService.sendVerificationDM(user.getUserId());

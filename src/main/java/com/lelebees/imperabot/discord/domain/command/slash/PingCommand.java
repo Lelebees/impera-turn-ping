@@ -15,7 +15,7 @@ import static com.lelebees.imperabot.discord.application.DiscordService.convertS
 @Component
 public class PingCommand implements SlashCommand {
 
-    private final static Logger logger = LoggerFactory.getLogger(PingCommand.class);
+    private final Logger logger = LoggerFactory.getLogger(PingCommand.class);
 
 
     public PingCommand() {

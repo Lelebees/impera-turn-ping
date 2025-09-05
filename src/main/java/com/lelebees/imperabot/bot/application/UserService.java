@@ -19,10 +19,10 @@ public class UserService {
         this.repository = repository;
     }
 
-    public BotUser verifyUser(String verificationCode, UUID imperaId) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrectVerificationCodeException {
+    public BotUser verifyUser(String verificationCode, UUID imperaId, String username) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrectVerificationCodeException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
-            botUser.verifyUser(imperaId, verificationCode);
+            botUser.verifyUser(imperaId, verificationCode, username);
             return repository.save(botUser);
         } catch (UserNotFoundException e) {
             throw new UserNotFoundException("Cannot find user with this verification code (" + verificationCode + ")");

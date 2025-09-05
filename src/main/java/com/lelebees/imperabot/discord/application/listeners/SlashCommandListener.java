@@ -17,7 +17,7 @@ import java.util.List;
 @Component
 public class SlashCommandListener {
 
-    private final static Logger logger = LoggerFactory.getLogger(SlashCommandListener.class);
+    private final Logger logger = LoggerFactory.getLogger(SlashCommandListener.class);
     private final Collection<SlashCommand> commands;
 
     public SlashCommandListener(List<SlashCommand> slashCommands, GatewayDiscordClient client) {
@@ -26,7 +26,7 @@ public class SlashCommandListener {
         client.on(ChatInputInteractionEvent.class, this::handle).subscribe();
     }
 
-    public static void logCommandUse(User user, String commandName) {
+    public void logCommandUse(User user, String commandName) {
         logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /" + commandName);
     }
 

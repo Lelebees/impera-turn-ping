@@ -28,6 +28,8 @@ public class BotUser {
     @Column(name = "super_secret_code")
     @Unique
     private String verificationCode;
+    @Column(name = "impera_user_name")
+    private String username;
 
     protected BotUser() {
 
@@ -57,7 +59,7 @@ public class BotUser {
         return this.imperaId != null;
     }
 
-    public void verifyUser(UUID imperaId, String verificationCode) throws UserAlreadyVerfiedException, IncorrectVerificationCodeException {
+    public void verifyUser(UUID imperaId, String verificationCode, String username) throws UserAlreadyVerfiedException, IncorrectVerificationCodeException {
         if (!this.verificationCode.equals(verificationCode)) {
             throw new IncorrectVerificationCodeException("Supplied verification code " + verificationCode + " does not match this user's (" + this.userId + ") verification code.");
         }
@@ -65,6 +67,7 @@ public class BotUser {
             throw new UserAlreadyVerfiedException("This user (" + this.userId + ") is already linked to an Impera account (" + this.imperaId + ").");
         }
         this.imperaId = imperaId;
+        this.username = username;
     }
 
     // Is this good practice? Lol no.
@@ -85,9 +88,9 @@ public class BotUser {
      * This method generates a new verification code when the verification process is started.
      * Multiple calls to this method will generate new codes, and invalidate the old ones.
      *
-     * @return Verification code, call{@link BotUser#verifyUser(UUID, String)}with this code and an Impera account id to verify the user
+     * @return Verification code, call{@link BotUser#verifyUser(UUID, String, String)}with this code and an Impera account to verify the user
      * @throws UserAlreadyVerfiedException User is already linked to an Impera account and they must be unlinked before verification can start again
-     * @see BotUser#verifyUser(UUID, String)
+     * @see BotUser#verifyUser(UUID, String, String)
      */
     public String startVerification() throws UserAlreadyVerfiedException {
         if (isLinked()) {
@@ -100,6 +103,10 @@ public class BotUser {
     public void unlink() {
         this.imperaId = null;
         this.verificationCode = generateVerificationCode();
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getMention() {

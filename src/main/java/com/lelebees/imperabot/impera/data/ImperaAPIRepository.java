@@ -33,8 +33,8 @@ import static org.springframework.http.HttpMethod.*;
 
 @Component
 public class ImperaAPIRepository implements ImperaRepository {
-    private static final Logger logger = LoggerFactory.getLogger(ImperaAPIRepository.class);
-    public static HttpEntity<String> entity;
+    private final Logger logger = LoggerFactory.getLogger(ImperaAPIRepository.class);
+    private HttpEntity<String> entity;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String imperaURL;
     private final String imperaUsername;

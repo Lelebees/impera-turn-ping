@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @Component
 public class GuildSettingsCommand implements SlashCommand {
-    private final static Logger logger = LoggerFactory.getLogger(GuildSettingsCommand.class);
+    private final Logger logger = LoggerFactory.getLogger(GuildSettingsCommand.class);
     private final GuildSettingsService guildSettingsService;
 
     public GuildSettingsCommand(GuildSettingsService guildSettingsService) {

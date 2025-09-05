@@ -19,7 +19,7 @@ import static com.lelebees.imperabot.impera.domain.history.HistoryActionName.*;
 
 @Service
 public class ImperaService {
-    private static final Logger logger = LoggerFactory.getLogger(ImperaService.class);
+    private final Logger logger = LoggerFactory.getLogger(ImperaService.class);
     private final ImperaRepository imperaRepository;
 
     public ImperaService(ImperaRepository imperaRepository) {

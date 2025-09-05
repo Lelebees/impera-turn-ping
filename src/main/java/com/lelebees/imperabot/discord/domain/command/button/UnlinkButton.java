@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class UnlinkButton implements ButtonCommand {
-    private static final Logger logger = LoggerFactory.getLogger(UnlinkButton.class);
+    private final Logger logger = LoggerFactory.getLogger(UnlinkButton.class);
 
 
     private final UserService userService;

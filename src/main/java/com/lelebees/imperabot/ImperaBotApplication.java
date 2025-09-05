@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class ImperaBotApplication {
-    private static final Logger logger = LoggerFactory.getLogger(ImperaBotApplication.class);
+    private final Logger logger = LoggerFactory.getLogger(ImperaBotApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(ImperaBotApplication.class, args);

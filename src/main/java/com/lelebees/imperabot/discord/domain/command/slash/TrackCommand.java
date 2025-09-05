@@ -37,7 +37,7 @@ import java.util.Optional;
  */
 @Component
 public class TrackCommand implements SlashCommand {
-    private static final Logger logger = LoggerFactory.getLogger(TrackCommand.class);
+    private final Logger logger = LoggerFactory.getLogger(TrackCommand.class);
     private final GameService gameService;
     private final ImperaService imperaService;
     private final GameLinkService gameLinkService;

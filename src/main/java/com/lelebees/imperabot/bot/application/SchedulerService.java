@@ -23,7 +23,7 @@ public class SchedulerService {
     private final GameService gameService;
     private final GameLinkService gameLinkService;
     private final DiscordService discordService;
-    private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
+    private final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
     public SchedulerService(ImperaService imperaService, ImperaAPIRepository imperaAPIRepository, UserService userService, GameService gameService, GameLinkService gameLinkService, DiscordService discordService) {
         this.imperaService = imperaService;

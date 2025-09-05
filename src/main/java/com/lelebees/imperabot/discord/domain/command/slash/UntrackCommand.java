@@ -33,7 +33,7 @@ import java.util.Optional;
  */
 @Component
 public class UntrackCommand implements SlashCommand {
-    private final static Logger logger = LoggerFactory.getLogger(UntrackCommand.class);
+    private final Logger logger = LoggerFactory.getLogger(UntrackCommand.class);
     private final GuildSettingsService guildSettingsService;
     private final GameLinkService gameLinkService;
     private final ImperaService imperaService;

@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class CheckTurns implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(CheckTurns.class);
+    private final Logger logger = LoggerFactory.getLogger(CheckTurns.class);
     private final ImperaService imperaService;
     private final GameService gameService;
     private final GameLinkService gameLinkService;

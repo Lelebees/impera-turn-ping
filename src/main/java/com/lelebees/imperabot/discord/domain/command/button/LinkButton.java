@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class LinkButton implements ButtonCommand {
-    private final static Logger logger = LoggerFactory.getLogger(LinkButton.class);
+    private final Logger logger = LoggerFactory.getLogger(LinkButton.class);
     private final UserService userService;
     private final DiscordService discordService;
     @Value("${impera.username}")

@@ -15,7 +15,7 @@ import java.util.Collection;
 @Component
 public class ButtonCommandListener {
 
-    private final static Logger logger = LoggerFactory.getLogger(ButtonCommandListener.class);
+    private final Logger logger = LoggerFactory.getLogger(ButtonCommandListener.class);
     private final Collection<ButtonCommand> buttons;
 
     public ButtonCommandListener(GatewayDiscordClient client, Collection<ButtonCommand> buttons) {

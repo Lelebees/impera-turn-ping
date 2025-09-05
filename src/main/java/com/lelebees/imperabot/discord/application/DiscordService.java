@@ -33,7 +33,7 @@ import static discord4j.rest.util.Permission.VIEW_CHANNEL;
 
 @Service
 public class DiscordService {
-    private final static Logger logger = LoggerFactory.getLogger(DiscordService.class);
+    private final Logger logger = LoggerFactory.getLogger(DiscordService.class);
     private final GatewayDiscordClient gatewayClient;
     private final UserService userService;
     private final GuildSettingsService guildSettingsService;

@@ -19,7 +19,7 @@ import java.util.Optional;
 @Component
 public class SettingsCommand implements SlashCommand {
 
-    private final static Logger logger = LoggerFactory.getLogger(SettingsCommand.class);
+    private final Logger logger = LoggerFactory.getLogger(SettingsCommand.class);
     private final UserService userService;
     private final SelectMenu.Option[] options = {
             SelectMenu.Option.of("No notifications", "No Notifications"),
@@ -54,7 +54,7 @@ public class SettingsCommand implements SlashCommand {
             BotUser user = userService.updateDefaultSetting(callingUser.getId().asLong(), setting);
             return event.reply().withEphemeral(true).withContent("Updated notification setting to `" + user.getNotificationSetting().toString() + "`");
         }
-
+        // TODO: Replace with DTO
         BotUser botUser = userService.findOrCreateUser(callingUser.getId().asLong());
 
         logger.info("User " + callingUser.getId().asLong() + " used /settings view");
@@ -84,7 +84,7 @@ public class SettingsCommand implements SlashCommand {
         }
         return Section.of(
                 Button.danger("unlink", "Unlink your account"),
-                TextDisplay.of("You're currently linked to: " + botUser.getImperaId()),
+                TextDisplay.of("You're currently linked to: " + botUser.getUsername()),
                 TextDisplay.of("-# (%s)".formatted(botUser.getImperaId())));
     }
 }

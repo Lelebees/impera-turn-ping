@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class UpdateImperaToken implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(UpdateImperaToken.class);
+    private final Logger logger = LoggerFactory.getLogger(UpdateImperaToken.class);
     private final ImperaAPIRepository imperaRepository;
 
     public UpdateImperaToken(ImperaAPIRepository imperaService) {
