@@ -8,6 +8,6 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=builder /usr/src/target/*.jar ./app.jar
 
-ENTRYPOINT ["java", "-Xmx128m", "-XX:+UseShenandoahGC", \
+ENTRYPOINT ["java", "-Xmx128m", "-Xms100m", \
 "-XX:MaxMetaspaceSize=128m", "-XX:+UseCompressedClassPointers", "-XX:+UseCompressedOops", \
 "-jar", "app.jar"]
