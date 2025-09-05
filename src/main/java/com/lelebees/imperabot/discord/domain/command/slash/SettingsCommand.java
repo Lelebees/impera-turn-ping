@@ -1,8 +1,8 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
+import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
@@ -51,15 +51,14 @@ public class SettingsCommand implements SlashCommand {
 
             logger.info("User " + callingUser.getId().asLong() + " used /settings with setting: " + setting.ordinal() + " (" + setting + ")");
 
-            BotUser user = userService.updateDefaultSetting(callingUser.getId().asLong(), setting);
-            return event.reply().withEphemeral(true).withContent("Updated notification setting to `" + user.getNotificationSetting().toString() + "`");
+            BotUserDTO user = userService.updateDefaultSetting(callingUser.getId().asLong(), setting);
+            return event.reply().withEphemeral(true).withContent("Updated notification setting to `" + user.notificationSetting().toString() + "`");
         }
-        // TODO: Replace with DTO
-        BotUser botUser = userService.findOrCreateUser(callingUser.getId().asLong());
+        BotUserDTO botUser = userService.findOrCreateUser(callingUser.getId().asLong());
 
         logger.info("User " + callingUser.getId().asLong() + " used /settings view");
 
-        logger.info(String.valueOf(options[botUser.getNotificationSetting().ordinal()].isDefault()));
+        logger.info(String.valueOf(options[botUser.notificationSetting().ordinal()].isDefault()));
         //TODO: fix the placeholder - i'd like it to just have something selected
         return event.reply().withEphemeral(true).withComponents(
                 Container.of(Color.of(230, 200, 90),
@@ -67,7 +66,7 @@ public class SettingsCommand implements SlashCommand {
                         TextDisplay.of("## :bell: Notifications"),
                         ActionRow.of(
                                 SelectMenu.of("notification-setting", options)
-                                        .withPlaceholder("Currently: " + botUser.getNotificationSetting().toString())
+                                        .withPlaceholder("Currently: " + botUser.notificationSetting().toString())
                         ),
                         TextDisplay.of("## :link: Impera Account"),
                         getImperaLinkComponent(botUser)
@@ -76,7 +75,7 @@ public class SettingsCommand implements SlashCommand {
         );
     }
 
-    private Section getImperaLinkComponent(BotUser botUser) {
+    private Section getImperaLinkComponent(BotUserDTO botUser) {
         if (!botUser.isLinked()) {
             return Section.of(
                     Button.primary("link", "Link your account"),
@@ -84,7 +83,7 @@ public class SettingsCommand implements SlashCommand {
         }
         return Section.of(
                 Button.danger("unlink", "Unlink your account"),
-                TextDisplay.of("You're currently linked to: " + botUser.getUsername()),
-                TextDisplay.of("-# (%s)".formatted(botUser.getImperaId())));
+                TextDisplay.of("You're currently linked to: %s".formatted(botUser.username())),
+                TextDisplay.of("-# (%s)".formatted(botUser.imperaId())));
     }
 }

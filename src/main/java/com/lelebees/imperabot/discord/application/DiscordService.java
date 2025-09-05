@@ -5,8 +5,8 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.presentation.game.GameDTO;
+import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.HistoryActionName;
@@ -127,10 +127,10 @@ public class DiscordService {
         String victoryMessage = "Game %s has ended!".formatted(getGameURI(game.name(), game.id()));
         String directVictoryMessage = victoryMessage + " You have won!";
         for (ImperaGamePlayerDTO gamePlayer : winningPlayers) {
-            Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));
+            Optional<BotUserDTO> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));
             String userString = gamePlayer.name();
             if (user.isPresent()) {
-                BotUser player = user.get();
+                BotUserDTO player = user.get();
                 userString = getUserStringWithSettings(player, directVictoryMessage, gamePlayer, channels);
             }
             userStrings.add(userString);
@@ -145,22 +145,22 @@ public class DiscordService {
         }
     }
 
-    private AllowedMentions getAllowedMentions(BotUser player) {
-        return switch (player.getNotificationSetting()) {
+    private AllowedMentions getAllowedMentions(BotUserDTO player) {
+        return switch (player.notificationSetting()) {
             case NO_NOTIFICATIONS, DMS_ONLY -> AllowedMentions.suppressAll();
             case DMS_AND_GUILD, PREFER_GUILD_OVER_DMS, GUILD_ONLY ->
-                    AllowedMentions.builder().allowUser(Snowflake.of(player.getUserId())).build();
+                    AllowedMentions.builder().allowUser(Snowflake.of(player.discordId())).build();
         };
     }
 
-    private void sendDMAccordingToSettings(BotUser player, String directMessage, boolean noGuildChannels) {
-        switch (player.getNotificationSetting()) {
+    private void sendDMAccordingToSettings(BotUserDTO player, String directMessage, boolean noGuildChannels) {
+        switch (player.notificationSetting()) {
             case NO_NOTIFICATIONS, GUILD_ONLY -> {
             }
-            case DMS_ONLY, DMS_AND_GUILD -> sendDM(player.getUserId(), directMessage);
+            case DMS_ONLY, DMS_AND_GUILD -> sendDM(player.discordId(), directMessage);
             case PREFER_GUILD_OVER_DMS -> {
                 if (noGuildChannels) {
-                    sendDM(player.getUserId(), directMessage);
+                    sendDM(player.discordId(), directMessage);
                 }
             }
         }
@@ -171,9 +171,9 @@ public class DiscordService {
         List<MessageChannel> dmChannels = channels.stream().filter(channel -> channel.getType() == Channel.Type.DM).map(channel -> (MessageChannel) channel).toList();
         AllowedMentions allowedMentions = AllowedMentions.suppressAll();
         String userString = gamePlayer.name();
-        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));
+        Optional<BotUserDTO> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));
         if (user.isPresent()) {
-            BotUser player = user.get();
+            BotUserDTO player = user.get();
             userString = player.getMention();
 
             boolean userCanSeeMessageInGuild = false;
@@ -181,15 +181,15 @@ public class DiscordService {
                 Snowflake guildId = Snowflake.of(channel.getData().guildId().get());
                 Guild guild = gatewayClient.getGuildById(guildId).block();
                 try {
-                    Member guildMember = guild.getMemberById(Snowflake.of(player.getUserId())).block();
+                    Member guildMember = guild.getMemberById(Snowflake.of(player.discordId())).block();
                     // Check if the guildmember has access to the specific channel
                     userCanSeeMessageInGuild = !((GuildMessageChannel) channel).getEffectivePermissions(guildMember.getId()).block().contains(VIEW_CHANNEL);
                 } catch (ClientException e) {
-                    logger.debug("User " + player.getUserId() + " does not have access to guild " + guildId.asLong() + " (" + guild.getName() + ")");
+                    logger.debug("User " + player.discordId() + " does not have access to guild " + guildId.asLong() + " (" + guild.getName() + ")");
                 }
             }
 
-            PrivateChannel usersChannel = getDMChannelByOwner(player.getUserId());
+            PrivateChannel usersChannel = getDMChannelByOwner(player.discordId());
             if (dmChannels.contains(usersChannel)) {
                 sendDMAccordingToSettings(player, directMessage.formatted(userString), userCanSeeMessageInGuild);
             }
@@ -203,22 +203,22 @@ public class DiscordService {
     }
 
     //TODO: This method produces side effects, replace with better method :)
-    private String getUserStringWithSettings(BotUser player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
+    private String getUserStringWithSettings(BotUserDTO player, String directMessage, ImperaGamePlayerDTO gamePlayer, List<Channel> channels) {
         String userString = player.getMention();
-        switch (player.getNotificationSetting()) {
+        switch (player.notificationSetting()) {
             case NO_NOTIFICATIONS -> userString = gamePlayer.name();
             case GUILD_ONLY -> {
             }
             case DMS_ONLY -> {
-                getDMChannelByOwner(player.getUserId()).createMessage(directMessage);
+                getDMChannelByOwner(player.discordId()).createMessage(directMessage);
                 userString = gamePlayer.name();
             }
             case PREFER_GUILD_OVER_DMS -> {
                 if (channels.isEmpty()) {
-                    getDMChannelByOwner(player.getUserId()).createMessage(directMessage);
+                    getDMChannelByOwner(player.discordId()).createMessage(directMessage);
                 }
             }
-            case DMS_AND_GUILD -> getDMChannelByOwner(player.getUserId()).createMessage(directMessage);
+            case DMS_AND_GUILD -> getDMChannelByOwner(player.discordId()).createMessage(directMessage);
         }
         return userString;
     }
@@ -280,11 +280,11 @@ public class DiscordService {
     }
 
     public void giveWinnerRole(GameDTO game, ImperaGamePlayerDTO winner) {
-        Optional<BotUser> user = userService.findImperaUser(UUID.fromString(winner.userId()));
+        Optional<BotUserDTO> user = userService.findImperaUser(UUID.fromString(winner.userId()));
         if (user.isEmpty()) {
             return;
         }
-        BotUser winnerUser = user.get();
+        BotUserDTO winnerUser = user.get();
 
         List<GameChannelLink> links = gameLinkService.findLinksByGame(game.id());
         logger.debug("Found " + links.size() + " links for game " + game.id() + " when awarding winner role.");
@@ -309,7 +309,7 @@ public class DiscordService {
                     logger.debug("Skipping guild " + guildDebugId + " because it has no winner role.");
                     continue;
                 }
-                Member winningMember = guild.getMemberById(Snowflake.of(winnerUser.getUserId())).block();
+                Member winningMember = guild.getMemberById(Snowflake.of(winnerUser.discordId())).block();
                 if (winningMember == null) {
                     numberOfSkippedGuilds++;
                     logger.debug("Skipping guild " + guildDebugId + " because the winner is not a member of the guild.");

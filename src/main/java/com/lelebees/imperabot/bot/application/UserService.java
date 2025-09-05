@@ -6,6 +6,7 @@ import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.bot.domain.user.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
+import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -19,17 +20,17 @@ public class UserService {
         this.repository = repository;
     }
 
-    public BotUser verifyUser(String verificationCode, UUID imperaId, String username) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrectVerificationCodeException {
+    public BotUserDTO verifyUser(String verificationCode, UUID imperaId, String username) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrectVerificationCodeException {
         try {
             BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
             botUser.verifyUser(imperaId, verificationCode, username);
-            return repository.save(botUser);
+            return BotUserDTO.from(repository.save(botUser));
         } catch (UserNotFoundException e) {
             throw new UserNotFoundException("Cannot find user with this verification code (" + verificationCode + ")");
         }
     }
 
-    public BotUser findUser(long id) throws UserNotFoundException {
+    private BotUser findUser(long id) throws UserNotFoundException {
         try {
             return userFromOptional(repository.findById(id));
         } catch (UserNotFoundException e) {
@@ -37,20 +38,20 @@ public class UserService {
         }
     }
 
-    public BotUser createUser(long id) {
-        return repository.save(new BotUser(id));
+    public BotUserDTO createUser(long id) {
+        return BotUserDTO.from(repository.save(new BotUser(id)));
     }
 
-    public BotUser unlinkUser(long id) throws UserNotFoundException {
+    public BotUserDTO unlinkUser(long id) throws UserNotFoundException {
         BotUser botUser = findUser(id);
         botUser.unlink();
-        return repository.save(botUser);
+        return BotUserDTO.from(repository.save(botUser));
     }
 
-    public BotUser findOrCreateUser(long discordId) {
-        BotUser botUser;
+    public BotUserDTO findOrCreateUser(long discordId) {
+        BotUserDTO botUser;
         try {
-            botUser = findUser(discordId);
+            botUser = BotUserDTO.from(findUser(discordId));
         } catch (UserNotFoundException e) {
             botUser = createUser(discordId);
         }
@@ -61,19 +62,24 @@ public class UserService {
         return userOptional.orElseThrow(() -> new UserNotFoundException("Could not find user!"));
     }
 
-    public BotUser updateDefaultSetting(long discordId, UserNotificationSetting setting) {
-        BotUser user = findOrCreateUser(discordId);
-        user.notificationSetting = setting;
-        return repository.save(user);
-    }
-
-    public Optional<BotUser> findImperaUser(UUID imperaId) {
-        return repository.getUserByImperaId(imperaId);
-    }
-
-    public BotUser findImperaUserOrThrow(UUID imperaId) throws UserNotFoundException {
+    public BotUserDTO updateDefaultSetting(long discordId, UserNotificationSetting setting) {
+        BotUser user;
         try {
-            return userFromOptional(repository.getUserByImperaId(imperaId));
+            user = findUser(discordId);
+        } catch (UserNotFoundException e) {
+            user = new BotUser(discordId);
+        }
+        user.notificationSetting = setting;
+        return BotUserDTO.from(repository.save(user));
+    }
+
+    public Optional<BotUserDTO> findImperaUser(UUID imperaId) {
+        return repository.getUserByImperaId(imperaId).map(BotUserDTO::from);
+    }
+
+    public BotUserDTO findImperaUserOrThrow(UUID imperaId) throws UserNotFoundException {
+        try {
+            return BotUserDTO.from(userFromOptional(repository.getUserByImperaId(imperaId)));
         } catch (UserNotFoundException e) {
             throw new UserNotFoundException("Cannot find user with this Impera Id (" + imperaId + ")");
         }
@@ -88,9 +94,19 @@ public class UserService {
     }
 
     public String startVerification(long userId) throws UserAlreadyVerfiedException {
-        BotUser user = findOrCreateUser(userId);
+        BotUser user;
+        try {
+            user = findUser(userId);
+        } catch (UserNotFoundException e) {
+            user = new BotUser(userId);
+        }
         String verificationCode = user.startVerification();
         repository.save(user);
         return verificationCode;
+    }
+
+    public String getVerificationCode(long userId) throws UserNotFoundException {
+        BotUser user = findUser(userId);
+        return user.getVerificationCode();
     }
 }
