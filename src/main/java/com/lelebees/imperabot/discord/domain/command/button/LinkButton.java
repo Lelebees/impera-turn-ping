@@ -1,11 +1,11 @@
-package com.lelebees.imperabot.discord.domain.command.slash;
+package com.lelebees.imperabot.discord.domain.command.button;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.discord.application.DiscordService;
-import com.lelebees.imperabot.discord.domain.command.SlashCommand;
+import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
 import discord4j.common.util.Snowflake;
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.object.component.ActionRow;
 import discord4j.core.object.component.Button;
 import discord4j.core.object.entity.User;
@@ -16,26 +16,25 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class LinkCommand implements SlashCommand {
-
-    private final static Logger logger = LoggerFactory.getLogger(LinkCommand.class);
+public class LinkButton implements ButtonCommand {
+    private final static Logger logger = LoggerFactory.getLogger(LinkButton.class);
     private final UserService userService;
     private final DiscordService discordService;
     @Value("${impera.username}")
     private String imperaUsername;
 
-    public LinkCommand(UserService userService, DiscordService discordService) {
+    public LinkButton(UserService userService, DiscordService discordService) {
         this.userService = userService;
         this.discordService = discordService;
     }
 
     @Override
-    public String getName() {
+    public String getCustomId() {
         return "link";
     }
 
     @Override
-    public Mono<Void> handle(ChatInputInteractionEvent event) {
+    public Mono<Void> handle(ButtonInteractionEvent event) {
         User user = event.getInteraction().getUser();
         Snowflake id = user.getId();
         String username = user.getUsername();
