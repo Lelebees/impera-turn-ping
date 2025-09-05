@@ -38,7 +38,7 @@ public class LinkButton implements ButtonCommand {
         User user = event.getInteraction().getUser();
         Snowflake id = user.getId();
         String username = user.getUsername();
-        Long unlinkCommandId = discordService.getApplicationCommands().get("unlink");
+        Long settingsCommandId = discordService.getApplicationCommands().get("settings");
         try {
             String verificationCode = userService.startVerification(id.asLong());
             Button button = Button.primary("mobileCode", "Send me a mobile friendly code!");
@@ -53,15 +53,15 @@ public class LinkButton implements ButtonCommand {
                             > 5. Enter the following code into the "Text" field: ||```%s```||
                             > :warning: **IMPORTANT**: DO ***NOT*** SHARE THIS CODE WITH ANYONE!
                             > 6. Press send!
-                            After completing these steps, we'll know it's you, and you will be linked! You can unlink at any time by using the </unlink:%s> command!"""
-                            .formatted(imperaUsername, verificationCode, unlinkCommandId))
+                            After completing these steps, we'll know it's you, and you will be linked! You can unlink at any time by clicking the button in </settings:%d>!"""
+                            .formatted(imperaUsername, verificationCode, settingsCommandId))
                     .withComponents(ActionRow.of(button));
         } catch (UserAlreadyVerfiedException e) {
-            logger.info("User " + id.asLong() + " (" + username + ") was denied access to /link because they are already verified");
-            return event.reply("You are already verified! If you wish to re-link, run </unlink:" + unlinkCommandId + "> first.").withEphemeral(true);
+            logger.info("User " + username + " (" + id.asLong() + ") was unable to link because they are already verified");
+            return event.reply("You are already verified! If you wish to re-link, press the button in </settings:%d> first.".formatted(settingsCommandId)).withEphemeral(true);
         } catch (RuntimeException e) {
-            logger.error("An unknown error occured: ", e);
-            return event.reply("An unknown error occured. Please try again later, or file a bug report.").withEphemeral(true);
+            logger.error("An unknown error occurred: ", e);
+            return event.reply("An unknown error occurred. Please try again later, or file a bug report.").withEphemeral(true);
         }
     }
 }

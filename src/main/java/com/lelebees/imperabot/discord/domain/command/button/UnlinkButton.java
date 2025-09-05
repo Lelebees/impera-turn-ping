@@ -2,13 +2,18 @@ package com.lelebees.imperabot.discord.domain.command.button;
 
 import com.lelebees.imperabot.bot.application.UserService;
 import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
+import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
+import com.lelebees.imperabot.discord.domain.SettingsMenu;
 import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.object.entity.User;
+import discord4j.core.spec.InteractionApplicationCommandCallbackSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Component
 public class UnlinkButton implements ButtonCommand {
@@ -30,8 +35,8 @@ public class UnlinkButton implements ButtonCommand {
     public Mono<Void> handle(ButtonInteractionEvent event) {
         User user = event.getInteraction().getUser();
         try {
-            userService.unlinkUser(user.getId().asLong());
-            return event.reply("Your discord account has been unlinked from your Impera account").withEphemeral(true);
+            BotUserDTO botUser = userService.unlinkUser(user.getId().asLong());
+            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.getForUser(botUser, user))).build());
         } catch (UserNotFoundException e) {
             return event.reply("We were unable to find your account").withEphemeral(true);
         } catch (RuntimeException e) {
