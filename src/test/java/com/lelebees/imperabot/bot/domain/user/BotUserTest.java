@@ -17,7 +17,7 @@ class BotUserTest {
         UUID imperaId = UUID.randomUUID();
         String verificationCode = UUID.randomUUID().toString();
         BotUser user = new BotUser(1L, imperaId, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
-        assertThrows(UserAlreadyVerfiedException.class, () -> user.verifyUser(imperaId, verificationCode));
+        assertThrows(UserAlreadyVerfiedException.class, () -> user.verifyUser(imperaId, verificationCode, "username"));
     }
 
     @Test
@@ -26,7 +26,7 @@ class BotUserTest {
         UUID imperaId = UUID.randomUUID();
         String verificationCode = UUID.randomUUID().toString();
         BotUser user = new BotUser(1L, imperaId, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
-        assertThrows(IncorrectVerificationCodeException.class, () -> user.verifyUser(imperaId, ""));
+        assertThrows(IncorrectVerificationCodeException.class, () -> user.verifyUser(imperaId, "", "username"));
     }
 
     @Test
@@ -35,7 +35,7 @@ class BotUserTest {
         UUID imperaId = UUID.randomUUID();
         String verificationCode = UUID.randomUUID().toString();
         BotUser user = new BotUser(1L, null, UserNotificationSetting.NO_NOTIFICATIONS, verificationCode);
-        assertDoesNotThrow(() -> user.verifyUser(imperaId, verificationCode));
+        assertDoesNotThrow(() -> user.verifyUser(imperaId, verificationCode, "username"));
     }
 
     @Test
