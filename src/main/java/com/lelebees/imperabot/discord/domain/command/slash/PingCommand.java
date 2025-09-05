@@ -10,8 +10,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
-import static com.lelebees.imperabot.discord.application.DiscordService.convertSnowflakeToInstant;
-
 @Component
 public class PingCommand implements SlashCommand {
 
@@ -31,7 +29,7 @@ public class PingCommand implements SlashCommand {
         Instant now = Instant.now();
         InteractionCallbackSpecDeferReplyMono spec = event.deferReply();
 
-        Instant eventInstant = convertSnowflakeToInstant(event.getInteraction().getId());
+        Instant eventInstant = event.getInteraction().getId().getTimestamp();
         long difference = now.toEpochMilli() - eventInstant.toEpochMilli();
 
         return spec.event().reply().withContent("Pong in " + difference + "ms");

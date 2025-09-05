@@ -27,7 +27,7 @@ public class SlashCommandListener {
     }
 
     public void logCommandUse(User user, String commandName) {
-        logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") used /" + commandName);
+        logger.info("User " + user.getUsername() + " (" + user.getId().asLong() + ") used /" + commandName);
     }
 
     public Mono<Void> handle(ChatInputInteractionEvent event) {
