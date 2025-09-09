@@ -1,8 +1,8 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -44,9 +44,9 @@ public class GuildSettingsCommand implements SlashCommand {
         Member guildMember = event.getInteraction().getMember().get();
 
         if (event.getOption("set").isPresent()) {
-            GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildIdOptional.get().asLong());
+            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guildIdOptional.get().asLong());
             boolean userHasManageChannelsPermission = guildMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-            boolean userHasPermissionRole = guildSettings.permissionRoleId != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
+            boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
             if (!userHasManageChannelsPermission && !userHasPermissionRole) {
                 logger.info("User " + guildMember.getId().asLong() + " (" + guildMember.getUsername() + ") was denied acces to /guildsettings set because they did not have the correct permissions.");
                 return event.reply().withEphemeral(true).withContent("You do not have the required permissions to use this command!");
@@ -102,12 +102,12 @@ public class GuildSettingsCommand implements SlashCommand {
         long guildId = guildIdOptional.get().asLong();
         String guildName = event.getInteraction().getGuild().block().getName();
         try {
-            GuildSettings settings = guildSettingsService.getGuildSettingsById(guildId);
+            GuildSettingsDTO settings = guildSettingsService.getGuildSettingsById(guildId);
             EmbedCreateSpec embed = EmbedCreateSpec.builder()
                     .title("Settings for %s".formatted(guildName))
-                    .addField("Default channel:", (settings.defaultChannelId == null ? "`None`" : "<#%s>".formatted(settings.defaultChannelId)), false)
-                    .addField("Permission role:", (settings.permissionRoleId == null ? "`None`" : "<@&%s>".formatted(settings.permissionRoleId)), false)
-                    .addField("Winner role:", (settings.winnerRoleId == null ? "`None`" : "<@&%s>".formatted(settings.winnerRoleId)), false)
+                    .addField("Default channel:", (settings.defaultChannelId() == null ? "`None`" : "<#%s>".formatted(settings.defaultChannelId())), false)
+                    .addField("Permission role:", (settings.permissionRoleId() == null ? "`None`" : "<@&%s>".formatted(settings.permissionRoleId())), false)
+                    .addField("Winner role:", (settings.winnerRoleId() == null ? "`None`" : "<@&%s>".formatted(settings.winnerRoleId())), false)
                     .color(Color.of(230, 200, 90))
                     .build();
             return event.reply().withEmbeds(embed).withAllowedMentions(AllowedMentions.suppressAll());

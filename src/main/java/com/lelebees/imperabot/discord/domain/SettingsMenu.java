@@ -26,6 +26,10 @@ public class SettingsMenu {
         );
     }
 
+    public static Container getForGuild() {
+        return null;
+    }
+
     private static Section getImperaLinkComponent(BotUserDTO botUser) {
         if (!botUser.isLinked()) {
             return Section.of(

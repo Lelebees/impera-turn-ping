@@ -3,7 +3,7 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
-import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
@@ -74,17 +74,17 @@ public class UntrackCommand implements SlashCommand {
         if (guildIdOptional.isPresent()) {
             // We're in a guild, so untrack for guild
             Snowflake guildId = guildIdOptional.get();
-            GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
+            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-            boolean userHasPermissionRole = guildSettings.permissionRoleId != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
+            boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
             if (!userHasManageChannelsPermission && !userHasPermissionRole) {
                 logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /untrack because they do not have the correct permissions.");
                 return event.reply().withContent("You are not allowed to stop tracking games in this guild.").withEphemeral(true);
             }
 
-            if (guildSettings.defaultChannelId != null && channelOptional.isEmpty()) {
-                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId)).block();
+            if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
+                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so untracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
             }
         }

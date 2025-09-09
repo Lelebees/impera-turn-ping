@@ -4,8 +4,8 @@ import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GameService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.presentation.game.GameDTO;
+import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
@@ -87,7 +87,7 @@ public class TrackCommand implements SlashCommand {
         if (guildIdOptional.isPresent()) {
             // We're in a guild, so track for guild
             Snowflake guildId = guildIdOptional.get();
-            GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
+            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
             if (!hasPermissions(guildSettings, callingMember) && !userIsLelebees) {
@@ -95,8 +95,8 @@ public class TrackCommand implements SlashCommand {
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
 
-            if (guildSettings.defaultChannelId != null && channelOptional.isEmpty()) {
-                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId)).block();
+            if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
+                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
             }
         }
@@ -129,9 +129,9 @@ public class TrackCommand implements SlashCommand {
         return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
     }
 
-    public boolean hasPermissions(GuildSettings guildSettings, Member guildMember) {
+    public boolean hasPermissions(GuildSettingsDTO guildSettings, Member guildMember) {
         boolean userHasManageChannelsPermission = guildMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-        boolean userHasPermissionRole = guildSettings.permissionRoleId != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
+        boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
         return userHasManageChannelsPermission || userHasPermissionRole;
     }
 }

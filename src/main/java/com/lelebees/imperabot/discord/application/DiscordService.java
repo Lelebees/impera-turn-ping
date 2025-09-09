@@ -287,7 +287,7 @@ public class DiscordService {
             long guildId = guild.getId().asLong();
             String guildDebugId = guildId + " (" + guild.getName() + ")";
             try {
-                Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId;
+                Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId();
                 if (winnerRoleId == null) {
                     numberOfSkippedGuilds++;
                     logger.debug("Skipping guild " + guildDebugId + " because it has no winner role.");
