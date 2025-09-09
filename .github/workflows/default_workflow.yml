@@ -1,7 +1,7 @@
 name: Java Deploy
 
 on:
-  pr:
+  pull_request:
     branches:
       - master
   push:
