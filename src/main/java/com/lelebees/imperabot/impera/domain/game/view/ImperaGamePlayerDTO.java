@@ -19,6 +19,6 @@ public record ImperaGamePlayerDTO(String id, String userId, String name, String 
     }
 
     public boolean hasWon() {
-        return state.equals("Won");
+        return state.equals("Won") || outcome.equals("Won");
     }
 }
