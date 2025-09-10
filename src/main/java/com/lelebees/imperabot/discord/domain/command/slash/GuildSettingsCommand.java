@@ -3,16 +3,15 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
+import com.lelebees.imperabot.discord.domain.SettingsMenu;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
-import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
-import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.rest.util.AllowedMentions;
-import discord4j.rest.util.Color;
-import discord4j.rest.util.Permission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -36,19 +35,18 @@ public class GuildSettingsCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
-        Optional<Snowflake> guildIdOptional = event.getInteraction().getGuildId();
-        if (guildIdOptional.isEmpty()) {
-            logger.error("A guild command was called, but no guild Id was supplied with the interaction.");
-            return event.reply().withContent("Could not run command because a critical error has occurred, please file a bug report and include the timestamp of the interaction").withEphemeral(true);
+        Optional<Guild> guildOptional = event.getInteraction().getGuild().blockOptional();
+        if (guildOptional.isEmpty()) {
+            logger.error("A guild command was called, but not ran inside a guild.");
+            return event.reply().withContent("Could not run command because it must be run inside a server.").withEphemeral(true);
         }
-        Member guildMember = event.getInteraction().getMember().get();
+        Guild guild = guildOptional.get();
+        User callingUser = event.getUser();
 
         if (event.getOption("set").isPresent()) {
-            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guildIdOptional.get().asLong());
-            boolean userHasManageChannelsPermission = guildMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-            boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
-            if (!userHasManageChannelsPermission && !userHasPermissionRole) {
-                logger.info("User " + guildMember.getId().asLong() + " (" + guildMember.getUsername() + ") was denied acces to /guildsettings set because they did not have the correct permissions.");
+            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guild.getId().asLong());
+            if (!SettingsMenu.userHasPermission(callingUser, guildSettings)) {
+                logger.info("User %s (%d) was denied acces to /guildsettings set because they did not have the correct permissions.".formatted(callingUser.getUsername(), callingUser.getId().asLong()));
                 return event.reply().withEphemeral(true).withContent("You do not have the required permissions to use this command!");
             }
             ApplicationCommandInteractionOption subOption = event.getOption("set").get().getOptions().get(0);
@@ -62,9 +60,9 @@ public class GuildSettingsCommand implements SlashCommand {
                             channel = channelOption.get().getValue().get().asChannel().block();
                         }
                         Snowflake channelId = channel.getId();
-                        logger.info("User " + guildMember.getId().asLong() + " (" + guildMember.getUsername() + ") used /guildsettings set defaultchannel with channel: " + channelId.asLong() + " (" + channel.getData().name().get() + ")");
+                        logger.info("User %s (%d) used /guildsettings set defaultchannel with channel: %s (%d)".formatted(callingUser.getUsername(), callingUser.getId().asLong(), channel.getData().name().get(), channelId.asLong()));
 
-                        guildSettingsService.updateDefaultChannel(guildIdOptional.get().asLong(), channelId.asLong());
+                        guildSettingsService.updateDefaultChannel(guild.getId().asLong(), channelId.asLong());
                         return event.reply().withContent("Updated default channel to <#%s>".formatted(channelId.asString()));
                     }
                     case "permissionrole" -> {
@@ -73,9 +71,9 @@ public class GuildSettingsCommand implements SlashCommand {
                         if (roleOption.isPresent()) {
                             roleId = roleOption.get().getValue().get().asRole().block().getId().asLong();
                         }
-                        logger.info("User " + guildMember.getId().asLong() + " (" + guildMember.getUsername() + ") used /guildsettings set permissionrole with role: " + roleId);
+                        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /guildsettings set permissionrole with role: " + roleId);
 
-                        guildSettingsService.updatePermissionRole(guildIdOptional.get().asLong(), roleId);
+                        guildSettingsService.updatePermissionRole(guild.getId().asLong(), roleId);
                         return event.reply().withContent("Updated permission role to <@&%s>".formatted(roleId)).withAllowedMentions(AllowedMentions.suppressAll());
                     }
                     case "winnerrole" -> {
@@ -84,33 +82,24 @@ public class GuildSettingsCommand implements SlashCommand {
                         if (roleOption.isPresent()) {
                             roleId = roleOption.get().getValue().get().asRole().block().getId().asLong();
                         }
-                        logger.info("User " + guildMember.getId().asLong() + " (" + guildMember.getUsername() + ") used /guildsettings set winnerrole with role: " + roleId);
+                        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /guildsettings set winnerrole with role: " + roleId);
 
-                        guildSettingsService.updateWinnerRole(guildIdOptional.get().asLong(), roleId);
+                        guildSettingsService.updateWinnerRole(guild.getId().asLong(), roleId);
                         return event.reply().withContent("Updated winner role to <@&%s>".formatted(roleId)).withAllowedMentions(AllowedMentions.suppressAll());
                     }
                 }
             } catch (GuildSettingsNotFoundException e) {
                 return event.reply().withContent("Could not find settings for this guild!").withEphemeral(true);
             }
-            logger.info("User " + guildMember.getId().asLong() + " (" + guildMember.getUsername() + ") used /guildsettings set");
+            logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /guildsettings set");
             return event.reply().withEphemeral(true).withContent("This is not a valid option. Please select one!");
         }
 
-        logger.info("User " + guildMember.getId().asLong() + " (" + guildMember.getUsername() + ") used /guildsettings view");
+        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /guildsettings view");
 
-        long guildId = guildIdOptional.get().asLong();
-        String guildName = event.getInteraction().getGuild().block().getName();
         try {
-            GuildSettingsDTO settings = guildSettingsService.getGuildSettingsById(guildId);
-            EmbedCreateSpec embed = EmbedCreateSpec.builder()
-                    .title("Settings for %s".formatted(guildName))
-                    .addField("Default channel:", (settings.defaultChannelId() == null ? "`None`" : "<#%s>".formatted(settings.defaultChannelId())), false)
-                    .addField("Permission role:", (settings.permissionRoleId() == null ? "`None`" : "<@&%s>".formatted(settings.permissionRoleId())), false)
-                    .addField("Winner role:", (settings.winnerRoleId() == null ? "`None`" : "<@&%s>".formatted(settings.winnerRoleId())), false)
-                    .color(Color.of(230, 200, 90))
-                    .build();
-            return event.reply().withEmbeds(embed).withAllowedMentions(AllowedMentions.suppressAll());
+            GuildSettingsDTO settings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
+            return event.reply().withComponents(SettingsMenu.getForGuild(settings, guild)).withAllowedMentions(AllowedMentions.suppressAll());
         } catch (GuildSettingsNotFoundException e) {
             return event.reply().withEphemeral(true).withContent("Could not find guild settings! use /guildsettings set to create a settings list for this guild.");
         }
