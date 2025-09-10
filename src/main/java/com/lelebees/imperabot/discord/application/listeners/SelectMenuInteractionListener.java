@@ -28,7 +28,7 @@ public class SelectMenuInteractionListener {
                 .next()
                 .flatMap(selectMenu -> {
                     User user = event.getInteraction().getUser();
-                    logger.info("User " + user.getUsername() + " (" + user.getId().asLong() + ") entered a value into " + selectMenu.getCustomId() + " select.");
+                    logger.debug("User " + user.getUsername() + " (" + user.getId().asLong() + ") entered a value into " + selectMenu.getCustomId() + " select.");
                     return selectMenu.handle(event);
                 });
     }
