@@ -32,6 +32,6 @@ public class SettingsCommand implements SlashCommand {
         User callingUser = event.getInteraction().getUser();
         BotUserDTO botUser = userService.findOrCreateUser(callingUser.getId().asLong());
 
-        return event.reply().withEphemeral(true).withComponents(SettingsMenu.getForUser(botUser, callingUser));
+        return event.reply().withEphemeral(true).withComponents(SettingsMenu.buildForUser(botUser, callingUser));
     }
 }

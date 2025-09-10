@@ -6,11 +6,9 @@ import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.component.*;
 import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.rest.util.Color;
-import discord4j.rest.util.Permission;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +18,7 @@ import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.*;
 public class SettingsMenu {
 
 
-    public static Container getForUser(BotUserDTO botUser, User discordUser) {
+    public static Container buildForUser(BotUserDTO botUser, User discordUser) {
         return Container.of(Color.of(230, 200, 90),
                 TextDisplay.of("# Settings for %s".formatted(discordUser.getUserData().globalName().get())),
                 TextDisplay.of("## :bell: Notifications"),
@@ -33,7 +31,7 @@ public class SettingsMenu {
         );
     }
 
-    public static Container getForGuild(GuildSettingsDTO guildSettings, Guild guild) {
+    public static Container buildForGuild(GuildSettingsDTO guildSettings, Guild guild) {
         return Container.of(Color.of(230, 200, 90),
                 TextDisplay.of("# Settings for %s".formatted(guild.getName())),
                 TextDisplay.of("## :bell: Notifications"),
@@ -46,10 +44,10 @@ public class SettingsMenu {
                 ActionRow.of(
                         SelectMenu.ofRole("guild-settings-winner-role-select", getWinnerRoleOption(guildSettings)).withMinValues(0)
                 ),
-                TextDisplay.of("### Automatically remove winner role when a different server member wins?"),
+/*                TextDisplay.of("### Automatically remove winner role when a different server member wins?"),
                 ActionRow.of(
                         SelectMenu.of("guild-settings-auto-remove-winner-select", getAutoRemovePreviousWinOptions(guildSettings))
-                ),
+                ), */
                 TextDisplay.of("## :identification_card: Permissions"),
                 TextDisplay.of("### Allow users with this role to edit these settings"),
                 ActionRow.of(
@@ -136,15 +134,5 @@ public class SettingsMenu {
                 Channel.Type.GUILD_PRIVATE_THREAD,
                 Channel.Type.GUILD_PUBLIC_THREAD
         );
-    }
-
-    public static boolean userHasPermission(User user, GuildSettingsDTO guildSettings) {
-        Member member = user.asMember(Snowflake.of(guildSettings.guildId())).block();
-        if (member == null) {
-            return false;
-        }
-        boolean canManageChannelsAndRoles = member.getBasePermissions().block().containsAll(List.of(Permission.MANAGE_CHANNELS, Permission.MANAGE_ROLES));
-        boolean hasPermissionRole = guildSettings.permissionRoleId() != null && member.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
-        return canManageChannelsAndRoles || hasPermissionRole;
     }
 }

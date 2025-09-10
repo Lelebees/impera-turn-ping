@@ -36,7 +36,7 @@ public class UnlinkButton implements ButtonCommand {
         User user = event.getInteraction().getUser();
         try {
             BotUserDTO botUser = userService.unlinkUser(user.getId().asLong());
-            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.getForUser(botUser, user))).build());
+            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForUser(botUser, user))).build());
         } catch (UserNotFoundException e) {
             return event.reply("We were unable to find your account").withEphemeral(true);
         } catch (RuntimeException e) {
