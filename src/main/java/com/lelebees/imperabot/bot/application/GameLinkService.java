@@ -24,8 +24,12 @@ public class GameLinkService {
         return repository.save(gameChannelLink);
     }
 
-    public GameChannelLink findLink(GameLinkId id) {
-        return getFromOptional(repository.findById(id));
+    public GameChannelLink findLink(GameLinkId id) throws GameChannelLinkNotFoundException {
+        try {
+            return getFromOptional(repository.findById(id));
+        } catch (GameChannelLinkNotFoundException e){
+            throw new GameChannelLinkNotFoundException("Could not find game channel link with id: " + id);
+        }
     }
 
     public GameChannelLink createLink(long gameId, long channelId, NotificationSettings notificationSetting) {
@@ -42,7 +46,7 @@ public class GameLinkService {
         return link;
     }
 
-    private GameChannelLink getFromOptional(Optional<GameChannelLink> optional) {
+    private GameChannelLink getFromOptional(Optional<GameChannelLink> optional) throws GameChannelLinkNotFoundException {
         return optional.orElseThrow(() -> new GameChannelLinkNotFoundException("Could not find the link"));
     }
 
@@ -54,31 +58,11 @@ public class GameLinkService {
         return repository.findGameChannelLinkByGameId(gameId);
     }
 
-//    public NotificationSettings deepGetNotificationSetting(GameLinkId id) {
-//        GameChannelLink gameChannelLink = findLink(id);
-//        long channelId = gameChannelLink.getChannelId();
-//        if (discordService.channelIsDM(channelId)) {
-//            if (gameChannelLink.notificationSetting != null) {
-//                return UserNotificationSetting.values()[gameChannelLink.notificationSetting];
-//            }
-//            long user = discordService.getChannelOwner(channelId);
-//            return userService.findUser(user).getNotificationSetting();
-//        }
-//        if (discordService.channelIsGuildChannel(channelId)) {
-//            if (gameChannelLink.notificationSetting != null) {
-//                return GuildNotificationSettings.values()[gameChannelLink.notificationSetting];
-//            }
-//            long guildId = discordService.getGuildChannelGuild(channelId);
-//            return guildSettingsService.getGuildSettingsById(guildId).notificationSetting;
-//        }
-//        throw new IllegalStateException("Incorrect channel type!");
-//    }
-
     public boolean linkExists(long gameId, long channelId) {
         return repository.existsById(new GameLinkId(gameId, channelId));
     }
 
-    public void deleteLink(long gameId, long channelId) {
+    public void deleteLink(long gameId, long channelId) throws GameChannelLinkNotFoundException {
         GameChannelLink gameChannelLink = findLink(new GameLinkId(gameId, channelId));
         repository.delete(gameChannelLink);
     }

@@ -2,17 +2,8 @@ package com.lelebees.imperabot.impera.domain.game;
 
 import java.util.List;
 
-public class ImperaGameOptionsDTO {
-    public int numberOfPlayersPerTeam;
-    public int numberOfTeams;
-    public int minUnitsPerCountry;
-    public int newUnitsPerTurn;
-    public int attacksPerTurn;
-    public int movesPerTurn;
-    public int initialCountryUnits;
-    public String mapDistribution;
-    public int timeoutInSeconds;
-    public int maximumTimeoutsPerPlayer;
-    public List<String> victoryConditions;
-    public List<String> visibilityModifier;
+public record ImperaGameOptionsDTO(int numberOfPlayersPerTeam, int numberOfTeams, int minUnitsPerCountry,
+                                   int newUnitsPerTurn, int attacksPerTurn, int movesPerTurn, int initialCountryUnits,
+                                   String mapDistribution, int timeoutInSeconds, int maximumTimeoutsPerPlayer,
+                                   List<String> victoryConditions, List<String> visibilityModifier) {
 }

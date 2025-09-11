@@ -4,9 +4,11 @@ import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GameService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
+import com.lelebees.imperabot.bot.presentation.game.GameDTO;
+import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
+import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -35,7 +37,7 @@ import java.util.Optional;
  */
 @Component
 public class TrackCommand implements SlashCommand {
-    private static final Logger logger = LoggerFactory.getLogger(TrackCommand.class);
+    private final Logger logger = LoggerFactory.getLogger(TrackCommand.class);
     private final GameService gameService;
     private final ImperaService imperaService;
     private final GameLinkService gameLinkService;
@@ -61,10 +63,11 @@ public class TrackCommand implements SlashCommand {
         User callingUser = event.getInteraction().getUser();
 
         Optional<ApplicationCommandInteractionOption> gameOptional = event.getOption("gameid");
-        if (gameOptional.isEmpty()) {
-            return event.reply().withContent("You must specify a game to track!").withEphemeral(true);
-        }
-        long gameId = gameOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no gameId was entered")).asLong();
+        long gameId = gameOptional
+                .orElseThrow(() -> new NullPointerException("You must specify a gameid."))
+                .getValue()
+                .orElseThrow(() -> new NullPointerException("Somehow, no gameId was entered"))
+                .asLong();
 
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
@@ -72,7 +75,11 @@ public class TrackCommand implements SlashCommand {
         logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /track with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
 
         if (channelOptional.isPresent()) {
-            channel = channelOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no channel was entered")).asChannel().block();
+            channel = channelOptional.get()
+                    .getValue()
+                    .orElseThrow(() -> new NullPointerException("Somehow, no channel was entered"))
+                    .asChannel()
+                    .block();
             logger.info("Channel was specified, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
         }
 
@@ -80,44 +87,51 @@ public class TrackCommand implements SlashCommand {
         if (guildIdOptional.isPresent()) {
             // We're in a guild, so track for guild
             Snowflake guildId = guildIdOptional.get();
-            GuildSettings guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
+            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
-            boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-            boolean userHasPermissionRole = guildSettings.permissionRoleId != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId));
             boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
-            if (!userHasManageChannelsPermission && !userHasPermissionRole && !userIsLelebees) {
+            if (!hasPermissions(guildSettings, callingMember) && !userIsLelebees) {
                 logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
 
-            if (guildSettings.defaultChannelId != null && channelOptional.isEmpty()) {
-                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId)).block();
+            if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
+                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
             }
         }
         ImperaGameViewDTO gameView;
         try {
             gameView = imperaService.getGame(gameId);
-        } catch (Exception e) {
-            logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /track because Impera (or the fetch request) returned an error.");
+        } catch (RuntimeException e) {
+            logger.error("Impera server returned an unknown error while trying to track game (" + gameId + ") for " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ").");
             return event.reply().withContent("An error occurred while trying to get game information from Impera. Please try again later.").withEphemeral(true);
+        } catch (ImperaGameNotFoundException e) {
+            logger.warn("Impera game could not be found " + gameId);
+            return event.reply().withContent("Impera could not find the game (" + gameId + ") you are looking for.").withEphemeral(true);
         }
 
-        if (!gameService.gameExists(gameId)) {
+        if (!gameService.gameExists(gameView.id())) {
             // Add game to database
             /* We pass the current turn,
             because this would otherwise allow someone to start a DDoS attack on the Impera service by playing a game for a while,
-            tracking the game (which will cause 3 * turns passed requests to be made) and then untracking it.
+            tracking the game (which will cause up to the number of turns passed requests to be made, at once.) and then untracking it.
             Rinse and repeat, and that's a big problem. */
-            gameService.createGame(gameId, gameView.turnCounter);
+            GameDTO gameDTO = gameService.createGame(gameView);
         }
         long channelId = channel.getId().asLong();
         // Add line to tracking table with gameid and channelid
-        if (gameLinkService.linkExists(gameId, channelId)) {
-            return event.reply().withEphemeral(true).withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+        if (gameLinkService.linkExists(gameView.id(), channelId)) {
+            return event.reply().withEphemeral(true).withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
         }
         GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
         logger.debug("Created new GameChannelLink with gameId: " + gameLink.getGameId() + " and channelId: " + gameLink.getChannelId());
-        return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name, imperaUrl, gameId, channelId));
+        return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
+    }
+
+    public boolean hasPermissions(GuildSettingsDTO guildSettings, Member guildMember) {
+        boolean userHasManageChannelsPermission = guildMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
+        boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
+        return userHasManageChannelsPermission || userHasPermissionRole;
     }
 }

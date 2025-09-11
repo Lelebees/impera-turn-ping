@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.4</version>
+        <version>3.4.9</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.Lelebees</groupId>
@@ -35,14 +35,14 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.3</version> <!-- replace with your desired version -->
+            <version>42.7.3</version>
         </dependency>
 
 
         <dependency>
             <groupId>com.discord4j</groupId>
             <artifactId>discord4j-core</artifactId>
-            <version>3.3.0-M2</version>
+            <version>3.3.0-RC3</version>
         </dependency>
 
         <dependency>

@@ -9,25 +9,22 @@ import static com.lelebees.imperabot.bot.domain.guild.GuildNotificationSettings.
 @Entity
 @Table(name = "bot_guild_settings")
 public class GuildSettings {
-    @Id
-    @Column(name = "guild_id")
-    private long id;
     @Column(name = "default_channel_id")
     @Nullable
     public Long defaultChannelId;
-
     //TODO: Determine if this needs to be saved.
     @Column(name = "notification_setting")
     @Convert(converter = GuildNotificationSettingsConverter.class)
     public GuildNotificationSettings notificationSetting;
-
     @Column(name = "permission_role_id")
     @Nullable
     public Long permissionRoleId;
-
     @Column(name = "winner_role_id")
     @Nullable
     public Long winnerRoleId;
+    @Id
+    @Column(name = "guild_id")
+    private long id;
 
     public GuildSettings(long id, @Nullable Long defaultChannelId, GuildNotificationSettings notificationSetting, @Nullable Long permissionRoleId, @Nullable Long winnerRoleId) {
         this.id = id;

@@ -2,15 +2,8 @@ package com.lelebees.imperabot.impera.domain.game.view;
 
 import java.util.Objects;
 
-public class ImperaGamePlayerDTO {
-    public String id;
-    public String userId;
-    public String name;
-    public String state;
-    public String outcome;
-    public String teamId;
-    public int playOrder;
-    public int timeouts;
+public record ImperaGamePlayerDTO(String id, String userId, String name, String state, String outcome, String teamId,
+                                  int playOrder, int timeouts) {
 
     @Override
     public boolean equals(Object o) {
@@ -23,5 +16,9 @@ public class ImperaGamePlayerDTO {
     @Override
     public int hashCode() {
         return Objects.hash(userId);
+    }
+
+    public boolean hasWon() {
+        return state.equals("Won") || outcome.equals("Won");
     }
 }
