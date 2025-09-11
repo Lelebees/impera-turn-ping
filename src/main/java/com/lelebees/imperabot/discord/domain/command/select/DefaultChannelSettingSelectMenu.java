@@ -46,11 +46,12 @@ public class DefaultChannelSettingSelectMenu implements SelectMenuInteraction {
             newChannel = Long.parseLong(value.get(0));
         }
         try {
-            GuildSettingsDTO guildSettings = guildSettingsService.updateDefaultChannel(guild.getId().asLong(), newChannel);
-            if (!guildSettings.userHasEditPermission(callingUser)) {
+            GuildSettingsDTO oldSettings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
+            if (!oldSettings.userHasEditPermission(callingUser)) {
                 logger.info("User %s (%d) attempted to update the default channel for guild %s (%d) but was denied because they have no permission".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
                 return event.reply("Interaction Failed: No Permission").withEphemeral(true);
             }
+            GuildSettingsDTO guildSettings = guildSettingsService.updateDefaultChannel(guild.getId().asLong(), newChannel);
             logger.info("User %s (%d) updated the default channel for guild %s (%d).".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
             return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild))).build());
         } catch (GuildSettingsNotFoundException e) {

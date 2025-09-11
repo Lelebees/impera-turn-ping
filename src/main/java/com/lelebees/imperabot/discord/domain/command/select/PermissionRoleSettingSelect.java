@@ -46,12 +46,12 @@ public class PermissionRoleSettingSelect implements SelectMenuInteraction {
             roleId = Long.parseLong(values.get(0));
         }
         try {
-            //TODO: Great idea to check access after the fact. Really useful.
-            GuildSettingsDTO guildSettings = guildSettingsService.updatePermissionRole(guild.getId().asLong(), roleId);
-            if (!guildSettings.userHasEditPermission(callingUser)) {
+            GuildSettingsDTO oldSettings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
+            if (!oldSettings.userHasEditPermission(callingUser)) {
                 logger.info("User %s (%d) attempted to update the permission role for guild %s (%d) but was denied because they have no permission".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
                 return event.reply("Interaction Failed: No Permission").withEphemeral(true);
             }
+            GuildSettingsDTO guildSettings = guildSettingsService.updatePermissionRole(guild.getId().asLong(), roleId);
             logger.info("User %s (%d) updated the permission role for guild %s (%d).".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
             return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild))).build());
         } catch (GuildSettingsNotFoundException e) {
