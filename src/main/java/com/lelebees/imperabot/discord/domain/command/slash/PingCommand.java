@@ -2,7 +2,6 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.object.entity.User;
 import discord4j.core.spec.InteractionCallbackSpecDeferReplyMono;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,12 +10,10 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
-import static com.lelebees.imperabot.discord.application.DiscordService.convertSnowflakeToTimeStamp;
-
 @Component
 public class PingCommand implements SlashCommand {
 
-    private final static Logger logger = LoggerFactory.getLogger(PingCommand.class);
+    private final Logger logger = LoggerFactory.getLogger(PingCommand.class);
 
 
     public PingCommand() {
@@ -32,13 +29,10 @@ public class PingCommand implements SlashCommand {
         Instant now = Instant.now();
         InteractionCallbackSpecDeferReplyMono spec = event.deferReply();
 
-        Instant eventInstant = convertSnowflakeToTimeStamp(event.getInteraction().getId());
+        Instant eventInstant = event.getInteraction().getId().getTimestamp();
         long difference = now.toEpochMilli() - eventInstant.toEpochMilli();
 
-        User user = event.getInteraction().getUser();
-        logger.info(user.getUsername() + " (" + user.getId().asLong() + ") used /ping!");
-        return spec.event().reply()
-                .withContent("Pong in " + difference + "ms");
+        return spec.event().reply().withContent("Pong in " + difference + "ms");
     }
 
 

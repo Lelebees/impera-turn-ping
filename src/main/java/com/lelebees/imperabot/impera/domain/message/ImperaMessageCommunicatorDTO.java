@@ -1,6 +1,6 @@
 package com.lelebees.imperabot.impera.domain.message;
 
-public class ImperaMessageCommunicatorDTO {
-    public String id;
-    public String name;
+import java.util.UUID;
+
+public record ImperaMessageCommunicatorDTO(UUID id, String name) {
 }

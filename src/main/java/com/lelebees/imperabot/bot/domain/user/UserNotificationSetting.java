@@ -2,6 +2,8 @@ package com.lelebees.imperabot.bot.domain.user;
 
 import com.lelebees.imperabot.bot.domain.NotificationSettings;
 
+import java.util.Arrays;
+
 public enum UserNotificationSetting implements NotificationSettings {
     NO_NOTIFICATIONS("No Notifications"),
     DMS_ONLY("DMs Only"),
@@ -17,6 +19,13 @@ public enum UserNotificationSetting implements NotificationSettings {
 
     public static UserNotificationSetting get(int settingOption) {
         return UserNotificationSetting.values()[settingOption];
+    }
+
+    public static UserNotificationSetting parse(String text) {
+        return Arrays.stream(UserNotificationSetting.values())
+                .filter(setting -> setting.value.equals(text))
+                .toList()
+                .get(0);
     }
 
     @Override
