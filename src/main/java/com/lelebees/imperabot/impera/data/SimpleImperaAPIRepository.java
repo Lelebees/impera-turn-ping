@@ -154,7 +154,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
                 .uri(URI.create(imperaURL + "/games/" + gameId + "/history/" + turnId))
                 .setHeader("Content-Type", "application/json")
                 .setHeader("Authorization", "Bearer %s".formatted(bearerToken))
-                .DELETE()
+                .GET()
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
