@@ -185,7 +185,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
                 throw new CouldNotAuthorizeException("Couldn't authorize with Impera, %d: %s".formatted(response.statusCode(), response.body()));
             }
             ImperaLoginDTO dto = imperaMapper.getObjectMapper().readValue(response.body(), ImperaLoginDTO.class);
-            bearerToken = dto.access_token();
+            bearerToken = dto.access_token().strip().replaceAll("[\n\r]+", "");
             logger.info("Updated Impera bearer token");
         } catch (IOException | InterruptedException e) {
             logger.error("An Exception occurred while refreshing bearer token. To avoid silently failing, the error was caught and this thread will continue.", e);
