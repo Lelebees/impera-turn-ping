@@ -24,6 +24,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +116,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
     }
 
     @Override
-    public void deleteMessage(String id) {
+    public void deleteMessage(UUID id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(imperaURL + "/messages/" + id))
                 .setHeader("Content-Type", "application/json")
