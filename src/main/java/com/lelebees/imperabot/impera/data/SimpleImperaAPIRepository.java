@@ -24,6 +24,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +116,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
     }
 
     @Override
-    public void deleteMessage(String id) {
+    public void deleteMessage(UUID id) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(imperaURL + "/messages/" + id))
                 .setHeader("Content-Type", "application/json")
@@ -185,7 +186,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
                 throw new CouldNotAuthorizeException("Couldn't authorize with Impera, %d: %s".formatted(response.statusCode(), response.body()));
             }
             ImperaLoginDTO dto = imperaMapper.getObjectMapper().readValue(response.body(), ImperaLoginDTO.class);
-            bearerToken = dto.access_token();
+            bearerToken = dto.access_token().strip().replaceAll("[\n\r]+", "");
             logger.info("Updated Impera bearer token");
         } catch (IOException | InterruptedException e) {
             logger.error("An Exception occurred while refreshing bearer token. To avoid silently failing, the error was caught and this thread will continue.", e);

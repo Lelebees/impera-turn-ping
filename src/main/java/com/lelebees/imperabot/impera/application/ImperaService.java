@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import static com.lelebees.imperabot.impera.domain.history.HistoryActionName.*;
 
@@ -43,7 +44,7 @@ public class ImperaService {
         return playersThatNoLongerPlay;
     }
 
-    public void deleteMessageById(String id) {
+    public void deleteMessageById(UUID id) {
         imperaRepository.deleteMessage(id);
     }
 
