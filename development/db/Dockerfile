@@ -1,4 +1,4 @@
-FROM postgres:17.6-alpine
+FROM postgres:17.7-alpine
 
 COPY create_users.sh   /docker-entrypoint-initdb.d/10-create_users.sh
 COPY create_dbs.sh     /docker-entrypoint-initdb.d/20-create_dbs.sh
