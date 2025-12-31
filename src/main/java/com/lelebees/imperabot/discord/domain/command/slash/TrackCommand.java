@@ -4,6 +4,7 @@ import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GameService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.game.GameDTO;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
@@ -87,7 +88,12 @@ public class TrackCommand implements SlashCommand {
         if (guildIdOptional.isPresent()) {
             // We're in a guild, so track for guild
             Snowflake guildId = guildIdOptional.get();
-            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
+            GuildSettingsDTO guildSettings;
+            try {
+                guildSettings = guildSettingsService.getGuildSettingsById(guildId.asLong());
+            } catch (GuildSettingsNotFoundException e) {
+                return event.reply().withContent("Could not find guild settings! use /guildsettings set to create a settings list for this guild.").withEphemeral(true);
+            }
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
             if (!hasPermissions(guildSettings, callingMember) && !userIsLelebees) {
