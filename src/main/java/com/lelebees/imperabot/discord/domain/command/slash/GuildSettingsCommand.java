@@ -40,13 +40,14 @@ public class GuildSettingsCommand implements SlashCommand {
         Guild guild = guildOptional.get();
         User callingUser = event.getUser();
 
-        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /guildsettings");
+        logger.info("User {} ({}) used /guildsettings", callingUser.getId().asLong(), callingUser.getUsername());
 
+        GuildSettingsDTO settings;
         try {
-            GuildSettingsDTO settings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
-            return event.reply().withComponents(SettingsMenu.buildForGuild(settings, guild)).withAllowedMentions(AllowedMentions.suppressAll());
+            settings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
         } catch (GuildSettingsNotFoundException e) {
-            return event.reply().withEphemeral(true).withContent("Could not find guild settings! use /guildsettings set to create a settings list for this guild.");
+            settings = guildSettingsService.createNewGuildSettings(guild.getId().asLong());
         }
+        return event.reply().withComponents(SettingsMenu.buildForGuild(settings, guild)).withAllowedMentions(AllowedMentions.suppressAll());
     }
 }

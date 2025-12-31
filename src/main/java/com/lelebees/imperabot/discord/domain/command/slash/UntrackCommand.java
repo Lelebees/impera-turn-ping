@@ -3,6 +3,7 @@ package com.lelebees.imperabot.discord.domain.command.slash;
 import com.lelebees.imperabot.bot.application.GameLinkService;
 import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
+import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
@@ -74,7 +75,12 @@ public class UntrackCommand implements SlashCommand {
         if (guildIdOptional.isPresent()) {
             // We're in a guild, so untrack for guild
             Snowflake guildId = guildIdOptional.get();
-            GuildSettingsDTO guildSettings = guildSettingsService.getOrCreateGuildSettings(guildId.asLong());
+            GuildSettingsDTO guildSettings;
+            try {
+                guildSettings = guildSettingsService.getGuildSettingsById(guildId.asLong());
+            } catch (GuildSettingsNotFoundException e) {
+                return event.reply().withContent("Could not find guild settings! use /guildsettings set to create a settings list for this guild.").withEphemeral(true);
+            }
             Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
             boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
             boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));

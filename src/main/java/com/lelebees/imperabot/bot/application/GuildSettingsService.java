@@ -4,7 +4,6 @@ import com.lelebees.imperabot.bot.data.GuildSettingsRepository;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
-import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsModificationDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -34,25 +33,8 @@ public class GuildSettingsService {
         }
     }
 
-    public GuildSettings createNewGuildSettings(long guildId) {
-        return repository.save(new GuildSettings(guildId));
-    }
-
-    public GuildSettings updateGuildSettings(long guildId, GuildSettingsModificationDTO guildSettingsModificationDTO) throws GuildSettingsNotFoundException {
-        GuildSettings guildSettings = findGuildSettings(guildId);
-        guildSettings.defaultChannelId = guildSettingsModificationDTO.channelId;
-        guildSettings.permissionRoleId = guildSettingsModificationDTO.permissionRoleId;
-        guildSettings.winnerRoleId = guildSettingsModificationDTO.winnerRoleId;
-        return repository.save(guildSettings);
-    }
-
-    public GuildSettingsDTO getOrCreateGuildSettings(long guildId) {
-        Optional<GuildSettings> settingsOptional = repository.findById(guildId);
-        return GuildSettingsDTO.from(settingsOptional.orElseGet(() -> createNewGuildSettings(guildId)));
-    }
-
-    public boolean guildSettingsExist(long guildId) {
-        return repository.existsById(guildId);
+    public GuildSettingsDTO createNewGuildSettings(long guildId) {
+        return GuildSettingsDTO.from(repository.save(new GuildSettings(guildId)));
     }
 
     public GuildSettingsDTO updateDefaultChannel(long guildId, Long channelId) throws GuildSettingsNotFoundException {
