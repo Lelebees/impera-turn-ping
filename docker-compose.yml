@@ -5,11 +5,11 @@ services:
     ports:
       - "15432:5432"
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-      - DB_APP_NAME=impera-bot
-      - DB_APP_USER=impera-bot
-      - DB_APP_PASS=impera-bot
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_APP_NAME: ${DB_APP_NAME}
+      DB_APP_USER: ${DB_APP_USER}
+      DB_APP_PASS: ${DB_APP_PASS}
     volumes:
       - "./data:/var/data/db"
   webserver:
