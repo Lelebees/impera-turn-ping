@@ -31,18 +31,18 @@ public class SettingsMenu {
         );
     }
 
-    public static Container buildForGuild(GuildSettingsDTO guildSettings, Guild guild) {
+    public static Container buildForGuild(GuildSettingsDTO guildSettings, Guild guild, boolean hasWritePermissions) {
         return Container.of(Color.of(230, 200, 90),
                 TextDisplay.of("# Settings for %s".formatted(guild.getName())),
                 TextDisplay.of("## :bell: Notifications"),
                 TextDisplay.of("### Default Channel"),
                 ActionRow.of(
-                        SelectMenu.ofChannel("guild-settings-channel-select", getDefaultChannelOption(guildSettings), getAllowedChannelTypes()).withMinValues(0)
+                        SelectMenu.ofChannel("guild-settings-channel-select", getDefaultChannelOption(guildSettings), getAllowedChannelTypes()).withMinValues(0).disabled(!hasWritePermissions)
                 ),
                 TextDisplay.of("## :trophy: Winners"),
                 TextDisplay.of("### Role to award winners"),
                 ActionRow.of(
-                        SelectMenu.ofRole("guild-settings-winner-role-select", getWinnerRoleOption(guildSettings)).withMinValues(0)
+                        SelectMenu.ofRole("guild-settings-winner-role-select", getWinnerRoleOption(guildSettings)).withMinValues(0).disabled(!hasWritePermissions)
                 ),
 /*                TextDisplay.of("### Automatically remove winner role when a different server member wins?"),
                 ActionRow.of(
@@ -51,7 +51,7 @@ public class SettingsMenu {
                 TextDisplay.of("## :identification_card: Permissions"),
                 TextDisplay.of("### Allow users with this role to edit these settings"),
                 ActionRow.of(
-                        SelectMenu.ofRole("guild-settings-permission-role-select", getPermissionRoleOption(guildSettings)).withMinValues(0)
+                        SelectMenu.ofRole("guild-settings-permission-role-select", getPermissionRoleOption(guildSettings)).withMinValues(0).disabled(!hasWritePermissions)
                 )
         );
     }

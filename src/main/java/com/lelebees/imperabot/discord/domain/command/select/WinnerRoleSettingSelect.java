@@ -36,7 +36,7 @@ public class WinnerRoleSettingSelect implements SelectMenuInteraction {
         User callingUser = event.getInteraction().getUser();
         Optional<Guild> guildOptional = event.getInteraction().getGuild().blockOptional();
         if (guildOptional.isEmpty()) {
-            logger.error("User %s (%d) attempted to update winner role for guild but interaction was issued outside one. How did we get here?".formatted(callingUser.getUsername(), callingUser.getId().asLong()));
+            logger.error("User {} ({}) attempted to update winner role for guild but interaction was issued outside one. How did we get here?", callingUser.getUsername(), callingUser.getId().asLong());
             return event.reply("Could not update winner role. Not in a server. How did you get here?").withEphemeral(true);
         }
         Guild guild = guildOptional.get();
@@ -48,14 +48,14 @@ public class WinnerRoleSettingSelect implements SelectMenuInteraction {
         try {
             GuildSettingsDTO oldSettings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
             if (!oldSettings.userHasEditPermission(callingUser)) {
-                logger.info("User %s (%d) attempted to update the winner role for guild %s (%d) but was denied because they have no permission".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
+                logger.info("User {} ({}) attempted to update the winner role for guild {} ({}) but was denied because they have no permission", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
                 return event.reply("Interaction Failed: No Permission").withEphemeral(true);
             }
             GuildSettingsDTO guildSettings = guildSettingsService.updateWinnerRole(guild.getId().asLong(), roleId);
-            logger.info("User %s (%d) updated the winner role for guild %s (%d).".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
-            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild))).build());
+            logger.info("User {} ({}) updated the winner role for guild {} ({}).", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
+            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild, guildSettings.userHasEditPermission(callingUser)))).build());
         } catch (GuildSettingsNotFoundException e) {
-            logger.warn("User %s (%d) attempted to update winner role for guild %s (%d) but it's settings were not in the database.".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
+            logger.warn("User {} ({}) attempted to update winner role for guild {} ({}) but it's settings were not in the database.", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
             return event.reply("Could not update server settings, server is not in the database. Please file a bug report or cease using this outdated embed.").withEphemeral(true);
         }
     }

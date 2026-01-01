@@ -53,7 +53,7 @@ public class PermissionRoleSettingSelect implements SelectMenuInteraction {
             }
             GuildSettingsDTO guildSettings = guildSettingsService.updatePermissionRole(guild.getId().asLong(), roleId);
             logger.info("User %s (%d) updated the permission role for guild %s (%d).".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
-            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild))).build());
+            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild, guildSettings.userHasEditPermission(callingUser)))).build());
         } catch (GuildSettingsNotFoundException e) {
             logger.warn("User %s (%d) attempted to update permission role for guild %s (%d) but it's settings were not in the database.".formatted(callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong()));
             return event.reply("Could not update server settings, server is not in the database. Please file a bug report or cease using this outdated embed.").withEphemeral(true);
