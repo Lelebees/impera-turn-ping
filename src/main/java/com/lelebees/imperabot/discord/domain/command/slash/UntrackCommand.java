@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
@@ -12,10 +13,8 @@ import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
-import discord4j.rest.util.Permission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,7 +65,7 @@ public class UntrackCommand implements SlashCommand {
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
 
-        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /untrack with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? " (" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
+        logger.info("User {} ({}) used /untrack with gameid: {} in channel: {}{}. Context: {}", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channel.getId().asLong(), guildIdOptional.isPresent() ? " (" + channel.getData().name().get() + ")" : "", guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM"));
 
         if (channelOptional.isPresent()) {
             channel = channelOptional.get().getValue().orElseThrow(() -> new NullPointerException("Somehow, no channel was entered")).asChannel().block();
@@ -79,19 +78,16 @@ public class UntrackCommand implements SlashCommand {
             try {
                 guildSettings = guildSettingsService.getGuildSettingsById(guildId.asLong());
             } catch (GuildSettingsNotFoundException e) {
-                return event.reply().withContent("Could not find guild settings! use /guildsettings set to create a settings list for this guild.").withEphemeral(true);
+                return event.reply().withContent("Could not find guild settings! use /guildsettings to create a settings list for this guild.").withEphemeral(true);
             }
-            Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
-            boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-            boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
-            if (!userHasManageChannelsPermission && !userHasPermissionRole) {
-                logger.info("User " + callingUser.getId() + " (" + callingUser.getUsername() + ") was denied access to /untrack because they do not have the correct permissions.");
+            if (!guildSettings.hasTrackPermissions(callingUser) && !DiscordService.userIsLelebees(callingUser)) {
+                logger.info("User {} ({}) was denied access to /untrack because they do not have the correct permissions.", callingUser.getId(), callingUser.getUsername());
                 return event.reply().withContent("You are not allowed to stop tracking games in this guild.").withEphemeral(true);
             }
 
             if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
                 channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
-                logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so untracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
+                logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so untracking in channel: {} ({}).", channel.getId().asLong(), channel.getData().name().get());
             }
         }
 
@@ -105,7 +101,7 @@ public class UntrackCommand implements SlashCommand {
         try {
             gameLinkService.deleteLink(gameId, channelId);
         } catch (GameChannelLinkNotFoundException e) {
-            logger.info("User " + callingUser.getId().asLong() + " ("+callingUser.getUsername()+") attempted to stop tracking a game ("+gameId+") in channel <#"+channelId+"> but the corresponding GameChannelLink could not be found.");
+            logger.info("User {} ({}) attempted to stop tracking a game ({}) in channel <#{}> but the corresponding GameChannelLink could not be found.", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channelId);
             return event.reply().withContent("Game [%s] is not being tracked in <#%s>.".formatted(gameId, channelId));
         }
         try {

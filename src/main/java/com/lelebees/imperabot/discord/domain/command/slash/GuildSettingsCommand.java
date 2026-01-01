@@ -48,6 +48,6 @@ public class GuildSettingsCommand implements SlashCommand {
         } catch (GuildSettingsNotFoundException e) {
             settings = guildSettingsService.createNewGuildSettings(guild.getId().asLong());
         }
-        return event.reply().withComponents(SettingsMenu.buildForGuild(settings, guild)).withAllowedMentions(AllowedMentions.suppressAll());
+        return event.reply().withComponents(SettingsMenu.buildForGuild(settings, guild, callingUser)).withAllowedMentions(AllowedMentions.suppressAll());
     }
 }

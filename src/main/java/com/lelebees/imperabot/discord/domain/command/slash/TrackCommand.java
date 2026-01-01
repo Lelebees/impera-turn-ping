@@ -7,6 +7,7 @@ import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.game.GameDTO;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
@@ -14,10 +15,8 @@ import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
-import discord4j.rest.util.Permission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,7 +72,7 @@ public class TrackCommand implements SlashCommand {
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
 
-        logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") used /track with gameid: " + gameId + " in channel: " + channel.getId().asLong() + (guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "") + ". Context: " + (guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM")));
+        logger.info("User {} ({}) used /track with gameid: {} in channel: {}{}. Context: {}", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channel.getId().asLong(), guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "", guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM"));
 
         if (channelOptional.isPresent()) {
             channel = channelOptional.get()
@@ -81,7 +80,7 @@ public class TrackCommand implements SlashCommand {
                     .orElseThrow(() -> new NullPointerException("Somehow, no channel was entered"))
                     .asChannel()
                     .block();
-            logger.info("Channel was specified, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
+            logger.info("Channel was specified, so tracking in channel: {} ({}).", channel.getId().asLong(), channel.getData().name().get());
         }
 
 
@@ -92,37 +91,33 @@ public class TrackCommand implements SlashCommand {
             try {
                 guildSettings = guildSettingsService.getGuildSettingsById(guildId.asLong());
             } catch (GuildSettingsNotFoundException e) {
-                return event.reply().withContent("Could not find guild settings! use /guildsettings set to create a settings list for this guild.").withEphemeral(true);
+                return event.reply().withContent("Could not find guild settings! use /guildsettings to create a settings list for this guild.").withEphemeral(true);
             }
-            Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
-            boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
-            if (!hasPermissions(guildSettings, callingMember) && !userIsLelebees) {
-                logger.info("User " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ") was denied access to /track because they do not have the correct permissions.");
+            if (!guildSettings.hasTrackPermissions(callingUser) && !DiscordService.userIsLelebees(callingUser)) {
+                logger.info("User {} ({}) was denied access to /track because they do not have the correct permissions.", callingUser.getId().asLong(), callingUser.getUsername());
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
 
             if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
                 channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
-                logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: " + channel.getId().asLong() + " (" + channel.getData().name().get() + ").");
+                logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: {} ({}).", channel.getId().asLong(), channel.getData().name().get());
             }
         }
         ImperaGameViewDTO gameView;
         try {
             gameView = imperaService.getGame(gameId);
         } catch (RuntimeException e) {
-            logger.error("Impera server returned an unknown error while trying to track game (" + gameId + ") for " + callingUser.getId().asLong() + " (" + callingUser.getUsername() + ").");
+            logger.error("Impera server returned an unknown error while trying to track game ({}) for {} ({}).", gameId, callingUser.getId().asLong(), callingUser.getUsername());
             return event.reply().withContent("An error occurred while trying to get game information from Impera. Please try again later.").withEphemeral(true);
         } catch (ImperaGameNotFoundException e) {
-            logger.warn("Impera game could not be found " + gameId);
+            logger.warn("Impera game could not be found {}", gameId);
             return event.reply().withContent("Impera could not find the game (" + gameId + ") you are looking for.").withEphemeral(true);
         }
 
         if (!gameService.gameExists(gameView.id())) {
-            // Add game to database
-            /* We pass the current turn,
-            because this would otherwise allow someone to start a DDoS attack on the Impera service by playing a game for a while,
-            tracking the game (which will cause up to the number of turns passed requests to be made, at once.) and then untracking it.
-            Rinse and repeat, and that's a big problem. */
+            /* We pass the current turn as a parameter, because this would otherwise allow someone to start a DDoS attack on the Impera service.
+            By playing a game for a while, then repeatedly tracking and untracking the game,
+            the bot would make a number of requests equal to the number of turns the game has been going on for, at once.*/
             GameDTO gameDTO = gameService.createGame(gameView);
         }
         long channelId = channel.getId().asLong();
@@ -131,13 +126,7 @@ public class TrackCommand implements SlashCommand {
             return event.reply().withEphemeral(true).withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
         }
         GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
-        logger.debug("Created new GameChannelLink with gameId: " + gameLink.getGameId() + " and channelId: " + gameLink.getChannelId());
+        logger.debug("Created new GameChannelLink with gameId: {} and channelId: {}", gameLink.getGameId(), gameLink.getChannelId());
         return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
-    }
-
-    public boolean hasPermissions(GuildSettingsDTO guildSettings, Member guildMember) {
-        boolean userHasManageChannelsPermission = guildMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-        boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
-        return userHasManageChannelsPermission || userHasPermissionRole;
     }
 }
