@@ -7,6 +7,7 @@ import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.game.GameDTO;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
@@ -14,10 +15,8 @@ import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
-import discord4j.rest.util.Permission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -94,9 +93,7 @@ public class TrackCommand implements SlashCommand {
             } catch (GuildSettingsNotFoundException e) {
                 return event.reply().withContent("Could not find guild settings! use /guildsettings to create a settings list for this guild.").withEphemeral(true);
             }
-            Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
-            boolean userIsLelebees = callingMember.getId().asLong() == 373532675522166787L;
-            if (!hasPermissions(guildSettings, callingMember) && !userIsLelebees) {
+            if (!guildSettings.hasTrackPermissions(callingUser) && !DiscordService.userIsLelebees(callingUser)) {
                 logger.info("User {} ({}) was denied access to /track because they do not have the correct permissions.", callingUser.getId().asLong(), callingUser.getUsername());
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
@@ -131,11 +128,5 @@ public class TrackCommand implements SlashCommand {
         GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
         logger.debug("Created new GameChannelLink with gameId: {} and channelId: {}", gameLink.getGameId(), gameLink.getChannelId());
         return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
-    }
-
-    public boolean hasPermissions(GuildSettingsDTO guildSettings, Member guildMember) {
-        boolean userHasManageChannelsPermission = guildMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-        boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && guildMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
-        return userHasManageChannelsPermission || userHasPermissionRole;
     }
 }

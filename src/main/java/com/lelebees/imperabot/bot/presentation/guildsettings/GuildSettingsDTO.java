@@ -6,7 +6,7 @@ import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.rest.util.Permission;
 
-import java.util.List;
+import java.time.Duration;
 
 public record GuildSettingsDTO(long guildId, Long defaultChannelId, Long permissionRoleId, Long winnerRoleId) {
 
@@ -14,13 +14,41 @@ public record GuildSettingsDTO(long guildId, Long defaultChannelId, Long permiss
         return new GuildSettingsDTO(settings.getId(), settings.defaultChannelId, settings.permissionRoleId, settings.winnerRoleId);
     }
 
-    public boolean userHasEditPermission(User user) {
+    public boolean hasDefaultChannelPermissions(User user) {
         Member member = user.asMember(Snowflake.of(guildId())).block();
         if (member == null) {
             return false;
         }
-        boolean canManageChannelsAndRoles = member.getBasePermissions().block().containsAll(List.of(Permission.MANAGE_CHANNELS, Permission.MANAGE_ROLES));
-        boolean hasPermissionRole = permissionRoleId() != null && member.getRoleIds().contains(Snowflake.of(permissionRoleId()));
-        return canManageChannelsAndRoles || hasPermissionRole;
+        boolean canManageChannels = member.getBasePermissions().block(Duration.ofSeconds(30)).contains(Permission.MANAGE_CHANNELS);
+        return canManageChannels || hasPermissionRole(user);
+    }
+
+    public boolean hasTrackPermissions(User user) {
+        return hasDefaultChannelPermissions(user);
+    }
+
+    public boolean hasVanityRoleManagePermissions(User user) {
+        Member member = user.asMember(Snowflake.of(guildId())).block();
+        if (member == null) {
+            return false;
+        }
+        boolean canManageVanityRole = member.getBasePermissions().block(Duration.ofSeconds(30)).contains(Permission.MANAGE_ROLES);
+        return canManageVanityRole || hasPermissionRole(user);
+    }
+
+    public boolean hasPermissionRoleManagePermissions(User user) {
+        Member member = user.asMember(Snowflake.of(guildId())).block();
+        if (member == null) {
+            return false;
+        }
+        return member.getBasePermissions().block(Duration.ofSeconds(30)).contains(Permission.MANAGE_ROLES);
+    }
+
+    private boolean hasPermissionRole(User user) {
+        Member member = user.asMember(Snowflake.of(guildId())).block();
+        if (member == null) {
+            return false;
+        }
+        return permissionRoleId() != null && member.getRoleIds().contains(Snowflake.of(permissionRoleId()));
     }
 }

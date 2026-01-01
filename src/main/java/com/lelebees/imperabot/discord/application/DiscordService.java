@@ -79,7 +79,7 @@ public class DiscordService {
     }
 
     public void sendDefeatedMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        logger.info("Sending defeated notice for " + game.name() + " (" + game.id() + ")!");
+        logger.info("Sending defeated notice for {} ({})!", game.name(), game.id());
         String defeatedMessage = "been defeated in %s!".formatted(getGameURI(game.name(), game.id()));
         String directDefeatedMessage = "You have " + defeatedMessage;
         String generalDefeatedMessage = "%s has " + defeatedMessage;
@@ -87,7 +87,7 @@ public class DiscordService {
     }
 
     public void sendTimedOutMessage(List<Channel> channels, ImperaGamePlayerDTO player, ImperaGameViewDTO game) {
-        logger.info("Sending timed out notice for " + game.name() + " (" + game.id() + ")!");
+        logger.info("Sending timed out notice for {} ({})!", game.name(), game.id());
         String timedOutMessage = "timed out in %s!".formatted(getGameURI(game.name(), game.id()));
         String directTimeOutMessage = "You have " + timedOutMessage;
         String generalTimeOutMessage = "%s has " + timedOutMessage;
@@ -95,7 +95,7 @@ public class DiscordService {
     }
 
     public void sendSurrenderMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        logger.info("Sending surrendered notice for " + game.name() + " (" + game.id() + ")!");
+        logger.info("Sending surrendered notice for {} ({})!", game.name(), game.id());
         String generalSurrenderMessage = "%s has surrendered in %s!".formatted(gamePlayer.name(), getGameURI(game.name(), game.id()));
         for (Channel channel : channels) {
             ((MessageChannel) channel).createMessage(generalSurrenderMessage).block();
@@ -169,7 +169,7 @@ public class DiscordService {
                     // Check if the guildmember has access to the specific channel
                     userCanSeeMessageInGuild = !((GuildMessageChannel) channel).getEffectivePermissions(guildMember.getId()).block().contains(VIEW_CHANNEL);
                 } catch (ClientException e) {
-                    logger.debug("User " + player.discordId() + " does not have access to guild " + guildId.asLong() + " (" + guild.getName() + ")");
+                    logger.debug("User {} does not have access to guild {} ({})", player.discordId(), guildId.asLong(), guild.getName());
                 }
             }
 
@@ -271,7 +271,7 @@ public class DiscordService {
         BotUserDTO winnerUser = user.get();
 
         List<GameChannelLink> links = gameLinkService.findLinksByGame(game.id());
-        logger.debug("Found " + links.size() + " links for game " + game.id() + " when awarding winner role.");
+        logger.debug("Found {} links for game {} when awarding winner role.", links.size(), game.id());
         if (links.isEmpty()) {
             return;
         }
@@ -280,7 +280,7 @@ public class DiscordService {
         List<Guild> guilds = links.stream().map(GameChannelLink::getChannelId).filter(this::channelIsGuildChannel).map(this::getGuildChannelGuild).map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block()).toList();
 
         int numberOfGuilds = guilds.size();
-        logger.info("Found " + numberOfGuilds + " guilds to award winner role in.");
+        logger.info("Found {} guilds to award winner role in.", numberOfGuilds);
         int numberOfSkippedGuilds = 0;
         // In each guild, find the winner role, and give it to the winner
         for (Guild guild : guilds) {
@@ -290,30 +290,34 @@ public class DiscordService {
                 Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId();
                 if (winnerRoleId == null) {
                     numberOfSkippedGuilds++;
-                    logger.debug("Skipping guild " + guildDebugId + " because it has no winner role.");
+                    logger.debug("Skipping guild {} because it has no winner role.", guildDebugId);
                     continue;
                 }
                 Member winningMember = guild.getMemberById(Snowflake.of(winnerUser.discordId())).block();
                 if (winningMember == null) {
                     numberOfSkippedGuilds++;
-                    logger.debug("Skipping guild " + guildDebugId + " because the winner is not a member of the guild.");
+                    logger.debug("Skipping guild {} because the winner is not a member of the guild.", guildDebugId);
                     continue;
                 }
                 String winningMemberDebugId = winningMember.getId().asLong() + " (" + winningMember.getUsername() + ")";
                 try {
                     winningMember.addRole(Snowflake.of(winnerRoleId)).block();
                 } catch (ClientException e) {
-                    logger.error("Bot cannot give roles to " + winningMemberDebugId + " in guild " + guildDebugId + "!\n Most likely, the bot does not have the \"Manage Roles\" permission.");
+                    logger.error("Bot cannot give roles to {} in guild {}!\n Most likely, the bot does not have the \"Manage Roles\" permission.", winningMemberDebugId, guildDebugId);
                     numberOfSkippedGuilds++;
                     continue;
                 }
-                logger.debug("Successfully awarded winner role to " + winningMemberDebugId + " in guild " + guildDebugId);
+                logger.debug("Successfully awarded winner role to {} in guild {}", winningMemberDebugId, guildDebugId);
             } catch (GuildSettingsNotFoundException e) {
                 // With the way the system is set up, this shouldn't ever trigger, but if it does, we'll know :)
                 numberOfSkippedGuilds++;
-                logger.error("Settings for guild: " + guildDebugId + " could not be found. Skipping...");
+                logger.error("Settings for guild: {} could not be found. Skipping...", guildDebugId);
             }
         }
-        logger.info("Skipped " + numberOfSkippedGuilds + " guilds.");
+        logger.info("Skipped {} guilds.", numberOfSkippedGuilds);
+    }
+
+    public static boolean userIsLelebees(User user) {
+        return user.getId().asLong() == 373532675522166787L;
     }
 }

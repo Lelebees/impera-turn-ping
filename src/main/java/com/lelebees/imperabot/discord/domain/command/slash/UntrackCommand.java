@@ -5,6 +5,7 @@ import com.lelebees.imperabot.bot.application.GuildSettingsService;
 import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
 import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
+import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
@@ -12,10 +13,8 @@ import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.Channel;
-import discord4j.rest.util.Permission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,10 +80,7 @@ public class UntrackCommand implements SlashCommand {
             } catch (GuildSettingsNotFoundException e) {
                 return event.reply().withContent("Could not find guild settings! use /guildsettings to create a settings list for this guild.").withEphemeral(true);
             }
-            Member callingMember = callingUser.asMember(guildIdOptional.get()).block();
-            boolean userHasManageChannelsPermission = callingMember.getBasePermissions().block().contains(Permission.MANAGE_CHANNELS);
-            boolean userHasPermissionRole = guildSettings.permissionRoleId() != null && callingMember.getRoleIds().contains(Snowflake.of(guildSettings.permissionRoleId()));
-            if (!userHasManageChannelsPermission && !userHasPermissionRole) {
+            if (!guildSettings.hasTrackPermissions(callingUser) && !DiscordService.userIsLelebees(callingUser)) {
                 logger.info("User {} ({}) was denied access to /untrack because they do not have the correct permissions.", callingUser.getId(), callingUser.getUsername());
                 return event.reply().withContent("You are not allowed to stop tracking games in this guild.").withEphemeral(true);
             }

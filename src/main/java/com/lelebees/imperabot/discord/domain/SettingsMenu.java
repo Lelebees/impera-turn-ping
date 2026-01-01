@@ -31,27 +31,27 @@ public class SettingsMenu {
         );
     }
 
-    public static Container buildForGuild(GuildSettingsDTO guildSettings, Guild guild, boolean hasWritePermissions) {
+    public static Container buildForGuild(GuildSettingsDTO settings, Guild guild, User user) {
         return Container.of(Color.of(230, 200, 90),
                 TextDisplay.of("# Settings for %s".formatted(guild.getName())),
                 TextDisplay.of("## :bell: Notifications"),
                 TextDisplay.of("### Default Channel"),
                 ActionRow.of(
-                        SelectMenu.ofChannel("guild-settings-channel-select", getDefaultChannelOption(guildSettings), getAllowedChannelTypes()).withMinValues(0).disabled(!hasWritePermissions)
+                        SelectMenu.ofChannel("guild-settings-channel-select", getDefaultChannelOption(settings), getAllowedChannelTypes()).withMinValues(0).disabled(!settings.hasDefaultChannelPermissions(user))
                 ),
                 TextDisplay.of("## :trophy: Winners"),
                 TextDisplay.of("### Role to award winners"),
                 ActionRow.of(
-                        SelectMenu.ofRole("guild-settings-winner-role-select", getWinnerRoleOption(guildSettings)).withMinValues(0).disabled(!hasWritePermissions)
+                        SelectMenu.ofRole("guild-settings-winner-role-select", getWinnerRoleOption(settings)).withMinValues(0).disabled(!settings.hasVanityRoleManagePermissions(user))
                 ),
 /*                TextDisplay.of("### Automatically remove winner role when a different server member wins?"),
                 ActionRow.of(
-                        SelectMenu.of("guild-settings-auto-remove-winner-select", getAutoRemovePreviousWinOptions(guildSettings))
+                        SelectMenu.of("guild-settings-auto-remove-winner-select", getAutoRemovePreviousWinOptions(guildSettings)).disabled(!settings.hasVanityRoleManagePermissions(user))
                 ), */
                 TextDisplay.of("## :identification_card: Permissions"),
                 TextDisplay.of("### Allow users with this role to edit these settings"),
                 ActionRow.of(
-                        SelectMenu.ofRole("guild-settings-permission-role-select", getPermissionRoleOption(guildSettings)).withMinValues(0).disabled(!hasWritePermissions)
+                        SelectMenu.ofRole("guild-settings-permission-role-select", getPermissionRoleOption(settings)).withMinValues(0).disabled(!settings.hasPermissionRoleManagePermissions(user))
                 )
         );
     }

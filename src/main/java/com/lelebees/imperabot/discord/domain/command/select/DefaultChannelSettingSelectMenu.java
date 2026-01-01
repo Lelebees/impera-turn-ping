@@ -47,13 +47,13 @@ public class DefaultChannelSettingSelectMenu implements SelectMenuInteraction {
         }
         try {
             GuildSettingsDTO oldSettings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
-            if (!oldSettings.userHasEditPermission(callingUser)) {
+            if (!oldSettings.hasDefaultChannelPermissions(callingUser)) {
                 logger.info("User {} ({}) attempted to update the default channel for guild {} ({}) but was denied because they have no permission", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
                 return event.reply("Interaction Failed: No Permission").withEphemeral(true);
             }
             GuildSettingsDTO guildSettings = guildSettingsService.updateDefaultChannel(guild.getId().asLong(), newChannel);
             logger.info("User {} ({}) updated the default channel for guild {} ({}).", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
-            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild, guildSettings.userHasEditPermission(callingUser)))).build());
+            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild, callingUser))).build());
         } catch (GuildSettingsNotFoundException e) {
             logger.warn("User {} ({}) attempted to update default channel for guild {} ({}) but it's settings were not in the database.", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
             return event.reply("Could not update server settings, server is not in the database. Please file a bug report or cease using this outdated embed.").withEphemeral(true);

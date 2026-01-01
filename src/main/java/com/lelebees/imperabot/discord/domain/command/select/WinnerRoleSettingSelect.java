@@ -47,13 +47,13 @@ public class WinnerRoleSettingSelect implements SelectMenuInteraction {
         }
         try {
             GuildSettingsDTO oldSettings = guildSettingsService.getGuildSettingsById(guild.getId().asLong());
-            if (!oldSettings.userHasEditPermission(callingUser)) {
+            if (!oldSettings.hasVanityRoleManagePermissions(callingUser)) {
                 logger.info("User {} ({}) attempted to update the winner role for guild {} ({}) but was denied because they have no permission", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
                 return event.reply("Interaction Failed: No Permission").withEphemeral(true);
             }
             GuildSettingsDTO guildSettings = guildSettingsService.updateWinnerRole(guild.getId().asLong(), roleId);
             logger.info("User {} ({}) updated the winner role for guild {} ({}).", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
-            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild, guildSettings.userHasEditPermission(callingUser)))).build());
+            return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForGuild(guildSettings, guild, callingUser))).build());
         } catch (GuildSettingsNotFoundException e) {
             logger.warn("User {} ({}) attempted to update winner role for guild {} ({}) but it's settings were not in the database.", callingUser.getUsername(), callingUser.getId().asLong(), guild.getName(), guild.getId().asLong());
             return event.reply("Could not update server settings, server is not in the database. Please file a bug report or cease using this outdated embed.").withEphemeral(true);
