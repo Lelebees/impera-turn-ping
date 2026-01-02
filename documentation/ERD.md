@@ -3,15 +3,15 @@
 title: Impera Bot Database ERD
 ---
 erDiagram
-    bot_user ||--|o impera_player: ""
+    bot_user ||--|o impera_player: "linked to"
     impera_game ||--|| bot_game: ""
     impera_player }o--o{ impera_game: ""
     discord_guild ||--|| bot_guild_settings: ""
     impera_player ||--o{ impera_message: "sent"
     impera_message }o--|| impera_player: "recieved"
-    impera_game ||--|| impera_player: ""
+    impera_game ||--|| impera_player: "current player"
     discord_user }o--o{ discord_channel: ""
-    bot_user ||--|| discord_user: ""
+    bot_user ||--|| discord_user: "is"
     discord_guild |o--|{ discord_channel: ""
     discord_user }o--o{ discord_guild: ""
     bot_channel ||--|| discord_channel: "is"
