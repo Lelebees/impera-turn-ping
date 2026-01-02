@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 public class GuildSettings {
     @JoinColumn(name = "default_channel_id")
     @Nullable
-    @OneToOne(orphanRemoval = true)
+    @OneToOne
     public Channel defaultChannel;
     @Column(name = "permission_role_id")
     @Nullable
