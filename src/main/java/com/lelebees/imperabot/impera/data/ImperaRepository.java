@@ -1,8 +1,8 @@
 package com.lelebees.imperabot.impera.data;
 
+import com.lelebees.imperabot.impera.application.exception.TurnNotFoundException;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.ImperaGameHistoryDTO;
-import com.lelebees.imperabot.impera.domain.history.exception.TurnNotFoundException;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 
 import java.util.List;

@@ -1,13 +1,13 @@
 package com.lelebees.imperabot.impera.data;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lelebees.imperabot.impera.application.exception.TurnNotFoundException;
 import com.lelebees.imperabot.impera.data.exception.CouldNotAuthorizeException;
+import com.lelebees.imperabot.impera.data.exception.ExceptionModel;
 import com.lelebees.imperabot.impera.data.exception.UnauthorizedException;
-import com.lelebees.imperabot.impera.domain.ExceptionModel;
 import com.lelebees.imperabot.impera.domain.ImperaLoginDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.ImperaGameHistoryDTO;
-import com.lelebees.imperabot.impera.domain.history.exception.TurnNotFoundException;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 import discord4j.common.JacksonResources;
 import org.slf4j.Logger;

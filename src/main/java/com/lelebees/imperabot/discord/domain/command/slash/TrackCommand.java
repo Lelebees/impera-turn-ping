@@ -1,13 +1,13 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
-import com.lelebees.imperabot.bot.application.game.GameService;
-import com.lelebees.imperabot.bot.application.guild.GuildSettingsService;
-import com.lelebees.imperabot.bot.application.guild.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
+import com.lelebees.imperabot.core.application.dto.GuildSettingsDTO;
+import com.lelebees.imperabot.core.application.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.core.application.protectedservices.GameService;
+import com.lelebees.imperabot.core.application.protectedservices.GuildSettingsService;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
-import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
+import com.lelebees.imperabot.impera.application.exception.ImperaGameNotFoundException;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -93,8 +93,8 @@ public class TrackCommand implements SlashCommand {
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
 
-            if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
-                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
+            if (guildSettings.defaultChannel() != null && channelOptional.isEmpty()) {
+                channel = event.getInteraction().getGuild().block().getChannelById(guildSettings.defaultChannel().idAsSnowflake()).block();
                 channelId = channel.getId().asLong();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: {} ({}).", channelId, channel.getData().name().get());
             }

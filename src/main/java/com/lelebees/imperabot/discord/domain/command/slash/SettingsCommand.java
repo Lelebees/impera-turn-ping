@@ -1,9 +1,9 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
-import com.lelebees.imperabot.bot.application.user.UserService;
-import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import com.lelebees.imperabot.discord.domain.SettingsMenu;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
+import com.lelebees.imperabot.user.application.UserService;
+import com.lelebees.imperabot.user.application.dto.BotUserDTO;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
 import org.slf4j.Logger;

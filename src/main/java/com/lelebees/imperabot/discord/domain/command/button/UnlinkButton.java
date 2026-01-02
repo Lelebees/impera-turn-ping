@@ -1,10 +1,10 @@
 package com.lelebees.imperabot.discord.domain.command.button;
 
-import com.lelebees.imperabot.bot.application.user.UserService;
-import com.lelebees.imperabot.bot.application.user.exception.UserNotFoundException;
-import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import com.lelebees.imperabot.discord.domain.SettingsMenu;
 import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
+import com.lelebees.imperabot.user.application.UserService;
+import com.lelebees.imperabot.user.application.dto.BotUserDTO;
+import com.lelebees.imperabot.user.application.exception.UserNotFoundException;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.object.entity.User;
 import discord4j.core.spec.InteractionApplicationCommandCallbackSpec;

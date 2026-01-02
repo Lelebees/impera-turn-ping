@@ -1,9 +1,9 @@
 package com.lelebees.imperabot.discord.domain.command.button;
 
-import com.lelebees.imperabot.bot.application.user.UserService;
-import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
+import com.lelebees.imperabot.user.application.UserService;
+import com.lelebees.imperabot.user.domain.exception.UserAlreadyVerfiedException;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.object.component.ActionRow;

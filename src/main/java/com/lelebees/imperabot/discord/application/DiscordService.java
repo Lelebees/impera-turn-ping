@@ -1,14 +1,14 @@
 package com.lelebees.imperabot.discord.application;
 
-import com.lelebees.imperabot.bot.application.guild.GuildSettingsService;
-import com.lelebees.imperabot.bot.application.guild.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.bot.application.user.UserService;
-import com.lelebees.imperabot.bot.presentation.game.ChannelDTO;
-import com.lelebees.imperabot.bot.presentation.game.GameDTO;
-import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
+import com.lelebees.imperabot.core.application.dto.ChannelDTO;
+import com.lelebees.imperabot.core.application.dto.GameDTO;
+import com.lelebees.imperabot.core.application.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.core.application.protectedservices.GuildSettingsService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.HistoryActionName;
+import com.lelebees.imperabot.user.application.UserService;
+import com.lelebees.imperabot.user.application.dto.BotUserDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.Guild;
