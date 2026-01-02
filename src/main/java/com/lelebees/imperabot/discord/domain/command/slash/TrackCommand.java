@@ -1,11 +1,8 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
-import com.lelebees.imperabot.bot.application.GameLinkService;
-import com.lelebees.imperabot.bot.application.GameService;
-import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.bot.presentation.game.GameDTO;
+import com.lelebees.imperabot.bot.application.game.GameService;
+import com.lelebees.imperabot.bot.application.guild.GuildSettingsService;
+import com.lelebees.imperabot.bot.application.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
@@ -40,14 +37,12 @@ public class TrackCommand implements SlashCommand {
     private final Logger logger = LoggerFactory.getLogger(TrackCommand.class);
     private final GameService gameService;
     private final ImperaService imperaService;
-    private final GameLinkService gameLinkService;
     private final GuildSettingsService guildSettingsService;
     private final String imperaUrl;
 
-    public TrackCommand(GameService gameService, ImperaService imperaService, GameLinkService gameLinkService, GuildSettingsService guildSettingsService, @Value("${impera.web.url}") String imperaUrl) {
+    public TrackCommand(GameService gameService, ImperaService imperaService, GuildSettingsService guildSettingsService, @Value("${impera.web.url}") String imperaUrl) {
         this.gameService = gameService;
         this.imperaService = imperaService;
-        this.gameLinkService = gameLinkService;
         this.guildSettingsService = guildSettingsService;
         this.imperaUrl = imperaUrl + "/game/play";
     }
@@ -71,8 +66,8 @@ public class TrackCommand implements SlashCommand {
 
         Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         Channel channel = event.getInteraction().getChannel().block();
-
-        logger.info("User {} ({}) used /track with gameid: {} in channel: {}{}. Context: {}", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channel.getId().asLong(), guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "", guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM"));
+        long channelId = channel.getId().asLong();
+        logger.info("User {} ({}) used /track with gameid: {} in channel: {}{}. Context: {}", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channelId, guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "", guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM"));
 
         if (channelOptional.isPresent()) {
             channel = channelOptional.get()
@@ -80,7 +75,7 @@ public class TrackCommand implements SlashCommand {
                     .orElseThrow(() -> new NullPointerException("Somehow, no channel was entered"))
                     .asChannel()
                     .block();
-            logger.info("Channel was specified, so tracking in channel: {} ({}).", channel.getId().asLong(), channel.getData().name().get());
+            logger.info("Channel was specified, so tracking in channel: {} ({}).", channelId, channel.getData().name().get());
         }
 
 
@@ -100,7 +95,7 @@ public class TrackCommand implements SlashCommand {
 
             if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
                 channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
-                logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: {} ({}).", channel.getId().asLong(), channel.getData().name().get());
+                logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: {} ({}).", channelId, channel.getData().name().get());
             }
         }
         ImperaGameViewDTO gameView;
@@ -114,19 +109,12 @@ public class TrackCommand implements SlashCommand {
             return event.reply().withContent("Impera could not find the game (" + gameId + ") you are looking for.").withEphemeral(true);
         }
 
-        if (!gameService.gameExists(gameView.id())) {
-            /* We pass the current turn as a parameter, because this would otherwise allow someone to start a DDoS attack on the Impera service.
-            By playing a game for a while, then repeatedly tracking and untracking the game,
-            the bot would make a number of requests equal to the number of turns the game has been going on for, at once.*/
-            GameDTO gameDTO = gameService.createGame(gameView);
+        boolean alreadyTracked = gameService.trackGame(gameView, channelId);
+        if (alreadyTracked) {
+            return event.reply().withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId)).withEphemeral(true);
         }
-        long channelId = channel.getId().asLong();
-        // Add line to tracking table with gameid and channelid
-        if (gameLinkService.linkExists(gameView.id(), channelId)) {
-            return event.reply().withEphemeral(true).withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
-        }
-        GameChannelLink gameLink = gameLinkService.createLink(gameId, channelId, null);
-        logger.debug("Created new GameChannelLink with gameId: {} and channelId: {}", gameLink.getGameId(), gameLink.getChannelId());
+
+        logger.debug("Created new GameChannelLink with gameId: {} and channelId: {}", gameId, channelId);
         return event.reply().withContent("Started tracking [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
     }
 }

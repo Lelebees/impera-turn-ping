@@ -1,7 +1,7 @@
 package com.lelebees.imperabot.discord.domain.command.select;
 
-import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.bot.application.guild.GuildSettingsService;
+import com.lelebees.imperabot.bot.application.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.domain.SettingsMenu;
 import com.lelebees.imperabot.discord.domain.command.SelectMenuInteraction;

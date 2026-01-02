@@ -1,11 +1,11 @@
-package com.lelebees.imperabot.bot.application;
+package com.lelebees.imperabot.bot.application.user;
 
+import com.lelebees.imperabot.bot.application.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.bot.data.UserRepository;
 import com.lelebees.imperabot.bot.domain.user.BotUser;
 import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
 import com.lelebees.imperabot.bot.domain.user.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
-import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import org.springframework.stereotype.Service;
 

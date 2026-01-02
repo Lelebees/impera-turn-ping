@@ -1,9 +1,8 @@
 package com.lelebees.imperabot.bot.application.runnable;
 
-import com.lelebees.imperabot.bot.application.GameLinkService;
-import com.lelebees.imperabot.bot.application.GameService;
-import com.lelebees.imperabot.bot.domain.game.exception.GameNotFoundException;
-import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
+import com.lelebees.imperabot.bot.application.game.GameService;
+import com.lelebees.imperabot.bot.application.game.exception.GameNotFoundException;
+import com.lelebees.imperabot.bot.presentation.game.ChannelDTO;
 import com.lelebees.imperabot.bot.presentation.game.GameDTO;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
@@ -22,13 +21,11 @@ public class CheckTurns implements Runnable {
     private final Logger logger = LoggerFactory.getLogger(CheckTurns.class);
     private final ImperaService imperaService;
     private final GameService gameService;
-    private final GameLinkService gameLinkService;
     private final DiscordService discordService;
 
-    public CheckTurns(ImperaService imperaService, GameService gameService, GameLinkService gameLinkService, DiscordService discordService) {
+    public CheckTurns(ImperaService imperaService, GameService gameService, DiscordService discordService) {
         this.imperaService = imperaService;
         this.gameService = gameService;
-        this.gameLinkService = gameLinkService;
         this.discordService = discordService;
     }
 
@@ -37,13 +34,13 @@ public class CheckTurns implements Runnable {
         try {
             checkTurns();
         } catch (RuntimeException e) {
-            logger.error("Handled Error: " + e.getMessage(), e);
+            logger.error("Handled Error: {}", e.getMessage(), e);
         }
     }
 
     private void checkTurns() {
         List<GameDTO> games = gameService.getAllGames();
-        logger.info("Checking turns for " + games.size() + " games.");
+        logger.info("Checking turns for {} games.", games.size());
         int skippedGames = 0;
         int handledGames = 0;
         for (GameDTO game : games) {
@@ -55,13 +52,13 @@ public class CheckTurns implements Runnable {
                 skippedGames++;
                 continue;
             }
-            if (gameLinkService.findLinksByGame(game.id()).isEmpty()) {
-                logger.debug("Skipping and removing game " + game.id() + " (" + imperaGame.name() + ") because it has no channels.");
-                gameService.deleteGame(game.id());
+            if (!imperaGame.hasStarted()) {
                 skippedGames++;
                 continue;
             }
-            if (imperaGame.hasYetToStart()) {
+            if (game.trackingChannels().isEmpty()) {
+                logger.debug("Skipping and removing game {} ({}) because it is not being tracked.", game.id(), imperaGame.name());
+                gameService.deleteGame(game.id());
                 skippedGames++;
                 continue;
             }
@@ -76,15 +73,15 @@ public class CheckTurns implements Runnable {
             }
 
             List<Channel> channels = getChannelsToNotify(game);
-            logger.debug("Found " + channels.size() + " channels to notify.");
+            logger.debug("Found {} channels to notify.", channels.size());
 
             HashMap<String, HistoryActionName> playersThatAreNoLongerPlaying = imperaService.getPlayersThatAreNoLongerPlaying(game.id(), game.currentTurn(), imperaGame.turnCounter() + 1);
-            logger.debug("Found " + playersThatAreNoLongerPlaying.size() + " players that are no longer playing.");
+            logger.debug("Found {} players that are no longer playing.", playersThatAreNoLongerPlaying.size());
             playersThatAreNoLongerPlaying.forEach((player, outcome) -> discordService.sendLoserMessage(channels, imperaGame.findPlayerById(player), imperaGame, outcome));
 
             // There is probably a better way to do this, but I'm not sure what it is.
             if (imperaGame.hasEnded()) {
-                logger.debug("Game " + game.id() + " has ended!");
+                logger.debug("Game {} has ended!", game.id());
                 sendVictoryNotice(game, imperaGame, channels);
             } else if (turnHasChanged) {
                 notifyNextUser(game, imperaGame, channels);
@@ -93,11 +90,11 @@ public class CheckTurns implements Runnable {
             }
             handledGames++;
         }
-        logger.info("Handled " + handledGames + " games, skipped " + skippedGames + " games.");
+        logger.info("Handled {} games, skipped {} games.", handledGames, skippedGames);
     }
 
     private void sendVictoryNotice(GameDTO game, ImperaGameViewDTO imperaGame, List<Channel> channels) {
-        logger.info("Sending victory notice for " + imperaGame.name() + " (" + imperaGame.id() + ")!");
+        logger.info("Sending victory notice for {} ({})!", imperaGame.name(), imperaGame.id());
         List<ImperaGamePlayerDTO> winningPlayers = imperaGame.getWinningPlayers();
         // Send a message to all channels that are tracking this game, who won
         discordService.sendVictorsMessage(channels, winningPlayers, imperaGame);
@@ -106,7 +103,7 @@ public class CheckTurns implements Runnable {
     }
 
     private void notifyNextUser(GameDTO game, ImperaGameViewDTO imperaGame, List<Channel> channels) {
-        logger.info("Sending turn notice for " + imperaGame.name() + " (" + imperaGame.id() + ")!");
+        logger.info("Sending turn notice for {} ({})!", imperaGame.name(), imperaGame.id());
         discordService.sendNewTurnMessage(channels, imperaGame.currentPlayer(), imperaGame);
         try {
             gameService.changeTurn(game.id(), imperaGame.turnCounter());
@@ -116,7 +113,7 @@ public class CheckTurns implements Runnable {
     }
 
     private void sendHalfTimeNotice(GameDTO game, ImperaGameViewDTO imperaGame, List<Channel> channels) {
-        logger.info("Sending half time notice for " + imperaGame.name() + " (" + imperaGame.id() + ")!");
+        logger.info("Sending half time notice for {} ({})!", imperaGame.name(), imperaGame.id());
         discordService.sendHalfTimeMessage(channels, imperaGame.currentPlayer(), imperaGame);
         try {
             gameService.setHalfTimeNoticeForGame(game.id());
@@ -126,9 +123,9 @@ public class CheckTurns implements Runnable {
     }
 
     private List<Channel> getChannelsToNotify(GameDTO game) {
-        return gameLinkService.findLinksByGame(game.id())
+        return game.trackingChannels()
                 .stream()
-                .map(GameChannelLink::getChannelId)
+                .map(ChannelDTO::id)
                 .map(discordService::getChannelById)
                 .toList();
     }

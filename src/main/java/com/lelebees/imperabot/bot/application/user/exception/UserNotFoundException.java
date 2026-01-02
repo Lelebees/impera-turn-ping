@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.bot.domain.user.exception;
+package com.lelebees.imperabot.bot.application.user.exception;
 
 public class UserNotFoundException extends Exception {
     public UserNotFoundException(String message) {

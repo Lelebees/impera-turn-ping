@@ -2,6 +2,8 @@ package com.lelebees.imperabot.impera.domain.game.view;
 
 import com.lelebees.imperabot.impera.domain.game.ImperaGameOptionsDTO;
 import com.lelebees.imperabot.impera.domain.game.ImperaGameTeamDTO;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.Contract;
 
 import java.util.Collection;
 import java.util.List;
@@ -11,9 +13,9 @@ public record ImperaGameViewDTO(long id, String type, String name, boolean hasPa
                                 ImperaGamePlayerDTO currentPlayer, ImperaGameMapDTO map, ImperaGameOptionsDTO options,
                                 String lastModifiedAt, int timeoutSecondsLeft, int turnCounter, int unitsToPlace,
                                 int attacksInCurrentTurn, int movesInCurrentTurn) {
-
+    @Contract(pure = true)
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "{ " + this.id + "; \"" + this.name + "\" }";
     }
 
@@ -30,8 +32,8 @@ public record ImperaGameViewDTO(long id, String type, String name, boolean hasPa
         return state.equals("Ended");
     }
 
-    public boolean hasYetToStart() {
-        return state.equals("Open");
+    public boolean hasStarted() {
+        return !state.equals("Open");
     }
 
     public List<ImperaGameTeamDTO> getWinningTeams() {

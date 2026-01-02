@@ -1,6 +1,6 @@
 package com.lelebees.imperabot.discord.domain.command.button;
 
-import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.application.user.UserService;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.ButtonCommand;

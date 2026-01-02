@@ -1,9 +1,9 @@
 package com.lelebees.imperabot.bot.application.runnable;
 
-import com.lelebees.imperabot.bot.application.UserService;
+import com.lelebees.imperabot.bot.application.user.UserService;
+import com.lelebees.imperabot.bot.application.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.bot.domain.user.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.bot.domain.user.exception.UserAlreadyVerfiedException;
-import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;

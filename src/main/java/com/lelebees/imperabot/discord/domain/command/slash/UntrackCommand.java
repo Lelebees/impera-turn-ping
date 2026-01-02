@@ -1,9 +1,10 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
-import com.lelebees.imperabot.bot.application.GameLinkService;
-import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
-import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.bot.application.game.GameService;
+import com.lelebees.imperabot.bot.application.game.exception.ChannelNotFoundException;
+import com.lelebees.imperabot.bot.application.game.exception.GameNotFoundException;
+import com.lelebees.imperabot.bot.application.guild.GuildSettingsService;
+import com.lelebees.imperabot.bot.application.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
@@ -35,15 +36,15 @@ import java.util.Optional;
 public class UntrackCommand implements SlashCommand {
     private final Logger logger = LoggerFactory.getLogger(UntrackCommand.class);
     private final GuildSettingsService guildSettingsService;
-    private final GameLinkService gameLinkService;
     private final ImperaService imperaService;
     private final String imperaUrl;
+    private final GameService gameService;
 
-    public UntrackCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, ImperaService imperaService, @Value("${impera.web.url}") String imperaUrl) {
+    public UntrackCommand(GuildSettingsService guildSettingsService, ImperaService imperaService, @Value("${impera.web.url}") String imperaUrl, GameService gameService) {
         this.guildSettingsService = guildSettingsService;
-        this.gameLinkService = gameLinkService;
         this.imperaService = imperaService;
         this.imperaUrl = imperaUrl + "/game/play";
+        this.gameService = gameService;
     }
 
     @Override
@@ -94,24 +95,29 @@ public class UntrackCommand implements SlashCommand {
         Long channelId = channel.getId().asLong();
         if (gameId == null) {
             // Stop tracking all games in channel
-            gameLinkService.deleteLinksForChannel(channelId);
+            gameService.deleteLinksForChannel(channelId);
             return event.reply().withContent("Stopped tracking notifications for all games in <#%s>".formatted(channelId));
         }
         // else, stop tracking specific game in channel
         try {
-            gameLinkService.deleteLink(gameId, channelId);
-        } catch (GameChannelLinkNotFoundException e) {
-            logger.info("User {} ({}) attempted to stop tracking a game ({}) in channel <#{}> but the corresponding GameChannelLink could not be found.", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channelId);
-            return event.reply().withContent("Game [%s] is not being tracked in <#%s>.".formatted(gameId, channelId));
+            boolean gameWasBeingTracked = gameService.untrackGame(gameId, channelId);
+            if (!gameWasBeingTracked) {
+                return event.reply().withContent("Game [%s] is not being tracked in <#%s>.".formatted(gameId, channelId));
+            }
+        } catch (GameNotFoundException e) {
+            logger.error("User {} ({}) attempted to stop tracking a game ({}) in channel <#{}> but the corresponding Game could not be found.", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channelId);
+            return event.reply().withContent("Game [%s] could not be found.".formatted(gameId)).withEphemeral(true);
+        } catch (ChannelNotFoundException e) {
+            logger.error("????");
         }
         try {
             ImperaGameViewDTO gameView = imperaService.getGame(gameId);
             return event.reply().withContent("Stopped logging notifications for [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
         } catch (ImperaGameNotFoundException e) {
-            return event.reply().withContent("Stopped logging notifications for [%s]".formatted(gameId));
+            return event.reply().withContent("Stopped logging notifications for [%s] in <#%s>".formatted(gameId, channelId));
         } catch (RuntimeException e) {
             logger.error("Unknown error occurred while attempting to fetch game from Impera. It has probably been deleted", e);
-            return event.reply("An error occurred, but we still managed to stop logging notifications for [%s]. Please do file a bug report.".formatted(gameId));
+            return event.reply("An error occurred, but we still managed to stop logging notifications for [%s] in <#%s>. Please do file a bug report.".formatted(gameId, channelId));
         }
     }
 }

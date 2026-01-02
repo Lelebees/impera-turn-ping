@@ -2,17 +2,15 @@ package com.lelebees.imperabot.bot.presentation.game;
 
 import com.lelebees.imperabot.bot.domain.game.Game;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-public record GameDTO(long id, int currentTurn, boolean halfTimeNotice) {
+public record GameDTO(long id, int currentTurn, boolean halfTimeNotice, Set<ChannelDTO> trackingChannels) {
     public static GameDTO from(Game game) {
-        return new GameDTO(game.getId(), game.getCurrentTurn(), game.sentHalfTimeNotice());
+        return new GameDTO(game.getId(), game.getCurrentTurn(), game.sentHalfTimeNotice(), ChannelDTO.From(game.getTrackingChannels()));
     }
 
     public static List<GameDTO> from(List<Game> games) {
-        List<GameDTO> dtos = new ArrayList<>();
-        games.forEach(game -> dtos.add(GameDTO.from(game)));
-        return dtos;
+        return games.stream().map(GameDTO::from).toList();
     }
 }

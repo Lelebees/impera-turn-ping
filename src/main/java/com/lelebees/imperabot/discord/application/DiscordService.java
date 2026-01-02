@@ -1,10 +1,9 @@
 package com.lelebees.imperabot.discord.application;
 
-import com.lelebees.imperabot.bot.application.GameLinkService;
-import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.gamechannellink.GameChannelLink;
-import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.bot.application.guild.GuildSettingsService;
+import com.lelebees.imperabot.bot.application.guild.exception.GuildSettingsNotFoundException;
+import com.lelebees.imperabot.bot.application.user.UserService;
+import com.lelebees.imperabot.bot.presentation.game.ChannelDTO;
 import com.lelebees.imperabot.bot.presentation.game.GameDTO;
 import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
@@ -36,15 +35,13 @@ public class DiscordService {
     private final GatewayDiscordClient gatewayClient;
     private final UserService userService;
     private final GuildSettingsService guildSettingsService;
-    private final GameLinkService gameLinkService;
     private final String imperaURL;
 
 
-    public DiscordService(GatewayDiscordClient gatewayClient, UserService userService, GuildSettingsService guildSettingsService, GameLinkService gameLinkService, @Value("${impera.web.url}") String imperaURL) {
+    public DiscordService(GatewayDiscordClient gatewayClient, UserService userService, GuildSettingsService guildSettingsService, @Value("${impera.web.url}") String imperaURL) {
         this.gatewayClient = gatewayClient;
         this.userService = userService;
         this.guildSettingsService = guildSettingsService;
-        this.gameLinkService = gameLinkService;
         this.imperaURL = imperaURL;
     }
 
@@ -270,14 +267,13 @@ public class DiscordService {
         }
         BotUserDTO winnerUser = user.get();
 
-        List<GameChannelLink> links = gameLinkService.findLinksByGame(game.id());
-        logger.debug("Found {} links for game {} when awarding winner role.", links.size(), game.id());
-        if (links.isEmpty()) {
+        logger.debug("Found {} links for game {} when awarding winner role.", game.trackingChannels().size(), game.id());
+        if (game.trackingChannels().isEmpty()) {
             return;
         }
 
         // Find which channels belong to which guilds, and filter out the ones that are DMs
-        List<Guild> guilds = links.stream().map(GameChannelLink::getChannelId).filter(this::channelIsGuildChannel).map(this::getGuildChannelGuild).map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block()).toList();
+        List<Guild> guilds = game.trackingChannels().stream().map(ChannelDTO::id).filter(this::channelIsGuildChannel).map(this::getGuildChannelGuild).map(guildId -> gatewayClient.getGuildById(Snowflake.of(guildId)).block()).toList();
 
         int numberOfGuilds = guilds.size();
         logger.info("Found {} guilds to award winner role in.", numberOfGuilds);

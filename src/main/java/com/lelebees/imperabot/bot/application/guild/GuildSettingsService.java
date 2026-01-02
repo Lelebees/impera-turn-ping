@@ -1,8 +1,8 @@
-package com.lelebees.imperabot.bot.application;
+package com.lelebees.imperabot.bot.application.guild;
 
+import com.lelebees.imperabot.bot.application.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.data.GuildSettingsRepository;
 import com.lelebees.imperabot.bot.domain.guild.GuildSettings;
-import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
 import org.springframework.stereotype.Service;
 

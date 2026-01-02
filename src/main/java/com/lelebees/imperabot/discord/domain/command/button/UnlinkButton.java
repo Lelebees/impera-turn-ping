@@ -1,7 +1,7 @@
 package com.lelebees.imperabot.discord.domain.command.button;
 
-import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
+import com.lelebees.imperabot.bot.application.user.UserService;
+import com.lelebees.imperabot.bot.application.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
 import com.lelebees.imperabot.discord.domain.SettingsMenu;
 import com.lelebees.imperabot.discord.domain.command.ButtonCommand;

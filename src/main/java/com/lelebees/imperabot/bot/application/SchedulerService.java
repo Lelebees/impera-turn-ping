@@ -1,7 +1,9 @@
 package com.lelebees.imperabot.bot.application;
 
+import com.lelebees.imperabot.bot.application.game.GameService;
 import com.lelebees.imperabot.bot.application.runnable.CheckTurns;
 import com.lelebees.imperabot.bot.application.runnable.CheckVerifyRequests;
+import com.lelebees.imperabot.bot.application.user.UserService;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import jakarta.annotation.PostConstruct;
@@ -18,24 +20,26 @@ public class SchedulerService {
     private final ImperaService imperaService;
     private final UserService userService;
     private final GameService gameService;
-    private final GameLinkService gameLinkService;
     private final DiscordService discordService;
     private final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
-    public SchedulerService(ImperaService imperaService, UserService userService, GameService gameService, GameLinkService gameLinkService, DiscordService discordService) {
+    public SchedulerService(ImperaService imperaService, UserService userService, GameService gameService, DiscordService discordService) {
         this.imperaService = imperaService;
         this.userService = userService;
         this.gameService = gameService;
-        this.gameLinkService = gameLinkService;
         this.discordService = discordService;
     }
 
     @PostConstruct
     public void schedule() {
         logger.info("Scheduling tasks...");
-        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(new CheckVerifyRequests(imperaService, userService, discordService), 1, 5, TimeUnit.MINUTES);
-        executorService.scheduleAtFixedRate(new CheckTurns(imperaService, gameService, gameLinkService, discordService), 1, 1, TimeUnit.MINUTES);
+        try (ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1)) {
+            executorService.scheduleAtFixedRate(new CheckVerifyRequests(imperaService, userService, discordService), 1, 5, TimeUnit.MINUTES);
+            executorService.scheduleAtFixedRate(new CheckTurns(imperaService, gameService, discordService), 1, 1, TimeUnit.MINUTES);
+        } catch (RuntimeException e) {
+            logger.error("Caught Runtime Exception while attempting to schedule tasks.", e);
+            throw new RuntimeException(e);
+        }
     }
 
 }

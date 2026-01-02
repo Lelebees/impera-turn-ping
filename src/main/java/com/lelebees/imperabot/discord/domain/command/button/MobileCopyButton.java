@@ -1,7 +1,7 @@
 package com.lelebees.imperabot.discord.domain.command.button;
 
-import com.lelebees.imperabot.bot.application.UserService;
-import com.lelebees.imperabot.bot.domain.user.exception.UserNotFoundException;
+import com.lelebees.imperabot.bot.application.user.UserService;
+import com.lelebees.imperabot.bot.application.user.exception.UserNotFoundException;
 import com.lelebees.imperabot.discord.domain.command.ButtonCommand;
 import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.object.entity.User;
