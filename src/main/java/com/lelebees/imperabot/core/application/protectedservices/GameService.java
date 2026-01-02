@@ -81,6 +81,5 @@ public class GameService {
             game.untrackInChannel(channel);
             gameRepository.save(game);
         }
-        channelService.deleteChannel(channelId);
     }
 }
