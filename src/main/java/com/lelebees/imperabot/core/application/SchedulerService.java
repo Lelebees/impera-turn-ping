@@ -2,7 +2,6 @@ package com.lelebees.imperabot.core.application;
 
 import com.lelebees.imperabot.core.application.protectedservices.GameService;
 import com.lelebees.imperabot.core.application.runnable.CheckTurns;
-import com.lelebees.imperabot.core.application.runnable.CheckVerifyRequests;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.user.application.UserService;
@@ -34,7 +33,7 @@ public class SchedulerService {
     public void schedule() {
         logger.info("Scheduling tasks...");
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(new CheckVerifyRequests(imperaService, userService, discordService), 1, 5, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(userService::checkVerificationMessages, 1, 5, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(new CheckTurns(imperaService, gameService, discordService), 1, 1, TimeUnit.MINUTES);
     }
 

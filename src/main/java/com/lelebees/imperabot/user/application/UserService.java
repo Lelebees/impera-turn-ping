@@ -1,5 +1,9 @@
 package com.lelebees.imperabot.user.application;
 
+import com.lelebees.imperabot.discord.application.DiscordService;
+import com.lelebees.imperabot.impera.application.ImperaService;
+import com.lelebees.imperabot.impera.domain.message.ImperaMessageCommunicatorDTO;
+import com.lelebees.imperabot.impera.domain.message.ImperaMessageDTO;
 import com.lelebees.imperabot.user.application.dto.BotUserDTO;
 import com.lelebees.imperabot.user.application.exception.UserNotFoundException;
 import com.lelebees.imperabot.user.data.UserRepository;
@@ -7,17 +11,25 @@ import com.lelebees.imperabot.user.domain.BotUser;
 import com.lelebees.imperabot.user.domain.UserNotificationSetting;
 import com.lelebees.imperabot.user.domain.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.user.domain.exception.UserAlreadyVerfiedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class UserService {
     private final UserRepository repository;
+    private final ImperaService imperaService;
+    private final DiscordService discordService;
+    private final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, ImperaService imperaService, DiscordService discordService) {
         this.repository = repository;
+        this.imperaService = imperaService;
+        this.discordService = discordService;
     }
 
     public BotUserDTO verifyUser(String verificationCode, UUID imperaId, String username) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrectVerificationCodeException {
@@ -108,5 +120,41 @@ public class UserService {
     public String getVerificationCode(long userId) throws UserNotFoundException {
         BotUser user = findUser(userId);
         return user.getVerificationCode();
+    }
+
+    public void checkVerificationMessages() {
+        List<ImperaMessageDTO> linkMessages = imperaService.getLinkMessages();
+        logger.info("Found {} link requests.", linkMessages.size());
+        int skippedRequests = 0;
+        for (ImperaMessageDTO linkMessage : linkMessages) {
+            ImperaMessageCommunicatorDTO sender = linkMessage.from();
+            Optional<BotUserDTO> potentialImperaUser = findImperaUser(sender.id());
+            if (potentialImperaUser.isPresent()) {
+                BotUserDTO imperaUser = potentialImperaUser.get();
+                skippedRequests++;
+                logger.warn("User with Impera account {} ({}) already exists. (is {} ({})) Skipping and destroying message...", sender.name(), sender.id(), imperaUser.username(), imperaUser.discordId());
+                imperaService.deleteMessage(linkMessage);
+                continue;
+            }
+            BotUser user;
+            try {
+                user = userFromOptional(repository.getUserByVerificationCode(linkMessage.getTrimmedText()));
+            } catch (UserNotFoundException e) {
+                logger.warn("User matching code {} Not found, skipping...", linkMessage.text());
+                skippedRequests++;
+                continue;
+            }
+            try {
+                user.verifyUser(sender.id(), linkMessage.getTrimmedText(), sender.name());
+                logger.info("User {} ({}) aka (snowflake) {} has been verified!", sender.name(), sender.id().toString(), user.getUserId());
+                discordService.sendVerificationDM(user.getUserId());
+            } catch (UserAlreadyVerfiedException e) {
+                logger.warn("User {} ({}) aka (snowflake) {} already verified!", sender.name(), sender.id().toString(), user.getUserId());
+            } catch (IncorrectVerificationCodeException e) {
+                logger.warn("User {} ({}) could not be verified as (snowflake) {} because the supplied verification code was incorrect.", sender.name(), sender.id(), user.getUserId());
+            }
+            imperaService.deleteMessage(linkMessage);
+        }
+        logger.info("Skipped {} requests.", skippedRequests);
     }
 }
