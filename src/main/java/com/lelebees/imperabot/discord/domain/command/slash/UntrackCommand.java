@@ -1,11 +1,11 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
+import com.lelebees.imperabot.core.application.GameService;
+import com.lelebees.imperabot.core.application.GuildSettingsService;
 import com.lelebees.imperabot.core.application.dto.GuildSettingsDTO;
 import com.lelebees.imperabot.core.application.exception.ChannelNotFoundException;
 import com.lelebees.imperabot.core.application.exception.GameNotFoundException;
 import com.lelebees.imperabot.core.application.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.core.application.protectedservices.GameService;
-import com.lelebees.imperabot.core.application.protectedservices.GuildSettingsService;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;

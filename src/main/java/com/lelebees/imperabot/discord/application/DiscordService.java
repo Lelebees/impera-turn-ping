@@ -1,9 +1,9 @@
 package com.lelebees.imperabot.discord.application;
 
+import com.lelebees.imperabot.core.application.GuildSettingsService;
 import com.lelebees.imperabot.core.application.dto.ChannelDTO;
 import com.lelebees.imperabot.core.application.dto.GameDTO;
 import com.lelebees.imperabot.core.application.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.core.application.protectedservices.GuildSettingsService;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.HistoryActionName;
@@ -53,18 +53,18 @@ public class DiscordService {
         getDMChannelByOwner(recipientId).createMessage(message).block();
     }
 
-    public void sendNewTurnMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String turnMessage = "your turn in %s!".formatted(getGameURI(game.name(), game.id()));
+    public void sendNewTurnMessage(List<Channel> channels, ImperaGameViewDTO game) {
+        String turnMessage = "your turn in %s!".formatted(getGameURI(game));
         String directTurnMessage = "It's " + turnMessage;
         String generalTurnMessage = "%s, it is " + turnMessage;
-        ordinaryNotify(channels, gamePlayer, generalTurnMessage, directTurnMessage);
+        ordinaryNotify(channels, game.currentPlayer(), generalTurnMessage, directTurnMessage);
     }
 
-    public void sendHalfTimeMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
-        String halfTimeMessage = "have half time remaining in %s!".formatted(getGameURI(game.name(), game.id()));
+    public void sendHalfTimeMessage(List<Channel> channels, ImperaGameViewDTO game) {
+        String halfTimeMessage = "have half time remaining in %s!".formatted(getGameURI(game));
         String directHalfTimeMessage = "You " + halfTimeMessage;
         String generalHalfTimeMessage = "%s, you " + halfTimeMessage;
-        ordinaryNotify(channels, gamePlayer, generalHalfTimeMessage, directHalfTimeMessage);
+        ordinaryNotify(channels, game.currentPlayer(), generalHalfTimeMessage, directHalfTimeMessage);
     }
 
     public void sendLoserMessage(List<Channel> channels, ImperaGamePlayerDTO player, ImperaGameViewDTO game, HistoryActionName outcome) {
@@ -77,7 +77,7 @@ public class DiscordService {
 
     public void sendDefeatedMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
         logger.info("Sending defeated notice for {} ({})!", game.name(), game.id());
-        String defeatedMessage = "been defeated in %s!".formatted(getGameURI(game.name(), game.id()));
+        String defeatedMessage = "been defeated in %s!".formatted(getGameURI(game));
         String directDefeatedMessage = "You have " + defeatedMessage;
         String generalDefeatedMessage = "%s has " + defeatedMessage;
         ordinaryNotify(channels, gamePlayer, generalDefeatedMessage, directDefeatedMessage);
@@ -85,7 +85,7 @@ public class DiscordService {
 
     public void sendTimedOutMessage(List<Channel> channels, ImperaGamePlayerDTO player, ImperaGameViewDTO game) {
         logger.info("Sending timed out notice for {} ({})!", game.name(), game.id());
-        String timedOutMessage = "timed out in %s!".formatted(getGameURI(game.name(), game.id()));
+        String timedOutMessage = "timed out in %s!".formatted(getGameURI(game));
         String directTimeOutMessage = "You have " + timedOutMessage;
         String generalTimeOutMessage = "%s has " + timedOutMessage;
         ordinaryNotify(channels, player, generalTimeOutMessage, directTimeOutMessage);
@@ -93,19 +93,19 @@ public class DiscordService {
 
     public void sendSurrenderMessage(List<Channel> channels, ImperaGamePlayerDTO gamePlayer, ImperaGameViewDTO game) {
         logger.info("Sending surrendered notice for {} ({})!", game.name(), game.id());
-        String generalSurrenderMessage = "%s has surrendered in %s!".formatted(gamePlayer.name(), getGameURI(game.name(), game.id()));
+        String generalSurrenderMessage = "%s has surrendered in %s!".formatted(gamePlayer.name(), getGameURI(game));
         for (Channel channel : channels) {
             ((MessageChannel) channel).createMessage(generalSurrenderMessage).block();
         }
     }
 
-    public String getGameURI(String gameName, long gameId) {
-        return "[%s](%s/game/play/%s)".formatted(gameName, imperaURL, gameId);
+    public String getGameURI(ImperaGameViewDTO game) {
+        return "[%s](%s/game/play/%s)".formatted(game.name(), imperaURL, game.id());
     }
 
     public void sendVictorsMessage(List<Channel> channels, List<ImperaGamePlayerDTO> winningPlayers, ImperaGameViewDTO game) {
         List<String> userStrings = new ArrayList<>();
-        String victoryMessage = "Game %s has ended!".formatted(getGameURI(game.name(), game.id()));
+        String victoryMessage = "Game %s has ended!".formatted(getGameURI(game));
         String directVictoryMessage = victoryMessage + " You have won!";
         for (ImperaGamePlayerDTO gamePlayer : winningPlayers) {
             Optional<BotUserDTO> user = userService.findImperaUser(UUID.fromString(gamePlayer.userId()));

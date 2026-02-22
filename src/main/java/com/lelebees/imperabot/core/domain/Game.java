@@ -83,6 +83,10 @@ public class Game {
         return Collections.unmodifiableSet(trackingChannels);
     }
 
+    public boolean isBeingTracked() {
+        return !trackingChannels.isEmpty();
+    }
+
     public boolean untrackInChannel(Channel channel) {
         return trackingChannels.remove(channel);
     }

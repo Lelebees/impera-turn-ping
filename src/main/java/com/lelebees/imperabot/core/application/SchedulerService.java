@@ -1,9 +1,5 @@
 package com.lelebees.imperabot.core.application;
 
-import com.lelebees.imperabot.core.application.protectedservices.GameService;
-import com.lelebees.imperabot.core.application.runnable.CheckTurns;
-import com.lelebees.imperabot.discord.application.DiscordService;
-import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.user.application.UserService;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -16,17 +12,13 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class SchedulerService {
-    private final ImperaService imperaService;
     private final UserService userService;
     private final GameService gameService;
-    private final DiscordService discordService;
     private final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
-    public SchedulerService(ImperaService imperaService, UserService userService, GameService gameService, DiscordService discordService) {
-        this.imperaService = imperaService;
+    public SchedulerService(UserService userService, GameService gameService) {
         this.userService = userService;
         this.gameService = gameService;
-        this.discordService = discordService;
     }
 
     @PostConstruct
@@ -34,7 +26,7 @@ public class SchedulerService {
         logger.info("Scheduling tasks...");
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         executorService.scheduleAtFixedRate(userService::checkVerificationMessages, 1, 5, TimeUnit.MINUTES);
-        executorService.scheduleAtFixedRate(new CheckTurns(imperaService, gameService, discordService), 1, 1, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(gameService::checkTurns, 1, 1, TimeUnit.MINUTES);
     }
 
 }

@@ -46,4 +46,8 @@ public record ImperaGameViewDTO(long id, String type, String name, boolean hasPa
                 .flatMap(Collection::stream)
                 .toList();
     }
+
+    public boolean hasHalfOfTurnPassed() {
+        return timeoutSecondsLeft() <= (options().timeoutInSeconds() / 2);
+    }
 }

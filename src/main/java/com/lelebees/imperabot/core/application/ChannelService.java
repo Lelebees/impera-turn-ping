@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.core.application.protectedservices;
+package com.lelebees.imperabot.core.application;
 
 import com.lelebees.imperabot.core.application.exception.ChannelNotFoundException;
 import com.lelebees.imperabot.core.data.ChannelRepository;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-// Service is package/private because it returns Entities, which may not leave the application layer.
+// Service is package-private because it returns Entities, which may not leave the application layer.
 class ChannelService {
     private final ChannelRepository repository;
 

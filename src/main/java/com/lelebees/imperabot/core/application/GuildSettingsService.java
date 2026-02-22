@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.core.application.protectedservices;
+package com.lelebees.imperabot.core.application;
 
 import com.lelebees.imperabot.core.application.dto.GuildSettingsDTO;
 import com.lelebees.imperabot.core.application.exception.ChannelNotFoundException;
