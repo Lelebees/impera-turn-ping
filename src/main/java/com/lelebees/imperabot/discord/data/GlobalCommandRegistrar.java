@@ -12,15 +12,20 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class GlobalCommandRegistrar implements ApplicationRunner {
+    final String path = "commands/guild";
+    final File jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-
     private final RestClient client;
+
 
     //Use the rest client provided by our Bean
     public GlobalCommandRegistrar(RestClient client) {
@@ -56,23 +61,26 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
                 .subscribe();
 
         //Do the same for each GuildCommand
-        Resource[] guilds = matcher.getResources("commands/guild/*");
-        if (guilds.length == 0) {
-            LOGGER.info("No guilds found!");
+        Resource[] guildCommands = matcher.getResources("commands/guild/*.*.json");
+        if (guildCommands.length == 0) {
+            LOGGER.info("No guild commands found.");
             return;
         }
-        for (Resource guildFolder : guilds) {
-            List<ApplicationCommandRequest> guildCommands = new ArrayList<>();
-            String guildId = guildFolder.getFilename();
-            for (Resource resource : matcher.getResources("commands/guild/%s/*.json".formatted(guildId))) {
-                ApplicationCommandRequest request = d4jMapper.getObjectMapper()
-                        .readValue(resource.getInputStream(), ApplicationCommandRequest.class);
-
-                guildCommands.add(request);
+        Map<Long, List<ApplicationCommandRequest>> commandsByGuild = new HashMap<>();
+        for (Resource guildCommand : guildCommands) {
+            Long guildId = Long.parseLong(guildCommand.getFilename().split("\\.")[0]);
+            if (!commandsByGuild.containsKey(guildId)) {
+                commandsByGuild.put(guildId, new ArrayList<>());
             }
-            applicationService.bulkOverwriteGuildApplicationCommand(applicationId, Long.parseLong(guildId), guildCommands)
-                    .doOnNext(ignore -> LOGGER.info("Successfully registered commands for {}", guildId))
-                    .doOnError(e -> LOGGER.error("Failed to register commands for {}", guildId, e))
+            ApplicationCommandRequest request = d4jMapper.getObjectMapper()
+                    .readValue(guildCommand.getInputStream(), ApplicationCommandRequest.class);
+
+            commandsByGuild.get(guildId).add(request);
+        }
+        for (Map.Entry<Long, List<ApplicationCommandRequest>> guildCommandSet : commandsByGuild.entrySet()) {
+            applicationService.bulkOverwriteGuildApplicationCommand(applicationId, guildCommandSet.getKey(), guildCommandSet.getValue())
+                    .doOnNext(ignore -> LOGGER.info("Successfully registered {} commands for {}", guildCommandSet.getValue().size(), guildCommandSet.getKey()))
+                    .doOnError(e -> LOGGER.error("Failed to register commands for {}", guildCommandSet.getKey(), e))
                     .subscribe();
         }
     }
