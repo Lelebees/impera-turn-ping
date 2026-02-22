@@ -12,10 +12,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -58,24 +56,23 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
                 .subscribe();
 
         //Do the same for each GuildCommand
-        File file = new File("src/main/resources/commands/guild/");
-        String[] strArr = file.list((current, name) -> new File(current, name).isDirectory());
-        if (strArr == null) {
+        Resource[] guilds = matcher.getResources("commands/guild/*");
+        if (guilds.length == 0) {
             LOGGER.debug("No guilds found!");
             return;
         }
-        List<String> guilds = Arrays.stream(strArr).toList();
-        for (String guildId : guilds) {
+        for (Resource guildFolder : guilds) {
             List<ApplicationCommandRequest> guildCommands = new ArrayList<>();
-            for (Resource resource : matcher.getResources("commands/guild/" + guildId + "/*.json")) {
+            String guildId = guildFolder.getFilename();
+            for (Resource resource : matcher.getResources("commands/guild/%s/*.json".formatted(guildId))) {
                 ApplicationCommandRequest request = d4jMapper.getObjectMapper()
                         .readValue(resource.getInputStream(), ApplicationCommandRequest.class);
 
                 guildCommands.add(request);
             }
             applicationService.bulkOverwriteGuildApplicationCommand(applicationId, Long.parseLong(guildId), guildCommands)
-                    .doOnNext(ignore -> LOGGER.debug("Successfully registered commands for " + guildId))
-                    .doOnError(e -> LOGGER.error("Failed to register commands for " + guildId, e))
+                    .doOnNext(ignore -> LOGGER.info("Successfully registered commands for {}", guildId))
+                    .doOnError(e -> LOGGER.error("Failed to register commands for {}", guildId, e))
                     .subscribe();
         }
     }
