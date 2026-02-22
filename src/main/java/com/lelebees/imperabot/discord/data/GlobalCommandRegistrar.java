@@ -58,7 +58,7 @@ public class GlobalCommandRegistrar implements ApplicationRunner {
         //Do the same for each GuildCommand
         Resource[] guilds = matcher.getResources("commands/guild/*");
         if (guilds.length == 0) {
-            LOGGER.debug("No guilds found!");
+            LOGGER.info("No guilds found!");
             return;
         }
         for (Resource guildFolder : guilds) {
