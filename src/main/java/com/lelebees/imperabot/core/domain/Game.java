@@ -58,7 +58,7 @@ public class Game {
      *
      * @param newTurn The turn the {@link Game} will now be on.
      */
-    public void setCurrentTurn(int newTurn) {
+    public void updateGameStatus(int newTurn) {
         if (newTurn <= currentTurn) {
             throw new TurnAlreadyPassedException("New turn (#" + newTurn + ") cannot be before or the same as the current turn (#" + currentTurn + ").");
         }
@@ -66,11 +66,6 @@ public class Game {
         this.halfTimeNotice = false;
     }
 
-    /**
-     * Sets the half-time tracker to true, indicating that the current player has been notified that they have half-time remaining.
-     *
-     * @see #setCurrentTurn(int newTurn)
-     */
     public void setHalfTimeNoticeTrue() {
         this.halfTimeNotice = true;
     }

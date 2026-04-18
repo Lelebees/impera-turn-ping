@@ -16,7 +16,7 @@ class GameTest {
     @DisplayName("Setting the current turn sets half time notice to false")
     void settingCurrentTurnsSetsHalfTimeNotice() {
         Game game = new Game(1L, 0, true, new HashSet<>());
-        game.setCurrentTurn(2);
+        game.updateGameStatus(2);
         assertFalse(game.sentHalfTimeNotice());
     }
 
@@ -24,7 +24,7 @@ class GameTest {
     @DisplayName("Current turn cannot decrease")
     void currentTurnCantDecrease() {
         Game game = new Game(1L, 5, false, new HashSet<>());
-        assertThrows(TurnAlreadyPassedException.class, () -> game.setCurrentTurn(1));
+        assertThrows(TurnAlreadyPassedException.class, () -> game.updateGameStatus(1));
     }
 
 }

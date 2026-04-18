@@ -86,6 +86,7 @@ public class GameService {
         int skippedGames = 0;
         int handledGames = 0;
         for (Game game : games) {
+            // Side effects not good
             if (!notifyPlayersFor(game)) {
                 skippedGames++;
                 continue;
@@ -146,7 +147,7 @@ public class GameService {
     private void notifyNextUser(Game game, ImperaGameViewDTO imperaGame, List<discord4j.core.object.entity.channel.Channel> channels) {
         logger.info("Sending turn notice for {} ({})!", imperaGame.name(), imperaGame.id());
         discordService.sendNewTurnMessage(channels, imperaGame);
-        game.setCurrentTurn(imperaGame.turnCounter());
+        game.updateGameStatus(imperaGame.turnCounter());
         repository.save(game);
     }
 

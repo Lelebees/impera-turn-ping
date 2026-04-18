@@ -46,7 +46,6 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
         this.imperaUsername = imperaUsername;
         this.imperaPassword = imperaPassword;
         this.client = client;
-//        updateBearerToken();
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         executorService.scheduleAtFixedRate(this::updateBearerToken, 0, 1, TimeUnit.HOURS);
     }
