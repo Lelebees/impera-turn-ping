@@ -38,6 +38,7 @@ public class CheckTurns implements Runnable {
             checkTurns();
         } catch (RuntimeException e) {
             logger.error("Handled Error: " + e.getMessage(), e);
+            throw new DamageControlException("An uncaught exception occurred during turn checks. To prevent message spam the thread will now exit", e);
         }
     }
 
