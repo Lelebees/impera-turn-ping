@@ -10,9 +10,10 @@ services:
       - "./data:/var/data/db"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_APP_USER}" ]
-      interval: 1s
+      interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
   webserver:
     build: ./
     ports:
@@ -27,3 +28,4 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       IMPERA_USERNAME: ${IMPERA_USER_NAME}
       IMPERA_PASSWORD: ${IMPERA_USER_PASSWORD}
+    restart: unless-stopped
