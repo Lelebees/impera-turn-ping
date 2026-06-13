@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.14</version>
+        <version>3.5.15</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.Lelebees</groupId>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>com.discord4j</groupId>
             <artifactId>discord4j-core</artifactId>
-            <version>3.3.1</version>
+            <version>3.3.2</version>
         </dependency>
 
         <dependency>
