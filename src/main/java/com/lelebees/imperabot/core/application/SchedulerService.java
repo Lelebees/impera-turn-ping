@@ -25,7 +25,7 @@ public class SchedulerService {
     public void schedule() {
         logger.info("Scheduling tasks...");
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(userService::checkVerificationMessages, 1, 5, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(userService::checkVerificationRequests, 1, 5, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(gameService::checkTurns, 1, 1, TimeUnit.MINUTES);
     }
 

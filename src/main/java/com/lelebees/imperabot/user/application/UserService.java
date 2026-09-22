@@ -122,39 +122,42 @@ public class UserService {
         return user.getVerificationCode();
     }
 
-    public void checkVerificationMessages() {
+    public void checkVerificationRequests() {
         List<ImperaMessageDTO> linkMessages = imperaService.getLinkMessages();
         logger.info("Found {} link requests.", linkMessages.size());
-        int skippedRequests = 0;
-        for (ImperaMessageDTO linkMessage : linkMessages) {
-            ImperaMessageCommunicatorDTO sender = linkMessage.from();
-            Optional<BotUserDTO> potentialImperaUser = findImperaUser(sender.id());
-            if (potentialImperaUser.isPresent()) {
-                BotUserDTO imperaUser = potentialImperaUser.get();
-                skippedRequests++;
-                logger.warn("User with Impera account {} ({}) already exists. (is {} ({})) Skipping and destroying message...", sender.name(), sender.id(), imperaUser.username(), imperaUser.discordId());
-                imperaService.deleteMessage(linkMessage);
-                continue;
-            }
-            BotUser user;
-            try {
-                user = userFromOptional(repository.getUserByVerificationCode(linkMessage.getTrimmedText()));
-            } catch (UserNotFoundException e) {
-                logger.warn("User matching code {} Not found, skipping...", linkMessage.text());
-                skippedRequests++;
-                continue;
-            }
-            try {
-                user.verifyUser(sender.id(), linkMessage.getTrimmedText(), sender.name());
-                logger.info("User {} ({}) aka (snowflake) {} has been verified!", sender.name(), sender.id().toString(), user.getUserId());
-                discordService.sendVerificationDM(user.getUserId());
-            } catch (UserAlreadyVerfiedException e) {
-                logger.warn("User {} ({}) aka (snowflake) {} already verified!", sender.name(), sender.id().toString(), user.getUserId());
-            } catch (IncorrectVerificationCodeException e) {
-                logger.warn("User {} ({}) could not be verified as (snowflake) {} because the supplied verification code was incorrect.", sender.name(), sender.id(), user.getUserId());
-            }
-            imperaService.deleteMessage(linkMessage);
-        }
+        int skippedRequests = (int) linkMessages.stream().filter(linkMessage -> !checkVerificationRequest(linkMessage)).count();
         logger.info("Skipped {} requests.", skippedRequests);
+    }
+
+    /// Checks if the given verification request is valid
+    /// @param message the message containing the verification request
+    /// @return whether the request was valid or had to be skipped.
+    private boolean checkVerificationRequest(ImperaMessageDTO message) {
+        ImperaMessageCommunicatorDTO sender = message.from();
+        Optional<BotUserDTO> potentialImperaUser = findImperaUser(sender.id());
+        if (potentialImperaUser.isPresent()) {
+            BotUserDTO imperaUser = potentialImperaUser.get();
+            logger.warn("User with Impera account {} ({}) already exists. (is {} ({})) Skipping and destroying message...", sender.name(), sender.id(), imperaUser.username(), imperaUser.discordId());
+            imperaService.deleteMessage(message);
+            return false;
+        }
+        BotUser user;
+        try {
+            user = userFromOptional(repository.getUserByVerificationCode(message.getTrimmedText()));
+        } catch (UserNotFoundException e) {
+            logger.warn("User matching code {} Not found, skipping...", message.text());
+            return false;
+        }
+        try {
+            user.verifyUser(sender.id(), message.getTrimmedText(), sender.name());
+            discordService.sendVerificationDM(user.getUserId());
+            logger.info("User {} ({}) aka (snowflake) {} has been verified!", sender.name(), sender.id().toString(), user.getUserId());
+        } catch (UserAlreadyVerfiedException e) {
+            logger.warn("User {} ({}) aka (snowflake) {} already verified!", sender.name(), sender.id().toString(), user.getUserId());
+        } catch (IncorrectVerificationCodeException e) {
+            logger.warn("User {} ({}) could not be verified as (snowflake) {} because the supplied verification code was incorrect.", sender.name(), sender.id(), user.getUserId());
+        }
+        imperaService.deleteMessage(message);
+        return true;
     }
 }
