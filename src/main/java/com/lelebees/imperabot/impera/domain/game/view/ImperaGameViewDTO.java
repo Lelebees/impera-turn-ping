@@ -2,8 +2,8 @@ package com.lelebees.imperabot.impera.domain.game.view;
 
 import com.lelebees.imperabot.impera.domain.game.ImperaGameOptionsDTO;
 import com.lelebees.imperabot.impera.domain.game.ImperaGameTeamDTO;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 import java.util.List;

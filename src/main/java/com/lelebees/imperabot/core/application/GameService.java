@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import static com.lelebees.imperabot.core.application.CourseOfAction.*;
+
 @Service
 public class GameService {
     private final Logger logger = LoggerFactory.getLogger(GameService.class);
@@ -86,35 +88,25 @@ public class GameService {
         int skippedGames = 0;
         int handledGames = 0;
         for (Game game : games) {
-            // Side effects not good
-            if (!notifyPlayersFor(game)) {
-                skippedGames++;
-                continue;
-            }
-            handledGames++;
+            CourseOfAction action = notifyPlayersFor(game);
+            if (action == SKIP_CHECK) skippedGames++;
+            else handledGames++;
         }
         logger.info("Handled {} games, skipped {} games.", handledGames, skippedGames);
     }
 
 
-    private boolean notifyPlayersFor(Game game) {
+    private CourseOfAction notifyPlayersFor(Game game) {
         ImperaGameViewDTO imperaGame;
         try {
             imperaGame = imperaService.getGame(game.getId());
         } catch (ImperaGameNotFoundException e) {
             logger.error("Game [{}] could not be found on the Impera server. Skipping and deleting game.", game.getId(), e);
             repository.delete(game);
-            return false;
+            return SKIP_CHECK;
         }
-        if (!imperaGame.hasStarted()) {
-            return false;
-        }
-        boolean turnHasChanged = game.getCurrentTurn() != imperaGame.turnCounter();
-        boolean shouldSendHalfTimeNotice = imperaGame.hasHalfOfTurnPassed() && !game.sentHalfTimeNotice();
-        // If the turn hasn't changed, and we don't need to send a half-time notice, and the game hasn't ended,
-        if (!turnHasChanged && !shouldSendHalfTimeNotice && !imperaGame.hasEnded()) {
-            return false;
-        }
+        CourseOfAction courseOfAction = decideAction(game, imperaGame);
+        if (courseOfAction == SKIP_CHECK) return SKIP_CHECK;
 
         List<discord4j.core.object.entity.channel.Channel> channels = getChannelsToNotify(game);
         logger.debug("Found {} channels to notify.", channels.size());
@@ -123,22 +115,27 @@ public class GameService {
         logger.debug("Found {} players that are no longer playing.", playersThatAreNoLongerPlaying.size());
         playersThatAreNoLongerPlaying.forEach((player, outcome) -> discordService.sendLoserMessage(channels, imperaGame.findPlayerById(player), imperaGame, outcome));
 
-        // There is probably a better way to do this, but I'm not sure what it is.
-        if (imperaGame.hasEnded()) {
-            logger.debug("Game {} has ended!", game.getId());
-            sendVictoryNotice(game, imperaGame, channels);
-        } else if (turnHasChanged) {
-            notifyNextUser(game, imperaGame, channels);
-        } else {
-            sendHalfTimeNotice(game, imperaGame, channels);
+        switch (courseOfAction) {
+            case DECLARE_VICTOR -> sendVictoryNotice(game, imperaGame, channels);
+            case NOTIFY_NEXT_PLAYER -> notifyNextUser(game, imperaGame, channels);
+            case NOTIFY_HALF_TIME_PASSED -> sendHalfTimeNotice(game, imperaGame, channels);
         }
-        return true;
+        return courseOfAction;
+    }
+
+    private static CourseOfAction decideAction(Game game, ImperaGameViewDTO imperaGame) {
+        // REMINDER: The order of if statements matters!
+        if (!imperaGame.hasStarted()) return SKIP_CHECK;
+        if (imperaGame.hasEnded()) return DECLARE_VICTOR;
+        if (imperaGame.hasHalfOfTurnPassed() && !game.sentHalfTimeNotice()) return NOTIFY_HALF_TIME_PASSED;
+        if (game.getCurrentTurn() != imperaGame.turnCounter()) return NOTIFY_NEXT_PLAYER;
+        return SKIP_CHECK;
     }
 
     private void sendVictoryNotice(Game game, ImperaGameViewDTO imperaGame, List<discord4j.core.object.entity.channel.Channel> channels) {
+        logger.debug("Game {} has ended!", game.getId());
         logger.info("Sending victory notice for {} ({})!", imperaGame.name(), imperaGame.id());
         List<ImperaGamePlayerDTO> winningPlayers = imperaGame.getWinningPlayers();
-        // Send a message to all channels that are tracking this game, who won
         discordService.sendVictorsMessage(channels, winningPlayers, imperaGame);
         winningPlayers.forEach(winner -> discordService.giveWinnerRole(GameDTO.from(game), winner));
         repository.delete(game);
