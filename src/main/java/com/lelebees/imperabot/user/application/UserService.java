@@ -32,16 +32,6 @@ public class UserService {
         this.discordService = discordService;
     }
 
-    public BotUserDTO verifyUser(String verificationCode, UUID imperaId, String username) throws UserAlreadyVerfiedException, UserNotFoundException, IncorrectVerificationCodeException {
-        try {
-            BotUser botUser = userFromOptional(repository.getUserByVerificationCode(verificationCode));
-            botUser.verifyUser(imperaId, verificationCode, username);
-            return BotUserDTO.from(repository.save(botUser));
-        } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("Cannot find user with this verification code (" + verificationCode + ")");
-        }
-    }
-
     private BotUser findUser(long id) throws UserNotFoundException {
         try {
             return userFromOptional(repository.findById(id));
@@ -87,22 +77,6 @@ public class UserService {
 
     public Optional<BotUserDTO> findImperaUser(UUID imperaId) {
         return repository.getUserByImperaId(imperaId).map(BotUserDTO::from);
-    }
-
-    public BotUserDTO findImperaUserOrThrow(UUID imperaId) throws UserNotFoundException {
-        try {
-            return BotUserDTO.from(userFromOptional(repository.getUserByImperaId(imperaId)));
-        } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("Cannot find user with this Impera Id (" + imperaId + ")");
-        }
-    }
-
-    public boolean isImperaUserVerified(UUID imperaId) {
-        try {
-            return findImperaUserOrThrow(imperaId).isLinked();
-        } catch (UserNotFoundException e) {
-            return false;
-        }
     }
 
     public String startVerification(long userId) throws UserAlreadyVerfiedException {
