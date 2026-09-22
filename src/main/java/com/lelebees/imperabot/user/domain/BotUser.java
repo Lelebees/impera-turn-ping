@@ -5,7 +5,6 @@ import com.lelebees.imperabot.user.domain.exception.IncorrectVerificationCodeExc
 import com.lelebees.imperabot.user.domain.exception.UserAlreadyVerfiedException;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import org.checkerframework.common.aliasing.qual.Unique;
 
 import java.util.UUID;
 
@@ -20,12 +19,10 @@ public class BotUser {
     @Id
     @Column(name = "discord_user_id")
     private long userId;
-    @Column(name = "impera_player_id")
-    @Unique
+    @Column(name = "impera_player_id", unique = true)
     @Nullable
     private UUID imperaId;
-    @Column(name = "super_secret_code")
-    @Unique
+    @Column(name = "super_secret_code", unique = true)
     private String verificationCode;
     @Column(name = "impera_user_name")
     private String username;
@@ -38,7 +35,7 @@ public class BotUser {
         this(id, null, PREFER_GUILD_OVER_DMS, null);
     }
 
-    public BotUser(long userId, @Nullable @Unique UUID imperaId, UserNotificationSetting notificationSetting, @Unique String verificationCode) {
+    public BotUser(long userId, @Nullable UUID imperaId, UserNotificationSetting notificationSetting, String verificationCode) {
         this.userId = userId;
         this.imperaId = imperaId;
         this.notificationSetting = notificationSetting;
