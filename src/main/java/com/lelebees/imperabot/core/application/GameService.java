@@ -12,11 +12,14 @@ import com.lelebees.imperabot.impera.application.exception.ImperaGameNotFoundExc
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.HistoryActionName;
+import discord4j.core.object.entity.channel.GuildMessageChannel;
+import discord4j.core.object.entity.channel.PrivateChannel;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +33,13 @@ public class GameService {
     private final ChannelService channelService;
     private final DiscordService discordService;
     private final ImperaService imperaService;
+
+    private final String halfTimeMessage = "%s have half time remaining in %s!";
+    private final String yourTurnMessage = "%s your turn in %s!";
+    private final String defeatMessage = "%s been defeated in %s!";
+    private final String timeOutMessage = "%s timed out in %s!";
+    private final String surrenderMessage = "%s has surrendered in %s!";
+    private final String victorsMessage = "Game %s has ended! %s";
 
     public GameService(GameRepository repository, ChannelService channelService, DiscordService discordService, ImperaService imperaService) {
         this.repository = repository;
@@ -104,18 +114,19 @@ public class GameService {
         }
         CourseOfAction courseOfAction = decideAction(game, imperaGame);
         if (courseOfAction == SKIP_CHECK) return SKIP_CHECK;
-
-        List<discord4j.core.object.entity.channel.Channel> channels = getChannelsToNotify(game);
-        logger.debug("Found {} channels to notify.", channels.size());
+        List<PrivateChannel> dmChannels = new ArrayList<>();
+        List<GuildMessageChannel> guildChannels = new ArrayList<>();
+        getChannelsToNotify(game, dmChannels, guildChannels);
+        logger.debug("Found {} channels to notify.", dmChannels.size() + guildChannels.size());
 
         HashMap<String, HistoryActionName> playersThatAreNoLongerPlaying = imperaService.getPlayersThatAreNoLongerPlaying(game.getId(), game.getCurrentTurn(), imperaGame.turnCounter() + 1);
         logger.debug("Found {} players that are no longer playing.", playersThatAreNoLongerPlaying.size());
-        playersThatAreNoLongerPlaying.forEach((player, outcome) -> discordService.sendLoserMessage(channels, imperaGame.findPlayerById(player), imperaGame, outcome));
+        playersThatAreNoLongerPlaying.forEach((player, outcome) -> discordService.sendLoserMessage(guildChannels, dmChannels, imperaGame.findPlayerById(player), imperaGame, outcome));
 
         switch (courseOfAction) {
-            case DECLARE_VICTOR -> sendVictoryNotice(game, imperaGame, channels);
-            case NOTIFY_NEXT_PLAYER -> notifyNextUser(game, imperaGame, channels);
-            case NOTIFY_HALF_TIME_PASSED -> sendHalfTimeNotice(game, imperaGame, channels);
+            case DECLARE_VICTOR -> sendVictoryNotice(game, imperaGame, guildChannels, dmChannels);
+            case NOTIFY_NEXT_PLAYER -> notifyNextUser(game, imperaGame, guildChannels, dmChannels);
+            case NOTIFY_HALF_TIME_PASSED -> sendHalfTimeNotice(game, imperaGame, guildChannels, dmChannels);
         }
         return courseOfAction;
     }
@@ -129,34 +140,46 @@ public class GameService {
         return SKIP_CHECK;
     }
 
-    private void sendVictoryNotice(Game game, ImperaGameViewDTO imperaGame, List<discord4j.core.object.entity.channel.Channel> channels) {
+    private void sendVictoryNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         logger.debug("Game {} has ended!", game.getId());
         logger.info("Sending victory notice for {} ({})!", imperaGame.name(), imperaGame.id());
         List<ImperaGamePlayerDTO> winningPlayers = imperaGame.getWinningPlayers();
-        discordService.sendVictorsMessage(channels, winningPlayers, imperaGame);
+        discordService.sendVictorsMessage(guildChannels, dmChannels, winningPlayers, imperaGame);
         winningPlayers.forEach(winner -> discordService.giveWinnerRole(GameDTO.from(game), winner));
         repository.delete(game);
     }
 
-    private void notifyNextUser(Game game, ImperaGameViewDTO imperaGame, List<discord4j.core.object.entity.channel.Channel> channels) {
+    private void notifyNextUser(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         logger.info("Sending turn notice for {} ({})!", imperaGame.name(), imperaGame.id());
-        discordService.sendNewTurnMessage(channels, imperaGame);
+        discordService.sendNewTurnMessage(guildChannels, dmChannels, imperaGame);
         game.updateGameStatus(imperaGame.turnCounter());
         repository.save(game);
     }
 
-    private void sendHalfTimeNotice(Game game, ImperaGameViewDTO imperaGame, List<discord4j.core.object.entity.channel.Channel> channels) {
+    private void sendHalfTimeNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         logger.info("Sending half time notice for {} ({})!", imperaGame.name(), imperaGame.id());
-        discordService.sendHalfTimeMessage(channels, imperaGame);
+        discordService.sendHalfTimeMessage(guildChannels, dmChannels, imperaGame);
         game.setHalfTimeNoticeTrue();
         repository.save(game);
     }
 
-    private List<discord4j.core.object.entity.channel.Channel> getChannelsToNotify(Game game) {
-        return game.getTrackingChannels()
+    private void getChannelsToNotify(Game game, List<PrivateChannel> dmChannels, List<GuildMessageChannel> otherChannels) {
+        List<discord4j.core.object.entity.channel.Channel> allChannels = game.getTrackingChannels()
                 .stream()
                 .map(Channel::getId)
                 .map(discordService::getChannelById)
                 .toList();
+        dmChannels.addAll(
+                allChannels.stream()
+                        .filter(channel -> channel.getType() == discord4j.core.object.entity.channel.Channel.Type.DM)
+                        .map(channel -> (PrivateChannel) channel)
+                        .toList()
+        );
+        otherChannels.addAll(
+                allChannels.stream()
+                        .filter(channel -> channel.getType() != discord4j.core.object.entity.channel.Channel.Type.DM)
+                        .map(channel -> (GuildMessageChannel) channel)
+                        .toList()
+        );
     }
 }
