@@ -85,18 +85,15 @@ public class GameService {
     public void checkTurns() {
         List<Game> games = repository.findAll();
         logger.info("Checking turns for {} games.", games.size());
-        int skippedGames = 0;
-        int handledGames = 0;
-        for (Game game : games) {
-            CourseOfAction action = notifyPlayersFor(game);
-            if (action == SKIP_CHECK) skippedGames++;
-            else handledGames++;
-        }
-        logger.info("Handled {} games, skipped {} games.", handledGames, skippedGames);
+        int handledGames = (int) games.stream()
+                .map(this::notifyPlayersFor)
+                .filter(action -> action != SKIP_CHECK)
+                .count();
+        logger.info("Handled {} games, skipped {} games.", handledGames, games.size() - handledGames);
     }
 
 
-    private CourseOfAction notifyPlayersFor(Game game) {
+    public CourseOfAction notifyPlayersFor(Game game) {
         ImperaGameViewDTO imperaGame;
         try {
             imperaGame = imperaService.getGame(game.getId());
@@ -123,12 +120,12 @@ public class GameService {
         return courseOfAction;
     }
 
-    private static CourseOfAction decideAction(Game game, ImperaGameViewDTO imperaGame) {
+    public static CourseOfAction decideAction(Game game, ImperaGameViewDTO imperaGame) {
         // REMINDER: The order of if statements matters!
         if (!imperaGame.hasStarted()) return SKIP_CHECK;
         if (imperaGame.hasEnded()) return DECLARE_VICTOR;
-        if (imperaGame.hasHalfOfTurnPassed() && !game.sentHalfTimeNotice()) return NOTIFY_HALF_TIME_PASSED;
         if (game.getCurrentTurn() != imperaGame.turnCounter()) return NOTIFY_NEXT_PLAYER;
+        if (imperaGame.hasHalfOfTurnPassed() && !game.sentHalfTimeNotice()) return NOTIFY_HALF_TIME_PASSED;
         return SKIP_CHECK;
     }
 
