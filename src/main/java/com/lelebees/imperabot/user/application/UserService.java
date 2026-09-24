@@ -11,6 +11,7 @@ import com.lelebees.imperabot.user.domain.BotUser;
 import com.lelebees.imperabot.user.domain.UserNotificationSetting;
 import com.lelebees.imperabot.user.domain.exception.IncorrectVerificationCodeException;
 import com.lelebees.imperabot.user.domain.exception.UserAlreadyVerfiedException;
+import discord4j.common.util.Snowflake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -124,7 +125,8 @@ public class UserService {
         }
         try {
             user.verifyUser(sender.id(), message.getTrimmedText(), sender.name());
-            discordService.sendVerificationDM(user.getUserId());
+            repository.save(user);
+            discordService.sendDM(Snowflake.of(user.getUserId()), "Successfully linked your Impera account with Discord");
             logger.info("User {} ({}) aka (snowflake) {} has been verified!", sender.name(), sender.id().toString(), user.getUserId());
         } catch (UserAlreadyVerfiedException e) {
             logger.warn("User {} ({}) aka (snowflake) {} already verified!", sender.name(), sender.id().toString(), user.getUserId());

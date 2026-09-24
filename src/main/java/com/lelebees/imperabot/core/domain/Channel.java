@@ -1,5 +1,6 @@
 package com.lelebees.imperabot.core.domain;
 
+import discord4j.common.util.Snowflake;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
@@ -53,6 +54,9 @@ public class Channel {
 
     public long getId() {
         return id;
+    }
+    public Snowflake getDiscordId() {
+        return Snowflake.of(id);
     }
 
     public Set<Game> getTrackedGames() {

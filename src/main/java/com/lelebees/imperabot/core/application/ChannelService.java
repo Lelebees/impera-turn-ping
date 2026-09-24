@@ -35,6 +35,7 @@ class ChannelService {
             channel = findChannel(channelId);
         } catch (ChannelNotFoundException e) {
             channel = createChannel(channelId);
+            repository.save(channel);
         }
         channel.trackGame(game);
         return repository.save(channel);

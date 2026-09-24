@@ -112,7 +112,7 @@ public class TrackCommand implements SlashCommand {
 
         boolean alreadyTracked = gameService.trackGame(gameView, channelId);
         if (alreadyTracked) {
-            return event.reply().withContent("[%s](%s/%s)  is already being tracked in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId)).withEphemeral(true);
+            return event.reply().withContent("[%s](%s/%s) is already being tracked in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId)).withEphemeral(true);
         }
 
         logger.debug("Created new GameChannelLink with gameId: {} and channelId: {}", gameId, channelId);

@@ -12,6 +12,8 @@ import com.lelebees.imperabot.impera.application.exception.ImperaGameNotFoundExc
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGamePlayerDTO;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import com.lelebees.imperabot.impera.domain.history.HistoryActionName;
+import com.lelebees.imperabot.user.application.UserService;
+import com.lelebees.imperabot.user.application.dto.BotUserDTO;
 import discord4j.core.object.entity.channel.GuildMessageChannel;
 import discord4j.core.object.entity.channel.PrivateChannel;
 import jakarta.transaction.Transactional;
@@ -19,10 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.lelebees.imperabot.core.application.CourseOfAction.*;
 
@@ -33,19 +32,16 @@ public class GameService {
     private final ChannelService channelService;
     private final DiscordService discordService;
     private final ImperaService imperaService;
+    private final NotificationService notificationService;
+    private final UserService userService;
 
-    private final String halfTimeMessage = "%s have half time remaining in %s!";
-    private final String yourTurnMessage = "%s your turn in %s!";
-    private final String defeatMessage = "%s been defeated in %s!";
-    private final String timeOutMessage = "%s timed out in %s!";
-    private final String surrenderMessage = "%s has surrendered in %s!";
-    private final String victorsMessage = "Game %s has ended! %s";
-
-    public GameService(GameRepository repository, ChannelService channelService, DiscordService discordService, ImperaService imperaService) {
+    public GameService(GameRepository repository, ChannelService channelService, DiscordService discordService, ImperaService imperaService, NotificationService notificationService, UserService userService) {
         this.repository = repository;
         this.channelService = channelService;
         this.discordService = discordService;
         this.imperaService = imperaService;
+        this.notificationService = notificationService;
+        this.userService = userService;
     }
 
     private Game findGame(long ID) throws GameNotFoundException {
@@ -60,6 +56,7 @@ public class GameService {
             game = findGame(imperaGame.id());
         } catch (GameNotFoundException e) {
             game = Game.From(imperaGame.id(), imperaGame.turnCounter());
+            repository.save(game);
         }
         boolean alreadyTracked = !game.trackInChannel(channelService.trackGame(game, channelId));
         repository.save(game);
@@ -121,7 +118,7 @@ public class GameService {
 
         HashMap<String, HistoryActionName> playersThatAreNoLongerPlaying = imperaService.getPlayersThatAreNoLongerPlaying(game.getId(), game.getCurrentTurn(), imperaGame.turnCounter() + 1);
         logger.debug("Found {} players that are no longer playing.", playersThatAreNoLongerPlaying.size());
-        playersThatAreNoLongerPlaying.forEach((player, outcome) -> discordService.sendLoserMessage(guildChannels, dmChannels, imperaGame.findPlayerById(player), imperaGame, outcome));
+        playersThatAreNoLongerPlaying.forEach((player, outcome) -> notificationService.sendLoserMessage(guildChannels, dmChannels, imperaGame.findPlayerById(player), imperaGame, outcome));
 
         switch (courseOfAction) {
             case DECLARE_VICTOR -> sendVictoryNotice(game, imperaGame, guildChannels, dmChannels);
@@ -144,21 +141,25 @@ public class GameService {
         logger.debug("Game {} has ended!", game.getId());
         logger.info("Sending victory notice for {} ({})!", imperaGame.name(), imperaGame.id());
         List<ImperaGamePlayerDTO> winningPlayers = imperaGame.getWinningPlayers();
-        discordService.sendVictorsMessage(guildChannels, dmChannels, winningPlayers, imperaGame);
-        winningPlayers.forEach(winner -> discordService.giveWinnerRole(GameDTO.from(game), winner));
+        notificationService.sendVictorsMessage(guildChannels, dmChannels, winningPlayers, imperaGame);
+        for (ImperaGamePlayerDTO winner : winningPlayers) {
+            Optional<BotUserDTO> userOptional = userService.findImperaUser(UUID.fromString(winner.userId()));
+            if (userOptional.isEmpty()) continue;
+            discordService.giveWinnerRole(GameDTO.from(game), userOptional.get());
+        }
         repository.delete(game);
     }
 
     private void notifyNextUser(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         logger.info("Sending turn notice for {} ({})!", imperaGame.name(), imperaGame.id());
-        discordService.sendNewTurnMessage(guildChannels, dmChannels, imperaGame);
+        notificationService.sendNewTurnMessage(guildChannels, dmChannels, imperaGame);
         game.updateGameStatus(imperaGame.turnCounter());
         repository.save(game);
     }
 
     private void sendHalfTimeNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         logger.info("Sending half time notice for {} ({})!", imperaGame.name(), imperaGame.id());
-        discordService.sendHalfTimeMessage(guildChannels, dmChannels, imperaGame);
+        notificationService.sendHalfTimeMessage(guildChannels, dmChannels, imperaGame);
         game.setHalfTimeNoticeTrue();
         repository.save(game);
     }
@@ -166,7 +167,7 @@ public class GameService {
     private void getChannelsToNotify(Game game, List<PrivateChannel> dmChannels, List<GuildMessageChannel> otherChannels) {
         List<discord4j.core.object.entity.channel.Channel> allChannels = game.getTrackingChannels()
                 .stream()
-                .map(Channel::getId)
+                .map(Channel::getDiscordId)
                 .map(discordService::getChannelById)
                 .toList();
         dmChannels.addAll(
