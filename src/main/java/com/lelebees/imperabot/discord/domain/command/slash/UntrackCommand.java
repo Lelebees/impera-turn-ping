@@ -1,14 +1,15 @@
 package com.lelebees.imperabot.discord.domain.command.slash;
 
-import com.lelebees.imperabot.bot.application.GameLinkService;
-import com.lelebees.imperabot.bot.application.GuildSettingsService;
-import com.lelebees.imperabot.bot.domain.gamechannellink.exception.GameChannelLinkNotFoundException;
-import com.lelebees.imperabot.bot.domain.guild.exception.GuildSettingsNotFoundException;
-import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
+import com.lelebees.imperabot.core.application.GameService;
+import com.lelebees.imperabot.core.application.GuildSettingsService;
+import com.lelebees.imperabot.core.application.dto.GuildSettingsDTO;
+import com.lelebees.imperabot.core.application.exception.ChannelNotFoundException;
+import com.lelebees.imperabot.core.application.exception.GameNotFoundException;
+import com.lelebees.imperabot.core.application.exception.GuildSettingsNotFoundException;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.discord.domain.command.SlashCommand;
 import com.lelebees.imperabot.impera.application.ImperaService;
-import com.lelebees.imperabot.impera.domain.game.exception.ImperaGameNotFoundException;
+import com.lelebees.imperabot.impera.application.exception.ImperaGameNotFoundException;
 import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -35,15 +36,15 @@ import java.util.Optional;
 public class UntrackCommand implements SlashCommand {
     private final Logger logger = LoggerFactory.getLogger(UntrackCommand.class);
     private final GuildSettingsService guildSettingsService;
-    private final GameLinkService gameLinkService;
     private final ImperaService imperaService;
     private final String imperaUrl;
+    private final GameService gameService;
 
-    public UntrackCommand(GuildSettingsService guildSettingsService, GameLinkService gameLinkService, ImperaService imperaService, @Value("${impera.web.url}") String imperaUrl) {
+    public UntrackCommand(GuildSettingsService guildSettingsService, ImperaService imperaService, @Value("${impera.web.url}") String imperaUrl, GameService gameService) {
         this.guildSettingsService = guildSettingsService;
-        this.gameLinkService = gameLinkService;
         this.imperaService = imperaService;
         this.imperaUrl = imperaUrl + "/game/play";
+        this.gameService = gameService;
     }
 
     @Override
@@ -85,8 +86,8 @@ public class UntrackCommand implements SlashCommand {
                 return event.reply().withContent("You are not allowed to stop tracking games in this guild.").withEphemeral(true);
             }
 
-            if (guildSettings.defaultChannelId() != null && channelOptional.isEmpty()) {
-                channel = event.getInteraction().getGuild().block().getChannelById(Snowflake.of(guildSettings.defaultChannelId())).block();
+            if (guildSettings.defaultChannel() != null && channelOptional.isEmpty()) {
+                channel = event.getInteraction().getGuild().block().getChannelById(guildSettings.defaultChannel().idAsSnowflake()).block();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so untracking in channel: {} ({}).", channel.getId().asLong(), channel.getData().name().get());
             }
         }
@@ -94,24 +95,29 @@ public class UntrackCommand implements SlashCommand {
         Long channelId = channel.getId().asLong();
         if (gameId == null) {
             // Stop tracking all games in channel
-            gameLinkService.deleteLinksForChannel(channelId);
+            gameService.deleteLinksForChannel(channelId);
             return event.reply().withContent("Stopped tracking notifications for all games in <#%s>".formatted(channelId));
         }
         // else, stop tracking specific game in channel
         try {
-            gameLinkService.deleteLink(gameId, channelId);
-        } catch (GameChannelLinkNotFoundException e) {
-            logger.info("User {} ({}) attempted to stop tracking a game ({}) in channel <#{}> but the corresponding GameChannelLink could not be found.", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channelId);
-            return event.reply().withContent("Game [%s] is not being tracked in <#%s>.".formatted(gameId, channelId));
+            boolean gameWasBeingTracked = gameService.untrackGame(gameId, channelId);
+            if (!gameWasBeingTracked) {
+                return event.reply().withContent("Game [%s] is not being tracked in <#%s>.".formatted(gameId, channelId));
+            }
+        } catch (GameNotFoundException e) {
+            logger.error("User {} ({}) attempted to stop tracking a game ({}) in channel <#{}> but the corresponding Game could not be found.", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channelId);
+            return event.reply().withContent("Game [%s] could not be found.".formatted(gameId)).withEphemeral(true);
+        } catch (ChannelNotFoundException e) {
+            logger.error("????");
         }
         try {
             ImperaGameViewDTO gameView = imperaService.getGame(gameId);
             return event.reply().withContent("Stopped logging notifications for [%s](%s/%s) in <#%s>".formatted(gameView.name(), imperaUrl, gameId, channelId));
         } catch (ImperaGameNotFoundException e) {
-            return event.reply().withContent("Stopped logging notifications for [%s]".formatted(gameId));
+            return event.reply().withContent("Stopped logging notifications for [%s] in <#%s>".formatted(gameId, channelId));
         } catch (RuntimeException e) {
             logger.error("Unknown error occurred while attempting to fetch game from Impera. It has probably been deleted", e);
-            return event.reply("An error occurred, but we still managed to stop logging notifications for [%s]. Please do file a bug report.".formatted(gameId));
+            return event.reply("An error occurred, but we still managed to stop logging notifications for [%s] in <#%s>. Please do file a bug report.".formatted(gameId, channelId));
         }
     }
 }

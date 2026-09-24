@@ -1,8 +1,8 @@
 package com.lelebees.imperabot.discord.domain;
 
-import com.lelebees.imperabot.bot.domain.user.UserNotificationSetting;
-import com.lelebees.imperabot.bot.presentation.guildsettings.GuildSettingsDTO;
-import com.lelebees.imperabot.bot.presentation.user.BotUserDTO;
+import com.lelebees.imperabot.core.application.dto.GuildSettingsDTO;
+import com.lelebees.imperabot.user.application.dto.BotUserDTO;
+import com.lelebees.imperabot.user.domain.UserNotificationSetting;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.component.*;
 import discord4j.core.object.entity.Guild;
@@ -13,7 +13,7 @@ import discord4j.rest.util.Color;
 import java.util.List;
 import java.util.Map;
 
-import static com.lelebees.imperabot.bot.domain.user.UserNotificationSetting.*;
+import static com.lelebees.imperabot.user.domain.UserNotificationSetting.*;
 
 public class SettingsMenu {
 
@@ -101,11 +101,11 @@ public class SettingsMenu {
     }
 
     private static List<SelectMenu.DefaultValue> getDefaultChannelOption(GuildSettingsDTO guildSettingsDTO) {
-        if (guildSettingsDTO.defaultChannelId() == null) {
+        if (guildSettingsDTO.defaultChannel() == null) {
             return List.of();
         }
         return List.of(
-                SelectMenu.DefaultValue.of(Snowflake.of(guildSettingsDTO.defaultChannelId()), SelectMenu.DefaultValue.Type.CHANNEL)
+                SelectMenu.DefaultValue.of(guildSettingsDTO.defaultChannel().idAsSnowflake(), SelectMenu.DefaultValue.Type.CHANNEL)
         );
     }
 
