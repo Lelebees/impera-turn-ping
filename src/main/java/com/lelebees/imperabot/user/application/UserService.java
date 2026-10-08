@@ -1,5 +1,6 @@
 package com.lelebees.imperabot.user.application;
 
+import com.lelebees.imperabot.core.application.CheckResult;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
 import com.lelebees.imperabot.impera.domain.message.ImperaMessageCommunicatorDTO;
@@ -19,6 +20,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.lelebees.imperabot.core.application.CheckResult.HANDLED;
+import static com.lelebees.imperabot.core.application.CheckResult.SKIPPED;
 
 @Service
 public class UserService {
@@ -100,28 +104,31 @@ public class UserService {
     public void checkVerificationRequests() {
         List<ImperaMessageDTO> linkMessages = imperaService.getLinkMessages();
         logger.info("Found {} link requests.", linkMessages.size());
-        int skippedRequests = (int) linkMessages.stream().filter(linkMessage -> !checkVerificationRequest(linkMessage)).count();
+        int skippedRequests = (int) linkMessages.stream()
+                .map(this::checkVerificationRequest)
+                .filter(result -> result == SKIPPED)
+                .count();
         logger.info("Skipped {} requests.", skippedRequests);
     }
 
     /// Checks if the given verification request is valid
     /// @param message the message containing the verification request
     /// @return whether the request was valid or had to be skipped.
-    private boolean checkVerificationRequest(ImperaMessageDTO message) {
+    private CheckResult checkVerificationRequest(ImperaMessageDTO message) {
         ImperaMessageCommunicatorDTO sender = message.from();
         Optional<BotUserDTO> potentialImperaUser = findImperaUser(sender.id());
         if (potentialImperaUser.isPresent()) {
             BotUserDTO imperaUser = potentialImperaUser.get();
             logger.warn("User with Impera account {} ({}) already exists. (is {} ({})) Skipping and destroying message...", sender.name(), sender.id(), imperaUser.username(), imperaUser.discordId());
             imperaService.deleteMessage(message);
-            return false;
+            return SKIPPED;
         }
         BotUser user;
         try {
             user = userFromOptional(repository.getUserByVerificationCode(message.getTrimmedText()));
         } catch (UserNotFoundException e) {
             logger.warn("User matching code {} Not found, skipping...", message.text());
-            return false;
+            return SKIPPED;
         }
         try {
             user.verifyUser(sender.id(), message.getTrimmedText(), sender.name());
@@ -134,6 +141,6 @@ public class UserService {
             logger.warn("User {} ({}) could not be verified as (snowflake) {} because the supplied verification code was incorrect.", sender.name(), sender.id(), user.getUserId());
         }
         imperaService.deleteMessage(message);
-        return true;
+        return HANDLED;
     }
 }
