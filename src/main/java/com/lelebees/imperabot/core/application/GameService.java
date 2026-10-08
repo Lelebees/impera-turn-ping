@@ -125,7 +125,7 @@ public class GameService {
 
         switch (courseOfAction) {
             case DECLARE_VICTOR -> sendVictoryNotice(game, imperaGame, guildChannels, dmChannels);
-            case NOTIFY_NEXT_PLAYER -> notifyNextUser(game, imperaGame, guildChannels, dmChannels);
+            case NOTIFY_NEXT_PLAYER -> notifyNextPlayer(game, imperaGame, guildChannels, dmChannels);
             case NOTIFY_HALF_TIME_PASSED -> sendHalfTimeNotice(game, imperaGame, guildChannels, dmChannels);
         }
         return HANDLED;
@@ -133,7 +133,6 @@ public class GameService {
 
     private void sendVictoryNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         logger.debug("Game {} has ended!", game.getId());
-        logger.info("Sending victory notice for {} ({})!", imperaGame.name(), imperaGame.id());
         List<ImperaGamePlayerDTO> winningPlayers = imperaGame.getWinningPlayers();
         notificationService.sendVictorsMessage(guildChannels, dmChannels, winningPlayers, imperaGame);
         for (ImperaGamePlayerDTO winner : winningPlayers) {
@@ -144,15 +143,13 @@ public class GameService {
         repository.delete(game);
     }
 
-    private void notifyNextUser(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
-        logger.info("Sending turn notice for {} ({})!", imperaGame.name(), imperaGame.id());
+    private void notifyNextPlayer(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         notificationService.sendNewTurnMessage(guildChannels, dmChannels, imperaGame);
         game.updateGameStatus(imperaGame.turnCounter());
         repository.save(game);
     }
 
     private void sendHalfTimeNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
-        logger.info("Sending half time notice for {} ({})!", imperaGame.name(), imperaGame.id());
         notificationService.sendHalfTimeMessage(guildChannels, dmChannels, imperaGame);
         game.setHalfTimeNoticeTrue();
         repository.save(game);

@@ -42,6 +42,7 @@ public class NotificationService {
     }
 
     public void sendNewTurnMessage(List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels, ImperaGameViewDTO game) {
+        logger.info("Sending turn notice for {} ({})!", game.name(), game.id());
         String turnMessage = "your turn in %s!".formatted(getGameURI(game));
         String directTurnMessage = "It's " + turnMessage;
         String generalTurnMessage = "%s, it is " + turnMessage;
@@ -49,6 +50,7 @@ public class NotificationService {
     }
 
     public void sendHalfTimeMessage(List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels, ImperaGameViewDTO game) {
+        logger.info("Sending half time notice for {} ({})!", game.name(), game.id());
         String halfTimeMessage = "have half time remaining in %s!".formatted(getGameURI(game));
         String directHalfTimeMessage = "You " + halfTimeMessage;
         String generalHalfTimeMessage = "%s, you " + halfTimeMessage;
@@ -95,6 +97,7 @@ public class NotificationService {
     }
 
     public void sendVictorsMessage(List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels, List<ImperaGamePlayerDTO> winningPlayers, ImperaGameViewDTO game) {
+        logger.info("Sending victory notice for {} ({})!", game.name(), game.id());
         List<String> userStrings = new ArrayList<>();
         String victoryMessage = "Game %s has ended! %s";
         for (ImperaGamePlayerDTO gamePlayer : winningPlayers) {
@@ -122,14 +125,6 @@ public class NotificationService {
         }
     }
 
-    private AllowedMentions getAllowedMentions(BotUserDTO player) {
-        return switch (player.notificationSetting()) {
-            case NO_NOTIFICATIONS, DMS_ONLY -> AllowedMentions.suppressAll();
-            case DMS_AND_GUILD, PREFER_GUILD_OVER_DMS, GUILD_ONLY ->
-                    AllowedMentions.builder().allowUser(Snowflake.of(player.discordId())).build();
-        };
-    }
-
     private void sendDMAccordingToSettings(BotUserDTO user, String directMessage, boolean noGuildChannels) {
         UserNotificationSetting setting = user.notificationSetting();
         if (setting == DMS_ONLY || setting == DMS_AND_GUILD || (setting == PREFER_GUILD_OVER_DMS && noGuildChannels)) {
@@ -151,13 +146,13 @@ public class NotificationService {
                 sendDMAccordingToSettings(user, directMessage.formatted(userString), !canUserSeeMessageInAGuild(guildChannels, user));
                 dmChannels.remove(usersChannel);
             }
-            allowedMentions = getAllowedMentions(user);
+            allowedMentions = user.getAllowedMentions();
         }
 
-        AllowedMentions finalAllowedMentions = allowedMentions;
-        String finalUserString = userString;
         // TODO: Force swap userstring to playername if player is not in a guild
-        guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString)).withAllowedMentions(finalAllowedMentions).block());
+        for (GuildMessageChannel channel : guildChannels) {
+            channel.createMessage(generalMessage.formatted(userString)).withAllowedMentions(allowedMentions).block();
+        }
     }
 
     private boolean canUserSeeMessageInAGuild(List<GuildMessageChannel> guildChannels, BotUserDTO player) {
