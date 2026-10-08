@@ -5,6 +5,7 @@ import com.lelebees.imperabot.core.application.exception.ChannelNotFoundExceptio
 import com.lelebees.imperabot.core.application.exception.GameNotFoundException;
 import com.lelebees.imperabot.core.data.GameRepository;
 import com.lelebees.imperabot.core.domain.Channel;
+import com.lelebees.imperabot.core.domain.CourseOfAction;
 import com.lelebees.imperabot.core.domain.Game;
 import com.lelebees.imperabot.discord.application.DiscordService;
 import com.lelebees.imperabot.impera.application.ImperaService;
@@ -23,7 +24,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.lelebees.imperabot.core.application.CourseOfAction.*;
+import static com.lelebees.imperabot.core.application.CheckResult.HANDLED;
+import static com.lelebees.imperabot.core.application.CheckResult.SKIPPED;
+import static com.lelebees.imperabot.core.domain.CourseOfAction.SKIP_CHECK;
 
 @Service
 public class GameService {
@@ -94,23 +97,23 @@ public class GameService {
         logger.info("Checking turns for {} games.", games.size());
         int handledGames = (int) games.stream()
                 .map(this::notifyPlayersFor)
-                .filter(action -> action != SKIP_CHECK)
+                .filter(result -> result == HANDLED)
                 .count();
         logger.info("Handled {} games, skipped {} games.", handledGames, games.size() - handledGames);
     }
 
 
-    public CourseOfAction notifyPlayersFor(Game game) {
+    public CheckResult notifyPlayersFor(Game game) {
         ImperaGameViewDTO imperaGame;
         try {
             imperaGame = imperaService.getGame(game.getId());
         } catch (ImperaGameNotFoundException e) {
             logger.error("Game [{}] could not be found on the Impera server. Skipping and deleting game.", game.getId(), e);
             repository.delete(game);
-            return SKIP_CHECK;
+            return SKIPPED;
         }
-        CourseOfAction courseOfAction = decideAction(game, imperaGame);
-        if (courseOfAction == SKIP_CHECK) return SKIP_CHECK;
+        CourseOfAction courseOfAction = game.getCourseOfAction(imperaGame);
+        if (courseOfAction == SKIP_CHECK) return SKIPPED;
         List<PrivateChannel> dmChannels = new ArrayList<>();
         List<GuildMessageChannel> guildChannels = new ArrayList<>();
         getChannelsToNotify(game, dmChannels, guildChannels);
@@ -125,16 +128,7 @@ public class GameService {
             case NOTIFY_NEXT_PLAYER -> notifyNextUser(game, imperaGame, guildChannels, dmChannels);
             case NOTIFY_HALF_TIME_PASSED -> sendHalfTimeNotice(game, imperaGame, guildChannels, dmChannels);
         }
-        return courseOfAction;
-    }
-
-    public static CourseOfAction decideAction(Game game, ImperaGameViewDTO imperaGame) {
-        // REMINDER: The order of if statements matters!
-        if (!imperaGame.hasStarted()) return SKIP_CHECK;
-        if (imperaGame.hasEnded()) return DECLARE_VICTOR;
-        if (game.getCurrentTurn() != imperaGame.turnCounter()) return NOTIFY_NEXT_PLAYER;
-        if (imperaGame.hasHalfOfTurnPassed() && !game.sentHalfTimeNotice()) return NOTIFY_HALF_TIME_PASSED;
-        return SKIP_CHECK;
+        return HANDLED;
     }
 
     private void sendVictoryNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {

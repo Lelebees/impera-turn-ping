@@ -1,4 +1,4 @@
-package com.lelebees.imperabot.core.application;
+package com.lelebees.imperabot.core.domain;
 
 public enum CourseOfAction {
     DECLARE_VICTOR,
