@@ -95,7 +95,7 @@ public class GameService {
     public void checkTurns() {
         List<Game> games = repository.findAll();
         logger.info("Checking turns for {} games.", games.size());
-        int handledGames = (int) games.stream()
+        long handledGames = games.stream()
                 .map(this::notifyPlayersFor)
                 .filter(result -> result == HANDLED)
                 .count();

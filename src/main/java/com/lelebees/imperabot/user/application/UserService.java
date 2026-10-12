@@ -104,7 +104,7 @@ public class UserService {
     public void checkVerificationRequests() {
         List<ImperaMessageDTO> linkMessages = imperaService.getLinkMessages();
         logger.info("Found {} link requests.", linkMessages.size());
-        int skippedRequests = (int) linkMessages.stream()
+        long skippedRequests = linkMessages.stream()
                 .map(this::checkVerificationRequest)
                 .filter(result -> result == SKIPPED)
                 .count();
