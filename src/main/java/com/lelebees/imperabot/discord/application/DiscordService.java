@@ -28,6 +28,7 @@ public class DiscordService {
     private final Logger logger = LoggerFactory.getLogger(DiscordService.class);
     private final GatewayDiscordClient gatewayClient;
     private final GuildSettingsService guildSettingsService;
+    private HashMap<String, Long> commands;
 
 
     public DiscordService(GatewayDiscordClient gatewayClient, GuildSettingsService guildSettingsService) {
@@ -66,8 +67,10 @@ public class DiscordService {
     }
 
     public Map<String, Long> getApplicationCommands() {
-        Map<String, Long> commands = new HashMap<>();
-        gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong()).collectList().block().forEach(command -> commands.put(command.name(), command.id().asLong()));
+        if (commands == null) {
+            commands = new HashMap<>();
+            gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong()).collectList().block().forEach(command -> commands.put(command.name(), command.id().asLong()));
+        }
         return commands;
     }
 
