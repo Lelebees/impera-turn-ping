@@ -27,9 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,8 +45,6 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
         this.imperaUsername = imperaUsername;
         this.imperaPassword = imperaPassword;
         this.client = client;
-        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(this::updateBearerToken, 0, 1, TimeUnit.HOURS);
     }
 
     //Spring Constructor (this is the one that will be called)
@@ -64,7 +59,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(imperaURL + "/games/" + gameId))
                 .setHeader("Content-Type", "application/json")
-                .setHeader("Authorization", "Bearer %s".formatted(bearerToken))
+                .setHeader("Authorization", "Bearer " + bearerToken)
                 .GET()
                 .build();
         try {
@@ -175,7 +170,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
         return Optional.empty();
     }
 
-    private void updateBearerToken() throws CouldNotAuthorizeException {
+    public void updateBearerToken() throws CouldNotAuthorizeException {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(imperaURL + "/Account/token"))
