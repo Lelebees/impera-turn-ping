@@ -29,7 +29,7 @@ public class DiscordService {
     private final GatewayDiscordClient gatewayClient;
     private final GuildSettingsService guildSettingsService;
     private HashMap<String, Long> commands;
-
+    private static final String debugFormat = "%d (%s)";
 
     public DiscordService(GatewayDiscordClient gatewayClient, GuildSettingsService guildSettingsService) {
         this.gatewayClient = gatewayClient;
@@ -81,7 +81,7 @@ public class DiscordService {
         }
 
         // Find which channels belong to which guilds, and filter out the ones that are DMs
-        List<Guild> guilds = game.trackingChannels().stream().map(ChannelDTO::id).map(Snowflake::of).filter(this::channelIsGuildChannel).map(this::getGuildChannelGuild).map(guildId -> gatewayClient.getGuildById(guildId).block()).toList();
+        List<Guild> guilds = game.trackingChannels().stream().map(ChannelDTO::id).filter(this::channelIsGuildChannel).map(this::getGuildChannelGuild).map(guildId -> gatewayClient.getGuildById(guildId).block()).toList();
 
         int numberOfGuilds = guilds.size();
         logger.info("Found {} guilds to award winner role in.", numberOfGuilds);
@@ -89,21 +89,21 @@ public class DiscordService {
         // In each guild, find the winner role, and give it to the winner
         for (Guild guild : guilds) {
             long guildId = guild.getId().asLong();
-            String guildDebugId = guildId + " (" + guild.getName() + ")";
+            String guildDebugId = debugFormat.formatted(guildId, guild.getName());
             try {
-                Long winnerRoleId = guildSettingsService.getGuildSettingsById(guild.getId().asLong()).winnerRoleId();
+                Long winnerRoleId = guildSettingsService.getGuildSettingsById(guildId).winnerRoleId();
                 if (winnerRoleId == null) {
                     numberOfSkippedGuilds++;
                     logger.debug("Skipping guild {} because it has no winner role.", guildDebugId);
                     continue;
                 }
-                Member winningMember = guild.getMemberById(Snowflake.of(winner.discordId())).block();
+                Member winningMember = guild.getMemberById(winner.id()).block();
                 if (winningMember == null) {
                     numberOfSkippedGuilds++;
                     logger.debug("Skipping guild {} because the winner is not a member of the guild.", guildDebugId);
                     continue;
                 }
-                String winningMemberDebugId = winningMember.getId().asLong() + " (" + winningMember.getUsername() + ")";
+                String winningMemberDebugId = debugFormat.formatted(winningMember.getId().asLong(), winningMember.getUsername());
                 try {
                     winningMember.addRole(Snowflake.of(winnerRoleId)).block();
                 } catch (ClientException e) {
@@ -121,8 +121,8 @@ public class DiscordService {
         logger.info("Skipped {} guilds.", numberOfSkippedGuilds);
     }
 
-    public static boolean userIsLelebees(User user) {
-        return user.getId().asLong() == 373532675522166787L;
+    public static boolean userIsPlebeian(User user) {
+        return user.getId().asLong() != 373532675522166787L;
     }
 
     public Guild getGuildById(Snowflake guildId) {

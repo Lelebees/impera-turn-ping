@@ -41,7 +41,7 @@ public class UserService {
         try {
             return userFromOptional(repository.findById(id));
         } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("Cannot find user with this id (" + id + ")");
+            throw new UserNotFoundException("Cannot find user with this idAsLong (" + id + ")");
         }
     }
 

@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -57,24 +58,25 @@ public class TrackCommand implements SlashCommand {
         Optional<Snowflake> guildIdOptional = event.getInteraction().getGuildId();
         User callingUser = event.getInteraction().getUser();
 
-        Optional<ApplicationCommandInteractionOption> gameOptional = event.getOption("gameid");
-        long gameId = gameOptional
+        long gameId = event.getOption("gameid")
                 .orElseThrow(() -> new NullPointerException("You must specify a gameid."))
                 .getValue()
                 .orElseThrow(() -> new NullPointerException("Somehow, no gameId was entered"))
                 .asLong();
 
-        Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
-        Channel channel = event.getInteraction().getChannel().block();
-        long channelId = channel.getId().asLong();
+        long channelId = event.getInteraction().getChannelId().asLong();
+        Channel channel = event.getInteraction().getChannel().blockOptional(Duration.ofSeconds(5)).orElseThrow(() -> new  NullPointerException("The channel (%d) this command was used in does not exist.".formatted(event.getInteraction().getChannelId().asLong())));
         logger.info("User {} ({}) used /track with gameid: {} in channel: {}{}. Context: {}", callingUser.getId().asLong(), callingUser.getUsername(), gameId, channelId, guildIdOptional.isPresent() ? "(" + channel.getData().name().get() + ")" : "", guildIdOptional.map(snowflake -> "Guild (" + snowflake.asLong() + ")").orElse("DM"));
 
+        Optional<ApplicationCommandInteractionOption> channelOptional = event.getOption("channel");
         if (channelOptional.isPresent()) {
             channel = channelOptional.get()
                     .getValue()
                     .orElseThrow(() -> new NullPointerException("Somehow, no channel was entered"))
                     .asChannel()
-                    .block();
+                    .blockOptional(Duration.ofSeconds(5))
+                    .orElseThrow(() -> new NullPointerException("Entered channel could not be found on discord."));
+            channelId = channel.getId().asLong();
             logger.info("Channel was specified, so tracking in channel: {} ({}).", channelId, channel.getData().name().get());
         }
 
@@ -88,14 +90,18 @@ public class TrackCommand implements SlashCommand {
             } catch (GuildSettingsNotFoundException e) {
                 return event.reply().withContent("Could not find guild settings! use /guildsettings to create a settings list for this guild.").withEphemeral(true);
             }
-            if (!guildSettings.hasTrackPermissions(callingUser) && !DiscordService.userIsLelebees(callingUser)) {
+            if (!guildSettings.hasTrackPermissions(callingUser) && DiscordService.userIsPlebeian(callingUser)) {
                 logger.info("User {} ({}) was denied access to /track because they do not have the correct permissions.", callingUser.getId().asLong(), callingUser.getUsername());
                 return event.reply().withContent("You are not allowed to track games in this guild.").withEphemeral(true);
             }
 
             if (guildSettings.defaultChannel() != null && channelOptional.isEmpty()) {
-                channel = event.getInteraction().getGuild().block().getChannelById(guildSettings.defaultChannel().idAsSnowflake()).block();
-                channelId = channel.getId().asLong();
+                channel = event.getInteraction()
+                        .getGuild()
+                        .flatMap(guild -> guild.getChannelById(guildSettings.defaultChannel().id()))
+                        .blockOptional(Duration.ofSeconds(5))
+                        .orElseThrow(() -> new NullPointerException("Registered default channel (%d) for guild (%d) does not exist".formatted(guildSettings.defaultChannel().idAsLong(), guildSettings.guildId())));
+                channelId = guildSettings.defaultChannel().idAsLong();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: {} ({}).", channelId, channel.getData().name().get());
             }
         }

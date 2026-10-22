@@ -106,7 +106,7 @@ public class NotificationService {
             if (user.isPresent()) {
                 BotUserDTO player = user.get();
                 userString = getUserStringDependingOnSettings(player);
-                Snowflake targetUser = Snowflake.of(player.discordId());
+                Snowflake targetUser = player.id();
                 sendDMAccordingToSettings(player, victoryMessage.formatted(getGameURI(game), "You have won!"), guildChannels.isEmpty());
                 dmChannels.removeIf(channel -> channel.getRecipientIds().contains(targetUser));
             }
@@ -128,7 +128,7 @@ public class NotificationService {
     private void sendDMAccordingToSettings(BotUserDTO user, String directMessage, boolean noGuildChannels) {
         UserNotificationSetting setting = user.notificationSetting();
         if (setting == DMS_ONLY || setting == DMS_AND_GUILD || (setting == PREFER_GUILD_OVER_DMS && noGuildChannels)) {
-            discordService.sendDM(Snowflake.of(user.discordId()), directMessage);
+            discordService.sendDM(user.id(), directMessage);
         }
     }
 
@@ -139,7 +139,7 @@ public class NotificationService {
         if (userOptional.isPresent()) {
             BotUserDTO user = userOptional.get();
             userString = user.getMention();
-            Snowflake userId = Snowflake.of(user.discordId());
+            Snowflake userId = user.id();
 
             PrivateChannel usersChannel = discordService.getDMChannelByOwner(userId);
             if (dmChannels.contains(usersChannel)) {
@@ -156,7 +156,7 @@ public class NotificationService {
     }
 
     private boolean canUserSeeMessageInAGuild(List<GuildMessageChannel> guildChannels, BotUserDTO player) {
-        Snowflake userId = Snowflake.of(player.discordId());
+        Snowflake userId = player.id();
         for (GuildMessageChannel channel : guildChannels) {
             Snowflake guildId = Snowflake.of(channel.getData().guildId().get());
             Guild guild = discordService.getGuildById(guildId);

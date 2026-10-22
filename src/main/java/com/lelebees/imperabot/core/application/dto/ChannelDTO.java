@@ -6,16 +6,16 @@ import discord4j.common.util.Snowflake;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public record ChannelDTO(long id) {
-    public static Set<ChannelDTO> From(Set<Channel> trackingChannels) {
-        return trackingChannels.stream().map(ChannelDTO::From).collect(Collectors.toSet());
+public record ChannelDTO(Snowflake id) {
+    public static Set<ChannelDTO> From(Set<Channel> channels) {
+        return channels.stream().map(ChannelDTO::From).collect(Collectors.toSet());
     }
 
     public static ChannelDTO From(Channel channel) {
-        return new ChannelDTO(channel.getId());
+        return new ChannelDTO(Snowflake.of(channel.getId()));
     }
 
-    public Snowflake idAsSnowflake() {
-        return Snowflake.of(id());
+    public long idAsLong() {
+        return id.asLong();
     }
 }
