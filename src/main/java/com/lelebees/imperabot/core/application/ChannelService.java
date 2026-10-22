@@ -30,13 +30,8 @@ class ChannelService {
     }
 
     Channel trackGame(Game game, long channelId) {
-        Channel channel;
-        try {
-            channel = findChannel(channelId);
-        } catch (ChannelNotFoundException e) {
-            channel = createChannel(channelId);
-            repository.save(channel);
-        }
+        Channel channel = repository.findById(channelId)
+                .orElse(createChannel(channelId));
         channel.trackGame(game);
         return repository.save(channel);
     }
@@ -45,9 +40,5 @@ class ChannelService {
         Channel channel = findChannel(channelId);
         channel.stopTracking(game);
         return repository.save(channel);
-    }
-
-    void deleteChannel(long channelId) {
-        repository.deleteById(channelId);
     }
 }

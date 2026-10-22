@@ -20,7 +20,7 @@ public record ImperaGameViewDTO(long id, String type, String name, boolean hasPa
     }
 
     public ImperaGamePlayerDTO findPlayerById(String playerId) {
-        // Note that "Id" here means Game-specific idAsLong. This is not their account idAsLong!
+        // Note that "ID" here means Game-specific idAsLong. This is not their account idAsLong!
         return this.teams.stream()
                 .flatMap(team -> team.players().stream())
                 .filter(player -> player.id().equals(playerId))
@@ -34,10 +34,6 @@ public record ImperaGameViewDTO(long id, String type, String name, boolean hasPa
 
     public boolean hasStarted() {
         return !state.equals("Open");
-    }
-
-    public List<ImperaGameTeamDTO> getWinningTeams() {
-        return teams().stream().filter(ImperaGameTeamDTO::hasWon).toList();
     }
 
     public List<ImperaGamePlayerDTO> getWinningPlayers() {

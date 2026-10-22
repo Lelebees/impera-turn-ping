@@ -100,7 +100,7 @@ public class TrackCommand implements SlashCommand {
                         .getGuild()
                         .flatMap(guild -> guild.getChannelById(guildSettings.defaultChannel().id()))
                         .blockOptional(Duration.ofSeconds(5))
-                        .orElseThrow(() -> new NullPointerException("Registered default channel (%d) for guild (%d) does not exist".formatted(guildSettings.defaultChannel().idAsLong(), guildSettings.guildId())));
+                        .orElseThrow(() -> new NullPointerException("Registered default channel (%d) for guild (%d) does not exist".formatted(guildSettings.defaultChannel().idAsLong(), guildSettings.guildId().asLong())));
                 channelId = guildSettings.defaultChannel().idAsLong();
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so tracking in channel: {} ({}).", channelId, channel.getData().name().get());
             }

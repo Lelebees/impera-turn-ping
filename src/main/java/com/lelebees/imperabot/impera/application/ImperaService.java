@@ -38,7 +38,7 @@ public class ImperaService {
                         .forEach(player -> playersThatNoLongerPlay.put(player, action)));
             }
         } catch (TurnNotFoundException e) {
-            logger.warn("Turn not found in game " + gameId + ", throwing IndexOutOfBoundsException!", e);
+            logger.warn("Turn not found in game {}, throwing IndexOutOfBoundsException!", gameId, e);
             throw new IndexOutOfBoundsException("Could not find a turn in game " + gameId);
         }
         return playersThatNoLongerPlay;

@@ -69,7 +69,11 @@ public class DiscordService {
     public Map<String, Long> getApplicationCommands() {
         if (commands == null) {
             commands = new HashMap<>();
-            gatewayClient.getRestClient().getApplicationService().getGlobalApplicationCommands(gatewayClient.getSelfId().asLong()).collectList().block().forEach(command -> commands.put(command.name(), command.id().asLong()));
+            gatewayClient.getRestClient()
+                    .getApplicationService()
+                    .getGlobalApplicationCommands(gatewayClient.getSelfId().asLong())
+                    .collectList().block()
+                    .forEach(command -> commands.put(command.name(), command.id().asLong()));
         }
         return commands;
     }
@@ -91,7 +95,7 @@ public class DiscordService {
             long guildId = guild.getId().asLong();
             String guildDebugId = debugFormat.formatted(guildId, guild.getName());
             try {
-                Long winnerRoleId = guildSettingsService.getGuildSettingsById(guildId).winnerRoleId();
+                Snowflake winnerRoleId = guildSettingsService.getGuildSettingsById(guildId).winnerRoleId();
                 if (winnerRoleId == null) {
                     numberOfSkippedGuilds++;
                     logger.debug("Skipping guild {} because it has no winner role.", guildDebugId);
@@ -105,7 +109,7 @@ public class DiscordService {
                 }
                 String winningMemberDebugId = debugFormat.formatted(winningMember.getId().asLong(), winningMember.getUsername());
                 try {
-                    winningMember.addRole(Snowflake.of(winnerRoleId)).block();
+                    winningMember.addRole(winnerRoleId).block();
                 } catch (ClientException e) {
                     logger.error("Bot cannot give roles to {} in guild {}!\n Most likely, the bot does not have the \"Manage Roles\" permission.", winningMemberDebugId, guildDebugId);
                     numberOfSkippedGuilds++;

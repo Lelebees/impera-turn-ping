@@ -27,9 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,8 +45,6 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
         this.imperaUsername = imperaUsername;
         this.imperaPassword = imperaPassword;
         this.client = client;
-        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleAtFixedRate(this::updateBearerToken, 0, 1, TimeUnit.HOURS);
     }
 
     //Spring Constructor (this is the one that will be called)
@@ -64,7 +59,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(imperaURL + "/games/" + gameId))
                 .setHeader("Content-Type", "application/json")
-                .setHeader("Authorization", "Bearer %s".formatted(bearerToken))
+                .setHeader("Authorization", "Bearer " + bearerToken)
                 .GET()
                 .build();
         try {
@@ -75,11 +70,11 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
             }
             return Optional.of(imperaMapper.getObjectMapper().readValue(response.body(), ImperaGameViewDTO.class));
         } catch (JsonProcessingException e) {
-            logger.error("Jackson could not parse returned object attempting to get game %d from Impera API".formatted(gameId), e);
+            logger.error("Jackson could not parse returned object attempting to get game {} from Impera API", gameId, e);
         } catch (IOException e) {
-            logger.error("IOException attempting to get game %d from impera API".formatted(gameId), e);
+            logger.error("IOException attempting to get game {} from impera API", gameId, e);
         } catch (InterruptedException e) {
-            logger.error("InterruptedException attempting to get game %d from impera API".formatted(gameId), e);
+            logger.error("InterruptedException attempting to get game {} from impera API", gameId, e);
         }
         return Optional.empty();
     }
@@ -175,7 +170,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
         return Optional.empty();
     }
 
-    private void updateBearerToken() throws CouldNotAuthorizeException {
+    public void updateBearerToken() throws CouldNotAuthorizeException {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(imperaURL + "/Account/token"))

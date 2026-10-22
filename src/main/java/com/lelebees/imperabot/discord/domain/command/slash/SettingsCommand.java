@@ -6,17 +6,12 @@ import com.lelebees.imperabot.user.application.UserService;
 import com.lelebees.imperabot.user.application.dto.BotUserDTO;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
 public class SettingsCommand implements SlashCommand {
-
-    private final Logger logger = LoggerFactory.getLogger(SettingsCommand.class);
     private final UserService userService;
-
 
     public SettingsCommand(UserService userService) {
         this.userService = userService;

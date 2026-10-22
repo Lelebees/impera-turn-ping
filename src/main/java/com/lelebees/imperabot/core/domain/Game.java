@@ -44,6 +44,10 @@ public class Game {
         return new Game(id, currentTurn, false, new HashSet<>());
     }
 
+    public static Game From(ImperaGameViewDTO imperaGame) {
+        return Game.From(imperaGame.id(), imperaGame.turnCounter());
+    }
+
     public long getId() {
         return id;
     }

@@ -12,7 +12,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,8 +20,6 @@ import java.util.Map;
 
 @Component
 public class GlobalCommandRegistrar implements ApplicationRunner {
-    final String path = "commands/guild";
-    final File jarFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     private final RestClient client;
 

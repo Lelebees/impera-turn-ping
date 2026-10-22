@@ -31,7 +31,7 @@ public class MobileCopyButton implements ButtonCommand {
         try {
             return event.reply().withEphemeral(true).withContent(userService.getVerificationCode(user.getId().asLong()));
         } catch (UserNotFoundException e) {
-            logger.error("Could not return verification code for %s (%d), as this user does not exist in the database.".formatted(user.getUsername(), user.getId().asLong()));
+            logger.error("Could not return verification code for {} ({}), as this user does not exist in the database.", user.getUsername(), user.getId().asLong());
             return event.reply().withEphemeral(true).withContent("Exception occurred while trying to fetch your verification code: user %s (%d) does not exist.".formatted(user.getUsername(), user.getId().asLong()));
         }
     }
