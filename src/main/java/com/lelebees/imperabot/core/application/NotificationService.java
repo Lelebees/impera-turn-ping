@@ -9,7 +9,6 @@ import com.lelebees.imperabot.user.application.dto.BotUserDTO;
 import com.lelebees.imperabot.user.domain.UserNotificationSetting;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.GuildMessageChannel;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.entity.channel.PrivateChannel;
@@ -149,7 +148,7 @@ public class NotificationService {
             allowedMentions = user.getAllowedMentions();
         }
 
-        // TODO: Force swap userstring to playername if player is not in a guild
+        // TODO: Force swap user string to player name if player is not in a guild
         for (GuildMessageChannel channel : guildChannels) {
             channel.createMessage(generalMessage.formatted(userString)).withAllowedMentions(allowedMentions).block();
         }
@@ -161,8 +160,7 @@ public class NotificationService {
             Snowflake guildId = Snowflake.of(channel.getData().guildId().get());
             Guild guild = discordService.getGuildById(guildId);
             try {
-                Member guildMember = guild.getMemberById(userId).block();
-                if (channel.getEffectivePermissions(guildMember.getId()).block().contains(VIEW_CHANNEL)) return true;
+                if (channel.getEffectivePermissions(userId).block().contains(VIEW_CHANNEL)) return true;
             } catch (ClientException e) {
                 logger.debug("User {} does not have access to guild {} ({})", player.discordId(), guildId.asLong(), guild.getName());
             }

@@ -70,11 +70,11 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
             }
             return Optional.of(imperaMapper.getObjectMapper().readValue(response.body(), ImperaGameViewDTO.class));
         } catch (JsonProcessingException e) {
-            logger.error("Jackson could not parse returned object attempting to get game %d from Impera API".formatted(gameId), e);
+            logger.error("Jackson could not parse returned object attempting to get game {} from Impera API", gameId, e);
         } catch (IOException e) {
-            logger.error("IOException attempting to get game %d from impera API".formatted(gameId), e);
+            logger.error("IOException attempting to get game {} from impera API", gameId, e);
         } catch (InterruptedException e) {
-            logger.error("InterruptedException attempting to get game %d from impera API".formatted(gameId), e);
+            logger.error("InterruptedException attempting to get game {} from impera API", gameId, e);
         }
         return Optional.empty();
     }

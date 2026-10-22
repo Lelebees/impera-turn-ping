@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSession;
-import java.io.IOException;
 import java.net.Authenticator;
 import java.net.CookieHandler;
 import java.net.ProxySelector;
@@ -23,7 +22,7 @@ import java.util.concurrent.Executor;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class SimpleImperaAPIRepositoryTest {
-    String dummy_dto = """
+    final String dummy_dto = """
             {
               "id": 0,
               "type": "Fun",
@@ -113,7 +112,7 @@ class SimpleImperaAPIRepositoryTest {
     }
 
     public static class DummyHttpClient extends HttpClient {
-        private String dummyResponse;
+        private final String dummyResponse;
 
         public DummyHttpClient(String dummyResponse) {
             this.dummyResponse = dummyResponse;
@@ -165,7 +164,7 @@ class SimpleImperaAPIRepositoryTest {
         }
 
         @Override
-        public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) throws IOException, InterruptedException {
+        public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) {
             return (HttpResponse<T>) new DummyHttpResponse(dummyResponse, 200);
         }
 
@@ -181,8 +180,8 @@ class SimpleImperaAPIRepositoryTest {
     }
 
     public static class DummyHttpResponse implements HttpResponse<String> {
-        private String dummyResponse;
-        private int dummyStatus;
+        private final String dummyResponse;
+        private final int dummyStatus;
 
         public DummyHttpResponse(String dummyResponse, int dummyStatus) {
             this.dummyResponse = dummyResponse;

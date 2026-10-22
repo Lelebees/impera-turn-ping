@@ -85,7 +85,7 @@ public class BotUser {
      * Multiple calls to this method will generate new codes, and invalidate the old ones.
      *
      * @return Verification code, call{@link BotUser#verifyUser(UUID, String, String)}with this code and an Impera account to verify the user
-     * @throws UserAlreadyVerfiedException User is already linked to an Impera account and they must be unlinked before verification can start again
+     * @throws UserAlreadyVerfiedException User is already linked to an Impera account, and they must be unlinked before verification can start again
      * @see BotUser#verifyUser(UUID, String, String)
      */
     public String startVerification() throws UserAlreadyVerfiedException {
@@ -103,9 +103,5 @@ public class BotUser {
 
     public String getUsername() {
         return username;
-    }
-
-    public String getMention() {
-        return "<@" + this.userId + ">";
     }
 }

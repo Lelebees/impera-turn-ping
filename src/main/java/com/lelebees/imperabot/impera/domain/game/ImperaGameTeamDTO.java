@@ -6,13 +6,6 @@ import java.util.List;
 
 public record ImperaGameTeamDTO(String id, int playOrder, List<ImperaGamePlayerDTO> players) {
 
-    public ImperaGamePlayerDTO getPlayer(String playerId) {
-        return this.players.stream()
-                .filter(p -> p.userId().equals(playerId))
-                .findFirst()
-                .orElse(null);
-    }
-
     public boolean hasWon() {
         return players.stream().anyMatch(ImperaGamePlayerDTO::hasWon);
     }

@@ -33,7 +33,7 @@ public class NotificationSettingSelectMenu implements SelectMenuInteraction {
     public Mono<Void> handle(SelectMenuInteractionEvent event) {
         UserNotificationSetting setting = UserNotificationSetting.parse(event.getValues().get(0));
         BotUserDTO user = userService.updateDefaultSetting(event.getInteraction().getUser().getId().asLong(), setting);
-        logger.info("Updated " + event.getUser().getUsername() + "'s (" + event.getUser().getId().asLong() + ") notification setting to " + user.notificationSetting());
+        logger.info("Updated {}'s ({}) notification setting to {}", event.getUser().getUsername(), event.getUser().getId().asLong(), user.notificationSetting());
         return event.edit(InteractionApplicationCommandCallbackSpec.builder().addAllComponents(List.of(SettingsMenu.buildForUser(user, event.getUser()))).build());
     }
 }

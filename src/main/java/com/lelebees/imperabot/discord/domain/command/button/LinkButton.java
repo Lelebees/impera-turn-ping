@@ -57,7 +57,7 @@ public class LinkButton implements ButtonCommand {
                             .formatted(imperaUsername, verificationCode, settingsCommandId))
                     .withComponents(ActionRow.of(button));
         } catch (UserAlreadyVerfiedException e) {
-            logger.info("User " + username + " (" + id.asLong() + ") was unable to link because they are already verified");
+            logger.info("User {} ({}) was unable to link because they are already verified", username, id.asLong());
             return event.reply("You are already verified! If you wish to re-link, press the button in </settings:%d> first.".formatted(settingsCommandId)).withEphemeral(true);
         } catch (RuntimeException e) {
             logger.error("An unknown error occurred: ", e);

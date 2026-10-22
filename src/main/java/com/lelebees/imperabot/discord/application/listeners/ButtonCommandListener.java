@@ -30,7 +30,7 @@ public class ButtonCommandListener {
                 .next()
                 .flatMap(button -> {
                     User user = event.getInteraction().getUser();
-                    logger.info("User " + user.getId().asLong() + " (" + user.getUsername() + ") clicked " + button.getCustomId() + " button.");
+                    logger.info("User {} ({}) clicked {} button.", user.getId().asLong(), user.getUsername(), button.getCustomId());
                     return button.handle(event);
                 });
     }

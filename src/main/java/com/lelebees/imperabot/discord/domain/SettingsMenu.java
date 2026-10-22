@@ -3,7 +3,6 @@ package com.lelebees.imperabot.discord.domain;
 import com.lelebees.imperabot.core.application.dto.GuildSettingsDTO;
 import com.lelebees.imperabot.user.application.dto.BotUserDTO;
 import com.lelebees.imperabot.user.domain.UserNotificationSetting;
-import discord4j.common.util.Snowflake;
 import discord4j.core.object.component.*;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.User;
@@ -88,6 +87,7 @@ public class SettingsMenu {
         return options;
     }
 
+/*
     private static SelectMenu.Option[] getAutoRemovePreviousWinOptions(GuildSettingsDTO guildSettingsDTO) {
         Map<Boolean, String> optionLabels = Map.of(
                 true, "Yes",
@@ -99,6 +99,7 @@ public class SettingsMenu {
         //TODO: Implement Defaults
         return options;
     }
+*/
 
     private static List<SelectMenu.DefaultValue> getDefaultChannelOption(GuildSettingsDTO guildSettingsDTO) {
         if (guildSettingsDTO.defaultChannel() == null) {
@@ -114,7 +115,7 @@ public class SettingsMenu {
             return List.of();
         }
         return List.of(
-                SelectMenu.DefaultValue.of(Snowflake.of(guildSettingsDTO.permissionRoleId()), SelectMenu.DefaultValue.Type.ROLE)
+                SelectMenu.DefaultValue.of(guildSettingsDTO.permissionRoleId(), SelectMenu.DefaultValue.Type.ROLE)
         );
     }
 
@@ -123,7 +124,7 @@ public class SettingsMenu {
             return List.of();
         }
         return List.of(
-                SelectMenu.DefaultValue.of(Snowflake.of(guildSettingsDTO.winnerRoleId()), SelectMenu.DefaultValue.Type.ROLE)
+                SelectMenu.DefaultValue.of(guildSettingsDTO.winnerRoleId(), SelectMenu.DefaultValue.Type.ROLE)
         );
     }
 
