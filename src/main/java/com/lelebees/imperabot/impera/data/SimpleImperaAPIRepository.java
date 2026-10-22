@@ -189,8 +189,10 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
             logger.info("Updated Impera bearer token");
         } catch (IOException | InterruptedException e) {
             logger.error("An Exception occurred while refreshing bearer token. To avoid silently failing, the error was caught and this thread will continue.", e);
+        } catch (CouldNotAuthorizeException e) {
+            logger.error("Could not authorize with Impera.", e);
         } catch (RuntimeException e) {
-            logger.error("A Runtime exception occurred! Rethrowing...");
+            logger.error("A Runtime exception occurred! Rethrowing...", e);
             throw new RuntimeException(e);
         }
     }

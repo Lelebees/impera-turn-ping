@@ -105,7 +105,7 @@ public class SettingsMenu {
             return List.of();
         }
         return List.of(
-                SelectMenu.DefaultValue.of(guildSettingsDTO.defaultChannel().idAsSnowflake(), SelectMenu.DefaultValue.Type.CHANNEL)
+                SelectMenu.DefaultValue.of(guildSettingsDTO.defaultChannel().id(), SelectMenu.DefaultValue.Type.CHANNEL)
         );
     }
 

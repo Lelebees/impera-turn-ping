@@ -42,6 +42,7 @@ public class NotificationService {
     }
 
     public void sendNewTurnMessage(List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels, ImperaGameViewDTO game) {
+        logger.info("Sending turn notice for {} ({})!", game.name(), game.id());
         String turnMessage = "your turn in %s!".formatted(getGameURI(game));
         String directTurnMessage = "It's " + turnMessage;
         String generalTurnMessage = "%s, it is " + turnMessage;
@@ -49,6 +50,7 @@ public class NotificationService {
     }
 
     public void sendHalfTimeMessage(List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels, ImperaGameViewDTO game) {
+        logger.info("Sending half time notice for {} ({})!", game.name(), game.id());
         String halfTimeMessage = "have half time remaining in %s!".formatted(getGameURI(game));
         String directHalfTimeMessage = "You " + halfTimeMessage;
         String generalHalfTimeMessage = "%s, you " + halfTimeMessage;
@@ -95,6 +97,7 @@ public class NotificationService {
     }
 
     public void sendVictorsMessage(List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels, List<ImperaGamePlayerDTO> winningPlayers, ImperaGameViewDTO game) {
+        logger.info("Sending victory notice for {} ({})!", game.name(), game.id());
         List<String> userStrings = new ArrayList<>();
         String victoryMessage = "Game %s has ended! %s";
         for (ImperaGamePlayerDTO gamePlayer : winningPlayers) {
@@ -103,7 +106,7 @@ public class NotificationService {
             if (user.isPresent()) {
                 BotUserDTO player = user.get();
                 userString = getUserStringDependingOnSettings(player);
-                Snowflake targetUser = Snowflake.of(player.discordId());
+                Snowflake targetUser = player.id();
                 sendDMAccordingToSettings(player, victoryMessage.formatted(getGameURI(game), "You have won!"), guildChannels.isEmpty());
                 dmChannels.removeIf(channel -> channel.getRecipientIds().contains(targetUser));
             }
@@ -122,18 +125,10 @@ public class NotificationService {
         }
     }
 
-    private AllowedMentions getAllowedMentions(BotUserDTO player) {
-        return switch (player.notificationSetting()) {
-            case NO_NOTIFICATIONS, DMS_ONLY -> AllowedMentions.suppressAll();
-            case DMS_AND_GUILD, PREFER_GUILD_OVER_DMS, GUILD_ONLY ->
-                    AllowedMentions.builder().allowUser(Snowflake.of(player.discordId())).build();
-        };
-    }
-
     private void sendDMAccordingToSettings(BotUserDTO user, String directMessage, boolean noGuildChannels) {
         UserNotificationSetting setting = user.notificationSetting();
         if (setting == DMS_ONLY || setting == DMS_AND_GUILD || (setting == PREFER_GUILD_OVER_DMS && noGuildChannels)) {
-            discordService.sendDM(Snowflake.of(user.discordId()), directMessage);
+            discordService.sendDM(user.id(), directMessage);
         }
     }
 
@@ -144,24 +139,24 @@ public class NotificationService {
         if (userOptional.isPresent()) {
             BotUserDTO user = userOptional.get();
             userString = user.getMention();
-            Snowflake userId = Snowflake.of(user.discordId());
+            Snowflake userId = user.id();
 
             PrivateChannel usersChannel = discordService.getDMChannelByOwner(userId);
             if (dmChannels.contains(usersChannel)) {
                 sendDMAccordingToSettings(user, directMessage.formatted(userString), !canUserSeeMessageInAGuild(guildChannels, user));
                 dmChannels.remove(usersChannel);
             }
-            allowedMentions = getAllowedMentions(user);
+            allowedMentions = user.getAllowedMentions();
         }
 
-        AllowedMentions finalAllowedMentions = allowedMentions;
-        String finalUserString = userString;
         // TODO: Force swap userstring to playername if player is not in a guild
-        guildChannels.forEach(channel -> channel.createMessage(generalMessage.formatted(finalUserString)).withAllowedMentions(finalAllowedMentions).block());
+        for (GuildMessageChannel channel : guildChannels) {
+            channel.createMessage(generalMessage.formatted(userString)).withAllowedMentions(allowedMentions).block();
+        }
     }
 
     private boolean canUserSeeMessageInAGuild(List<GuildMessageChannel> guildChannels, BotUserDTO player) {
-        Snowflake userId = Snowflake.of(player.discordId());
+        Snowflake userId = player.id();
         for (GuildMessageChannel channel : guildChannels) {
             Snowflake guildId = Snowflake.of(channel.getData().guildId().get());
             Guild guild = discordService.getGuildById(guildId);

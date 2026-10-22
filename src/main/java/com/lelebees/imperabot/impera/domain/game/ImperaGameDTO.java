@@ -13,7 +13,7 @@ public record ImperaGameDTO(long id, String type, String name, boolean hasPasswo
     @Override
     public String toString() {
         return "ImperaGameDTO{" +
-                "id=" + id +
+                "idAsLong=" + id +
                 ", name='" + name + '\'' +
                 '}';
     }

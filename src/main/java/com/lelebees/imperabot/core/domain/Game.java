@@ -1,12 +1,15 @@
 package com.lelebees.imperabot.core.domain;
 
 import com.lelebees.imperabot.core.domain.exception.TurnAlreadyPassedException;
+import com.lelebees.imperabot.impera.domain.game.view.ImperaGameViewDTO;
 import jakarta.persistence.*;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
+import static com.lelebees.imperabot.core.domain.CourseOfAction.*;
 
 @Entity
 @Table(name = "bot_game")
@@ -84,6 +87,15 @@ public class Game {
 
     public boolean untrackInChannel(Channel channel) {
         return trackingChannels.remove(channel);
+    }
+
+    public CourseOfAction getCourseOfAction(ImperaGameViewDTO imperaGame) {
+        // REMINDER: The order of if statements matters!
+        if (!imperaGame.hasStarted()) return SKIP_CHECK;
+        if (imperaGame.hasEnded()) return DECLARE_VICTOR;
+        if (currentTurn != imperaGame.turnCounter()) return NOTIFY_NEXT_PLAYER;
+        if (imperaGame.hasHalfOfTurnPassed() && !halfTimeNotice) return NOTIFY_HALF_TIME_PASSED;
+        return SKIP_CHECK;
     }
 
     @Override

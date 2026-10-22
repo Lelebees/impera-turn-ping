@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -81,13 +82,16 @@ public class UntrackCommand implements SlashCommand {
             } catch (GuildSettingsNotFoundException e) {
                 return event.reply().withContent("Could not find guild settings! use /guildsettings to create a settings list for this guild.").withEphemeral(true);
             }
-            if (!guildSettings.hasTrackPermissions(callingUser) && !DiscordService.userIsLelebees(callingUser)) {
+            if (!guildSettings.hasTrackPermissions(callingUser) && DiscordService.userIsPlebeian(callingUser)) {
                 logger.info("User {} ({}) was denied access to /untrack because they do not have the correct permissions.", callingUser.getId(), callingUser.getUsername());
                 return event.reply().withContent("You are not allowed to stop tracking games in this guild.").withEphemeral(true);
             }
 
             if (guildSettings.defaultChannel() != null && channelOptional.isEmpty()) {
-                channel = event.getInteraction().getGuild().block().getChannelById(guildSettings.defaultChannel().idAsSnowflake()).block();
+                channel = event.getInteraction().getGuild()
+                        .flatMap(guild -> guild.getChannelById(guildSettings.defaultChannel().id()))
+                        .blockOptional(Duration.ofSeconds(5))
+                        .orElseThrow(() -> new NullPointerException("Default channel (%d) for guild (%s) not present on discord.".formatted(guildSettings.defaultChannel().idAsLong(), guildId.asString())));
                 logger.info("No channel was specified, but a default channel was set, and the command was used in a guild, so untracking in channel: {} ({}).", channel.getId().asLong(), channel.getData().name().get());
             }
         }
