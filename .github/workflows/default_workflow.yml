@@ -1,4 +1,4 @@
-name: Java Deploy
+name: Tests
 
 on:
   pull_request:
@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
+      - name: Set up JDK 27
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '27'
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
