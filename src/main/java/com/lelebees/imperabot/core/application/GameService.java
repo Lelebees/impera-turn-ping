@@ -54,13 +54,8 @@ public class GameService {
 
     @Transactional
     public boolean trackGame(ImperaGameViewDTO imperaGame, long channelId) {
-        Game game;
-        try {
-            game = findGame(imperaGame.id());
-        } catch (GameNotFoundException e) {
-            game = Game.From(imperaGame.id(), imperaGame.turnCounter());
-            repository.save(game);
-        }
+        Game game = repository.findById(imperaGame.id())
+                .orElse(repository.save(Game.From(imperaGame)));
         boolean alreadyTracked = !game.trackInChannel(channelService.trackGame(game, channelId));
         repository.save(game);
         return alreadyTracked;
@@ -96,14 +91,14 @@ public class GameService {
         List<Game> games = repository.findAll();
         logger.info("Checking turns for {} games.", games.size());
         long handledGames = games.stream()
-                .map(this::notifyPlayersFor)
+                .map(this::checkGame)
                 .filter(result -> result == HANDLED)
                 .count();
         logger.info("Handled {} games, skipped {} games.", handledGames, games.size() - handledGames);
     }
 
 
-    public CheckResult notifyPlayersFor(Game game) {
+    public CheckResult checkGame(Game game) {
         ImperaGameViewDTO imperaGame;
         try {
             imperaGame = imperaService.getGame(game.getId());
@@ -119,19 +114,23 @@ public class GameService {
         getChannelsToNotify(game, dmChannels, guildChannels);
         logger.debug("Found {} channels to notify.", dmChannels.size() + guildChannels.size());
 
-        HashMap<String, HistoryActionName> playersThatAreNoLongerPlaying = imperaService.getPlayersThatAreNoLongerPlaying(game.getId(), game.getCurrentTurn(), imperaGame.turnCounter() + 1);
-        logger.debug("Found {} players that are no longer playing.", playersThatAreNoLongerPlaying.size());
-        playersThatAreNoLongerPlaying.forEach((player, outcome) -> notificationService.sendLoserMessage(guildChannels, dmChannels, imperaGame.findPlayerById(player), imperaGame, outcome));
+        notifyLosers(game, imperaGame, guildChannels, dmChannels);
 
         switch (courseOfAction) {
-            case DECLARE_VICTOR -> sendVictoryNotice(game, imperaGame, guildChannels, dmChannels);
+            case DECLARE_VICTOR -> notifyVictors(game, imperaGame, guildChannels, dmChannels);
             case NOTIFY_NEXT_PLAYER -> notifyNextPlayer(game, imperaGame, guildChannels, dmChannels);
-            case NOTIFY_HALF_TIME_PASSED -> sendHalfTimeNotice(game, imperaGame, guildChannels, dmChannels);
+            case NOTIFY_HALF_TIME_PASSED -> notifyPlayerHalfTime(game, imperaGame, guildChannels, dmChannels);
         }
         return HANDLED;
     }
 
-    private void sendVictoryNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
+    private void notifyLosers(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
+        HashMap<String, HistoryActionName> playersThatAreNoLongerPlaying = imperaService.getPlayersThatAreNoLongerPlaying(game.getId(), game.getCurrentTurn(), imperaGame.turnCounter() + 1);
+        logger.debug("Found {} players that are no longer playing.", playersThatAreNoLongerPlaying.size());
+        playersThatAreNoLongerPlaying.forEach((player, outcome) -> notificationService.sendLoserMessage(guildChannels, dmChannels, imperaGame.findPlayerById(player), imperaGame, outcome));
+    }
+
+    private void notifyVictors(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         logger.debug("Game {} has ended!", game.getId());
         List<ImperaGamePlayerDTO> winningPlayers = imperaGame.getWinningPlayers();
         notificationService.sendVictorsMessage(guildChannels, dmChannels, winningPlayers, imperaGame);
@@ -149,7 +148,7 @@ public class GameService {
         repository.save(game);
     }
 
-    private void sendHalfTimeNotice(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
+    private void notifyPlayerHalfTime(Game game, ImperaGameViewDTO imperaGame, List<GuildMessageChannel> guildChannels, List<PrivateChannel> dmChannels) {
         notificationService.sendHalfTimeMessage(guildChannels, dmChannels, imperaGame);
         game.setHalfTimeNoticeTrue();
         repository.save(game);
