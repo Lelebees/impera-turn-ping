@@ -195,7 +195,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
             logger.error("Could not authorize with Impera.", e);
         } catch (RuntimeException e) {
             logger.error("A Runtime exception occurred! Rethrowing...", e);
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
