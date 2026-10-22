@@ -18,9 +18,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -178,7 +180,7 @@ public class SimpleImperaAPIRepository implements ImperaRepository {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(imperaURL + "/Account/token"))
                     .setHeader("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString("grant_type=password&username=" + imperaUsername + "&password=" + imperaPassword + "&scope=openid%20offline_access%20roles&"))
+                    .POST(HttpRequest.BodyPublishers.ofString("grant_type=password&username=" + imperaUsername + "&password=" + URLEncoder.encode(imperaPassword, Charset.defaultCharset()) + "&scope=openid%20offline_access%20roles&"))
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
